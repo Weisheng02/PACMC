@@ -6,14 +6,14 @@ const getSheetsClient = () => {
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\n/g, '\n'),
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
   return google.sheets({ version: 'v4', auth });
 };
 
-export async function PUT(request: NextRequest, { params }: { params: { key: string } }) {
+export async function PUT(request, { params }) {
   try {
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -44,7 +44,6 @@ export async function PUT(request: NextRequest, { params }: { params: { key: str
     if (rowIndex === -1) {
       return NextResponse.json({ error: 'Record not found' }, { status: 404 });
     }
-    
     // 处理日期格式，确保保存为正确的格式
     let formattedDate = body.date;
     if (body.date) {
@@ -58,7 +57,6 @@ export async function PUT(request: NextRequest, { params }: { params: { key: str
         console.warn('Date formatting failed:', body.date);
       }
     }
-    
     // 构造新的行数据（按你表的16列顺序）
     const updatedRow = [
       key,
