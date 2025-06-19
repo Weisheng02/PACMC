@@ -87,16 +87,21 @@ export default function Home() {
     
     const monthlyBalance = monthlyIncome - monthlyExpense;
 
-    // 计算现金在手（基于独立的 cashInHand 字段）
+    // 计算现金在手（累计总数）
     let cashInHand = 0;
     
-    financialData.forEach(record => {
+    // 按日期排序，确保按时间顺序计算
+    const sortedRecords = [...financialData].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    sortedRecords.forEach(record => {
       if (record.type === 'Income') {
-        // 收入：现金在手字段直接相加
-        cashInHand += (record.cashInHand || 0);
+        // 收入：现金在手增加
+        cashInHand += record.amount;
       } else if (record.type === 'Expense') {
-        // 支出：现金在手字段直接相减
-        cashInHand -= (record.cashInHand || 0);
+        // 支出：现金在手减少
+        cashInHand -= record.amount;
       }
     });
 

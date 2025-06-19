@@ -62,20 +62,19 @@ export async function POST(request: NextRequest) {
       description,            // G: Description
       'Pending',              // H: Status (默认 Pending)
       'FALSE',                // I: Take/Put ?
-      '0',                    // J: Cash in Hand (默认 0)
-      remark || '',           // K: Remark (向后移动一列)
-      now,                    // L: Created Date (向后移动一列)
-      createdBy,              // M: Created By (向后移动一列)
-      '',                     // N: Approved Date (向后移动一列)
-      '',                     // O: Approved By (向后移动一列)
-      createdBy,              // P: Last User Update (向后移动一列)
-      now,                    // Q: Last Date Update (向后移动一列)
+      remark || '',           // J: Remark
+      now,                    // K: Created Date
+      createdBy,              // L: Created By
+      '',                     // M: Approved Date
+      '',                     // N: Approved By
+      createdBy,              // O: Last User Update
+      now,                    // P: Last Date Update
     ];
 
     // 添加到 Google Sheet
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${sheetName}!A:Q`, // 扩展到 Q 列
+      range: `${sheetName}!A:P`, // 回到 P 列
       valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
@@ -93,7 +92,6 @@ export async function POST(request: NextRequest) {
       description,
       status: 'Pending',
       takePut: false,
-      cashInHand: 0, // 新增 cashInHand 字段
       remark: remark || '',
       createdDate: now,
       createdBy,

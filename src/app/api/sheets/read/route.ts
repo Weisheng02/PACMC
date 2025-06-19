@@ -38,7 +38,7 @@ export async function GET() {
     // 只读取 Transaction 工作表
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A:Q`,
+      range: `${sheetName}!A:P`,
     });
 
     const rows = response.data.values;
@@ -57,14 +57,13 @@ export async function GET() {
       description: row[6] || '',
       status: (row[7] as 'Approved' | 'Pending') || 'Pending',
       takePut: row[8] === 'TRUE',
-      cashInHand: parseFloat(row[9]) || 0,
-      remark: row[10] || '',
-      createdDate: row[11] || '',
-      createdBy: row[12] || '',
-      approvedDate: row[13] || '',
-      approvedBy: row[14] || '',
-      lastUserUpdate: row[15] || '',
-      lastDateUpdate: row[16] || '',
+      remark: row[9] || '',
+      createdDate: row[10] || '',
+      createdBy: row[11] || '',
+      approvedDate: row[12] || '',
+      approvedBy: row[13] || '',
+      lastUserUpdate: row[14] || '',
+      lastDateUpdate: row[15] || '',
     }));
 
     return NextResponse.json({ records });
