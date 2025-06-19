@@ -18,6 +18,17 @@ export interface FinancialRecord {
   lastDateUpdate: string;
 }
 
+// 现金在手记录接口
+export interface CashInHandRecord {
+  key: string;
+  date: string;
+  type: 'Adjustment' | 'Transfer' | 'Other';
+  amount: number;
+  description: string;
+  createdBy: string;
+  createdDate: string;
+}
+
 // 读取所有财务记录
 export const readFinancialRecords = async (): Promise<FinancialRecord[]> => {
   try {

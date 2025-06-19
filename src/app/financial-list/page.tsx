@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { FinanceOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +13,14 @@ export default function FinancialListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [cashInHand, setCashInHand] = useState(0);
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [cashForm, setCashForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    type: 'Adjustment' as 'Adjustment' | 'Transfer' | 'Other',
+    amount: 0,
+    description: '',
+  });
   const router = useRouter();
 
   const loadRecords = async () => {
@@ -21,6 +29,13 @@ export default function FinancialListPage() {
       setError(null);
       const data = await readFinancialRecords();
       setRecords(data);
+      
+      // 获取现金在手
+      const cashResponse = await fetch('/api/sheets/cash-in-hand');
+      if (cashResponse.ok) {
+        const cashData = await cashResponse.json();
+        setCashInHand(cashData.cashInHand || 0);
+      }
     } catch (err) {
       setError('加载财务记录失败');
       console.error('Error loading records:', err);
@@ -51,6 +66,57 @@ export default function FinancialListPage() {
     }
   };
 
+  const handleAddCashInHand = async () => {
+    if (!cashForm.description.trim()) {
+      alert('请输入描述');
+      return;
+    }
+
+    if (cashForm.amount === 0) {
+      alert('请输入金额');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/sheets/cash-in-hand', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...cashForm,
+          createdBy: userProfile?.name || userProfile?.email || '未知用户',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('添加失败');
+      }
+
+      const result = await response.json();
+      
+      // 重新加载现金在手
+      const cashResponse = await fetch('/api/sheets/cash-in-hand');
+      if (cashResponse.ok) {
+        const cashData = await cashResponse.json();
+        setCashInHand(cashData.cashInHand || 0);
+      }
+
+      setShowCashModal(false);
+      setCashForm({
+        date: new Date().toISOString().split('T')[0],
+        type: 'Adjustment',
+        amount: 0,
+        description: '',
+      });
+      
+      alert(result.message || '现金在手更新成功！');
+    } catch (err) {
+      console.error('Error adding cash in hand:', err);
+      alert(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('zh-TW', {
       style: 'currency',
@@ -72,24 +138,6 @@ export default function FinancialListPage() {
     .reduce((sum, record) => sum + record.amount, 0);
 
   const balance = totalIncome - totalExpense;
-
-  // 计算现金在手（累计总数）
-  let cashInHand = 0;
-  
-  // 按日期排序，确保按时间顺序计算
-  const sortedRecords = [...records].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-  
-  sortedRecords.forEach(record => {
-    if (record.type === 'Income') {
-      // 收入：现金在手增加
-      cashInHand += record.amount;
-    } else if (record.type === 'Expense') {
-      // 支出：现金在手减少
-      cashInHand -= record.amount;
-    }
-  });
 
   const approvedRecords = records.filter(record => record.status === 'Approved');
   const pendingRecords = records.filter(record => record.status === 'Pending');
@@ -132,6 +180,13 @@ export default function FinancialListPage() {
                 刷新
               </button>
               <FinanceOnly>
+                <button
+                  onClick={() => setShowCashModal(true)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
+                >
+                  <Settings className="h-4 w-4" />
+                  管理现金
+                </button>
                 <Link
                   href="/add-record"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
@@ -363,6 +418,87 @@ export default function FinancialListPage() {
           )}
         </div>
       </main>
+
+      {/* Cash In Hand Modal */}
+      {showCashModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">管理现金在手</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    日期
+                  </label>
+                  <input
+                    type="date"
+                    value={cashForm.date}
+                    onChange={(e) => setCashForm({ ...cashForm, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    类型
+                  </label>
+                  <select
+                    value={cashForm.type}
+                    onChange={(e) => setCashForm({ ...cashForm, type: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Adjustment">调整</option>
+                    <option value="Transfer">转账</option>
+                    <option value="Other">其他</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    金额（正数为增加，负数为减少）
+                  </label>
+                  <input
+                    type="number"
+                    value={cashForm.amount}
+                    onChange={(e) => setCashForm({ ...cashForm, amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    step="0.01"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    描述
+                  </label>
+                  <textarea
+                    value={cashForm.description}
+                    onChange={(e) => setCashForm({ ...cashForm, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    placeholder="例如：银行转账、现金存取、手续费等"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowCashModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleAddCashInHand}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  确认
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

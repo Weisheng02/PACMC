@@ -43,6 +43,7 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       fetchFinancialData();
+      fetchCashInHand();
     }
   }, [user]);
 
@@ -62,6 +63,21 @@ export default function Home() {
       }
     } catch (error) {
       console.error('获取财务数据失败:', error);
+    }
+  };
+
+  const fetchCashInHand = async () => {
+    try {
+      const response = await fetch('/api/sheets/cash-in-hand');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(prev => ({
+          ...prev,
+          cashInHand: data.cashInHand || 0,
+        }));
+      }
+    } catch (error) {
+      console.error('获取现金在手失败:', error);
     }
   };
 
@@ -87,24 +103,6 @@ export default function Home() {
     
     const monthlyBalance = monthlyIncome - monthlyExpense;
 
-    // 计算现金在手（累计总数）
-    let cashInHand = 0;
-    
-    // 按日期排序，确保按时间顺序计算
-    const sortedRecords = [...financialData].sort((a, b) => 
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-    
-    sortedRecords.forEach(record => {
-      if (record.type === 'Income') {
-        // 收入：现金在手增加
-        cashInHand += record.amount;
-      } else if (record.type === 'Expense') {
-        // 支出：现金在手减少
-        cashInHand -= record.amount;
-      }
-    });
-
     // 计算总统计
     const totalIncome = financialData
       .filter(r => r.type === 'Income')
@@ -116,15 +114,15 @@ export default function Home() {
     
     const totalBalance = totalIncome - totalExpense;
 
-    setStats({
+    setStats(prev => ({
       monthlyIncome,
       monthlyExpense,
       monthlyBalance,
-      cashInHand,
+      cashInHand: prev.cashInHand, // 保持现金在手不变，因为它来自独立的 API
       totalIncome,
       totalExpense,
       totalBalance,
-    });
+    }));
   };
 
   if (loading) {
