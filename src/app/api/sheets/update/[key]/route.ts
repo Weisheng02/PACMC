@@ -13,7 +13,7 @@ const getSheetsClient = () => {
   return google.sheets({ version: 'v4', auth });
 };
 
-export async function PUT(request, { params }) {
+export async function PUT(request: NextRequest, { params }: { params: { key: string } }) {
   try {
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
