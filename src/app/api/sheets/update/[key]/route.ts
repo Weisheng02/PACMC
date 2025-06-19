@@ -13,15 +13,18 @@ const getSheetsClient = () => {
   return google.sheets({ version: 'v4', auth });
 };
 
-export async function PUT(request, { params }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ key: string }> }
+) {
   try {
+    const { key } = await params;
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     const sheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
     if (!spreadsheetId) {
       return NextResponse.json({ error: 'Google Sheet ID not configured' }, { status: 500 });
     }
-    const key = params.key;
     const body = await request.json();
 
     // 读取所有数据来找到要更新的行

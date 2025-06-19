@@ -12,7 +12,7 @@ const TYPES = ['Income', 'Expense'];
 
 export default function AddRecordPage() {
   const router = useRouter();
-  const { userProfile, authLoading } = useAuth();
+  const { userProfile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     account: 'MIYF',
