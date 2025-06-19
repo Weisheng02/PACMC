@@ -23,6 +23,7 @@ interface FinancialRecord {
   approvedBy: string;
   lastUserUpdate: string;
   lastDateUpdate: string;
+  cashInHand?: number;
 }
 
 export default function Home() {
@@ -86,25 +87,16 @@ export default function Home() {
     
     const monthlyBalance = monthlyIncome - monthlyExpense;
 
-    // 计算现金在手（基于 Take/Put 字段）
-    // 现金在手 = 总收入 - 已取出的现金 - 已存入的现金
+    // 计算现金在手（基于独立的 cashInHand 字段）
     let cashInHand = 0;
     
     financialData.forEach(record => {
       if (record.type === 'Income') {
-        // 收入增加现金
-        cashInHand += record.amount;
-        // 如果已经取出（Take/Put = true），则减少现金
-        if (record.takePut) {
-          cashInHand -= record.amount;
-        }
+        // 收入：现金在手字段直接相加
+        cashInHand += (record.cashInHand || 0);
       } else if (record.type === 'Expense') {
-        // 支出减少现金
-        cashInHand -= record.amount;
-        // 如果已经存入（Take/Put = true），则增加现金
-        if (record.takePut) {
-          cashInHand += record.amount;
-        }
+        // 支出：现金在手字段直接相减
+        cashInHand -= (record.cashInHand || 0);
       }
     });
 

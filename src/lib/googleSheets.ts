@@ -9,6 +9,7 @@ export interface FinancialRecord {
   description: string;
   status: 'Approved' | 'Pending';
   takePut: boolean;
+  cashInHand: number;
   remark: string;
   createdDate: string;
   createdBy: string;

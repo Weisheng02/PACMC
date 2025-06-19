@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { FinanceOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Hand } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Hand, DollarSign as DollarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,8 @@ export default function FinancialListPage() {
   const [error, setError] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+  const [editingCashInHand, setEditingCashInHand] = useState<string | null>(null);
+  const [cashInHandValue, setCashInHandValue] = useState<number>(0);
   const router = useRouter();
 
   const loadRecords = async () => {
@@ -52,28 +54,34 @@ export default function FinancialListPage() {
     }
   };
 
-  const handleToggleTakePut = async (record: FinancialRecord) => {
-    const action = record.takePut ? '存入' : '取出';
-    const confirmMessage = record.type === 'Income' 
-      ? `确定要${action}这笔收入吗？` 
-      : `确定要${action}这笔支出吗？`;
-    
-    if (!confirm(confirmMessage)) {
+  const handleEditCashInHand = (record: FinancialRecord) => {
+    setEditingCashInHand(record.key);
+    setCashInHandValue(record.cashInHand || 0);
+  };
+
+  const handleSaveCashInHand = async (record: FinancialRecord) => {
+    if (cashInHandValue < 0) {
+      alert('现金在手金额不能为负数');
+      return;
+    }
+
+    if (cashInHandValue > record.amount) {
+      alert('现金在手金额不能超过记录金额');
       return;
     }
 
     try {
       setUpdatingKey(record.key);
       
-      const response = await fetch(`/api/sheets/update/${record.key}`, {
+      const response = await fetch('/api/sheets/cash-in-hand', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...record,
-          takePut: !record.takePut,
-          lastUserUpdate: userProfile?.name || userProfile?.email || '未知用户',
+          key: record.key,
+          cashInHand: cashInHandValue,
+          type: record.type,
         }),
       });
 
@@ -81,20 +89,28 @@ export default function FinancialListPage() {
         throw new Error('更新失败');
       }
 
+      const result = await response.json();
+
       // 更新本地状态
       setRecords(records.map(r => 
         r.key === record.key 
-          ? { ...r, takePut: !r.takePut }
+          ? { ...r, cashInHand: cashInHandValue }
           : r
       ));
 
-      alert(`${action}成功！`);
+      setEditingCashInHand(null);
+      alert(result.message || '现金在手更新成功！');
     } catch (err) {
-      console.error('Error updating take/put status:', err);
+      console.error('Error updating cash in hand:', err);
       alert(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`);
     } finally {
       setUpdatingKey(null);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCashInHand(null);
+    setCashInHandValue(0);
   };
 
   const formatCurrency = (amount: number) => {
@@ -123,15 +139,9 @@ export default function FinancialListPage() {
   let cashInHand = 0;
   records.forEach(record => {
     if (record.type === 'Income') {
-      cashInHand += record.amount;
-      if (record.takePut) {
-        cashInHand -= record.amount;
-      }
+      cashInHand += (record.cashInHand || 0);
     } else if (record.type === 'Expense') {
-      cashInHand -= record.amount;
-      if (record.takePut) {
-        cashInHand += record.amount;
-      }
+      cashInHand -= (record.cashInHand || 0);
     }
   });
 
@@ -311,7 +321,7 @@ export default function FinancialListPage() {
                       状态
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      现金状态
+                      现金在手
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       备注
@@ -372,36 +382,53 @@ export default function FinancialListPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <FinanceOnly>
-                          <button
-                            onClick={() => handleToggleTakePut(record)}
-                            disabled={updatingKey === record.key}
-                            className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
-                              record.takePut
-                                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            }`}
-                            title={record.takePut ? '点击存入现金' : '点击取出现金'}
-                          >
-                            {updatingKey === record.key ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
-                            ) : record.takePut ? (
-                              <Hand className="h-3 w-3 mr-1" />
-                            ) : (
-                              <Wallet className="h-3 w-3 mr-1" />
-                            )}
-                            {record.takePut ? '已取出' : '在手'}
-                          </button>
-                        </FinanceOnly>
+                        {editingCashInHand === record.key ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={cashInHandValue}
+                              onChange={(e) => setCashInHandValue(parseFloat(e.target.value) || 0)}
+                              className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              min="0"
+                              max={record.amount}
+                              step="0.01"
+                            />
+                            <button
+                              onClick={() => handleSaveCashInHand(record)}
+                              disabled={updatingKey === record.key}
+                              className="text-green-600 hover:text-green-900 disabled:text-gray-400"
+                            >
+                              {updatingKey === record.key ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                              ) : (
+                                <CheckCircle className="h-4 w-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <FinanceOnly>
+                            <button
+                              onClick={() => handleEditCashInHand(record)}
+                              className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                              title="点击编辑现金在手"
+                            >
+                              <DollarIcon className="h-3 w-3 mr-1" />
+                              {formatCurrency(record.cashInHand || 0)}
+                            </button>
+                          </FinanceOnly>
+                        )}
                         {userProfile?.role !== 'finance' && (
-                          <span
-                            className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
-                              record.takePut
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {record.takePut ? '已取出' : '在手'}
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            <DollarIcon className="h-3 w-3 mr-1" />
+                            {formatCurrency(record.cashInHand || 0)}
                           </span>
                         )}
                       </td>
