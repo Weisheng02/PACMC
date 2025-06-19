@@ -34,6 +34,7 @@ export default function Home() {
     monthlyExpense: 0,
     monthlyBalance: 0,
     cashInHand: 0,
+    autoCashInHand: 0,
     totalIncome: 0,
     totalExpense: 0,
     totalBalance: 0,
@@ -103,6 +104,24 @@ export default function Home() {
     
     const monthlyBalance = monthlyIncome - monthlyExpense;
 
+    // 计算基于财务记录的自动现金在手
+    let autoCashInHand = 0;
+    
+    // 按日期排序，确保按时间顺序计算
+    const sortedRecords = [...financialData].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    sortedRecords.forEach(record => {
+      if (record.type === 'Income') {
+        // 收入：现金在手增加
+        autoCashInHand += record.amount;
+      } else if (record.type === 'Expense') {
+        // 支出：现金在手减少
+        autoCashInHand -= record.amount;
+      }
+    });
+
     // 计算总统计
     const totalIncome = financialData
       .filter(r => r.type === 'Income')
@@ -118,7 +137,8 @@ export default function Home() {
       monthlyIncome,
       monthlyExpense,
       monthlyBalance,
-      cashInHand: prev.cashInHand, // 保持现金在手不变，因为它来自独立的 API
+      cashInHand: prev.cashInHand, // 保持独立管理的现金在手不变
+      autoCashInHand, // 新增：基于财务记录的自动计算现金在手
       totalIncome,
       totalExpense,
       totalBalance,
@@ -376,6 +396,32 @@ export default function Home() {
                 <div className="text-2xl font-bold text-yellow-600">${stats.cashInHand.toFixed(2)}</div>
                 <div className="text-sm text-gray-600">现金在手</div>
               </div>
+            </div>
+            
+            {/* 现金在手对比 */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className="text-md font-medium text-gray-700 mb-3">现金在手对比</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                  <div className="text-lg font-bold text-yellow-600">${stats.cashInHand.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600">实际现金在手</div>
+                  <div className="text-xs text-gray-500">（手动管理）</div>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <div className="text-lg font-bold text-purple-600">${stats.autoCashInHand.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600">理论现金在手</div>
+                  <div className="text-xs text-gray-500">（基于财务记录）</div>
+                </div>
+              </div>
+              {Math.abs(stats.cashInHand - stats.autoCashInHand) > 0.01 && (
+                <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded-md">
+                  <div className="text-sm text-orange-800 text-center">
+                    差异：${(stats.cashInHand - stats.autoCashInHand).toFixed(2)}
+                    <br />
+                    <span className="text-xs">（可能包含手续费、转账等因素）</span>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* 总统计 */}
