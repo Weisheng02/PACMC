@@ -20,7 +20,7 @@ export default function TestPage() {
       const data = await response.json();
       setTestResult(data);
     } catch (error) {
-      setTestResult({ success: false, error: 'Network error' });
+      setTestResult({ success: false, message: 'Network error' });
     } finally {
       setLoading(false);
     }
