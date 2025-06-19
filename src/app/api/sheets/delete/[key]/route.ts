@@ -14,7 +14,7 @@ const getSheetsClient = () => {
   return google.sheets({ version: 'v4', auth });
 };
 
-export async function DELETE(request: NextRequest, { params }: { params: { key: string } }) {
+export async function DELETE(request, { params }) {
   try {
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
