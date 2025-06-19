@@ -103,19 +103,8 @@ export default function TestPage() {
                   <p className={`text-sm mt-1 ${
                     testResult.success ? 'text-green-700' : 'text-red-700'
                   }`}>
-                    {testResult.message || testResult.error}
+                    {testResult.message}
                   </p>
-                  
-                  {testResult.data && (
-                    <div className="mt-4">
-                      <h4 className="font-medium text-gray-900 mb-2">数据预览：</h4>
-                      <div className="bg-gray-50 p-4 rounded-md overflow-x-auto">
-                        <pre className="text-sm text-gray-800">
-                          {JSON.stringify(testResult.data, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
                   
                   {testResult.details && (
                     <div className="mt-2">
