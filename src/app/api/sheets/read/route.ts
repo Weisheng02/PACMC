@@ -17,6 +17,12 @@ const getSheetsClient = () => {
 
 export async function GET() {
   try {
+    // 打印所有关键环境变量
+    console.log('GOOGLE_SHEET_ID:', process.env.GOOGLE_SHEET_ID);
+    console.log('GOOGLE_SHEET_NAME:', process.env.GOOGLE_SHEET_NAME);
+    console.log('GOOGLE_SERVICE_ACCOUNT_EMAIL:', process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
+    console.log('GOOGLE_PRIVATE_KEY exists:', !!process.env.GOOGLE_PRIVATE_KEY);
+
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     const sheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
@@ -61,9 +67,9 @@ export async function GET() {
 
     return NextResponse.json({ records });
   } catch (error) {
-    console.error('Error reading Google Sheets:', error);
+    console.error('Error reading Google Sheets:', error, JSON.stringify(error));
     return NextResponse.json(
-      { error: 'Failed to read financial records' },
+      { error: 'Failed to read financial records', details: error },
       { status: 500 }
     );
   }
