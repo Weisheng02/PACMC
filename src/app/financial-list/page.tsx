@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { FinanceOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Hand } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -13,6 +13,7 @@ export default function FinancialListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [updatingKey, setUpdatingKey] = useState<string | null>(null);
   const router = useRouter();
 
   const loadRecords = async () => {
@@ -51,6 +52,51 @@ export default function FinancialListPage() {
     }
   };
 
+  const handleToggleTakePut = async (record: FinancialRecord) => {
+    const action = record.takePut ? '存入' : '取出';
+    const confirmMessage = record.type === 'Income' 
+      ? `确定要${action}这笔收入吗？` 
+      : `确定要${action}这笔支出吗？`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setUpdatingKey(record.key);
+      
+      const response = await fetch(`/api/sheets/update/${record.key}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...record,
+          takePut: !record.takePut,
+          lastUserUpdate: userProfile?.name || userProfile?.email || '未知用户',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('更新失败');
+      }
+
+      // 更新本地状态
+      setRecords(records.map(r => 
+        r.key === record.key 
+          ? { ...r, takePut: !r.takePut }
+          : r
+      ));
+
+      alert(`${action}成功！`);
+    } catch (err) {
+      console.error('Error updating take/put status:', err);
+      alert(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`);
+    } finally {
+      setUpdatingKey(null);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('zh-TW', {
       style: 'currency',
@@ -72,6 +118,22 @@ export default function FinancialListPage() {
     .reduce((sum, record) => sum + record.amount, 0);
 
   const balance = totalIncome - totalExpense;
+
+  // 计算现金在手
+  let cashInHand = 0;
+  records.forEach(record => {
+    if (record.type === 'Income') {
+      cashInHand += record.amount;
+      if (record.takePut) {
+        cashInHand -= record.amount;
+      }
+    } else if (record.type === 'Expense') {
+      cashInHand -= record.amount;
+      if (record.takePut) {
+        cashInHand += record.amount;
+      }
+    }
+  });
 
   const approvedRecords = records.filter(record => record.status === 'Approved');
   const pendingRecords = records.filter(record => record.status === 'Pending');
@@ -130,7 +192,7 @@ export default function FinancialListPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -176,11 +238,25 @@ export default function FinancialListPage() {
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
+                <Wallet className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">现金在手</p>
+                <p className={`text-2xl font-bold ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {formatCurrency(cashInHand)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Clock className="h-6 w-6 text-orange-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">待审核</p>
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-2xl font-bold text-orange-600">
                   {pendingRecords.length}
                 </p>
               </div>
@@ -233,6 +309,9 @@ export default function FinancialListPage() {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       状态
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      现金状态
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       备注
@@ -291,6 +370,40 @@ export default function FinancialListPage() {
                             {record.status === 'Approved' ? '已审核' : '待审核'}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <FinanceOnly>
+                          <button
+                            onClick={() => handleToggleTakePut(record)}
+                            disabled={updatingKey === record.key}
+                            className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
+                              record.takePut
+                                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            }`}
+                            title={record.takePut ? '点击存入现金' : '点击取出现金'}
+                          >
+                            {updatingKey === record.key ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
+                            ) : record.takePut ? (
+                              <Hand className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Wallet className="h-3 w-3 mr-1" />
+                            )}
+                            {record.takePut ? '已取出' : '在手'}
+                          </button>
+                        </FinanceOnly>
+                        {userProfile?.role !== 'finance' && (
+                          <span
+                            className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                              record.takePut
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {record.takePut ? '已取出' : '在手'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                         {record.remark || '-'}

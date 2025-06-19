@@ -2,11 +2,133 @@
 import { LoginButton } from '@/components/LoginButton';
 import { FinanceOnly, CoreAndAbove, AllUsers } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
-import { DollarSign, BarChart3, FileText, Plus, Users, Shield } from 'lucide-react';
+import { DollarSign, BarChart3, FileText, Plus, Users, Shield, Wallet } from 'lucide-react';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+
+interface FinancialRecord {
+  key: string;
+  account: string;
+  date: string;
+  type: 'Income' | 'Expense';
+  who: string;
+  amount: number;
+  description: string;
+  status: string;
+  takePut: boolean;
+  remark: string;
+  createdDate: string;
+  createdBy: string;
+  approvedDate: string;
+  approvedBy: string;
+  lastUserUpdate: string;
+  lastDateUpdate: string;
+}
 
 export default function Home() {
   const { user, userProfile, loading, error } = useAuth();
+  const [financialData, setFinancialData] = useState<FinancialRecord[]>([]);
+  const [stats, setStats] = useState({
+    monthlyIncome: 0,
+    monthlyExpense: 0,
+    monthlyBalance: 0,
+    cashInHand: 0,
+    totalIncome: 0,
+    totalExpense: 0,
+    totalBalance: 0,
+  });
+
+  // 获取财务数据
+  useEffect(() => {
+    if (user) {
+      fetchFinancialData();
+    }
+  }, [user]);
+
+  // 计算统计数据
+  useEffect(() => {
+    if (financialData.length > 0) {
+      calculateStats();
+    }
+  }, [financialData]);
+
+  const fetchFinancialData = async () => {
+    try {
+      const response = await fetch('/api/sheets/read');
+      if (response.ok) {
+        const data = await response.json();
+        setFinancialData(data.records || []);
+      }
+    } catch (error) {
+      console.error('获取财务数据失败:', error);
+    }
+  };
+
+  const calculateStats = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // 过滤本月数据
+    const monthlyRecords = financialData.filter(record => {
+      const recordDate = new Date(record.date);
+      return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear;
+    });
+
+    // 计算本月统计
+    const monthlyIncome = monthlyRecords
+      .filter(r => r.type === 'Income')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    const monthlyExpense = monthlyRecords
+      .filter(r => r.type === 'Expense')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    const monthlyBalance = monthlyIncome - monthlyExpense;
+
+    // 计算现金在手（基于 Take/Put 字段）
+    // 现金在手 = 总收入 - 已取出的现金 - 已存入的现金
+    let cashInHand = 0;
+    
+    financialData.forEach(record => {
+      if (record.type === 'Income') {
+        // 收入增加现金
+        cashInHand += record.amount;
+        // 如果已经取出（Take/Put = true），则减少现金
+        if (record.takePut) {
+          cashInHand -= record.amount;
+        }
+      } else if (record.type === 'Expense') {
+        // 支出减少现金
+        cashInHand -= record.amount;
+        // 如果已经存入（Take/Put = true），则增加现金
+        if (record.takePut) {
+          cashInHand += record.amount;
+        }
+      }
+    });
+
+    // 计算总统计
+    const totalIncome = financialData
+      .filter(r => r.type === 'Income')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    const totalExpense = financialData
+      .filter(r => r.type === 'Expense')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    const totalBalance = totalIncome - totalExpense;
+
+    setStats({
+      monthlyIncome,
+      monthlyExpense,
+      monthlyBalance,
+      cashInHand,
+      totalIncome,
+      totalExpense,
+      totalBalance,
+    });
+  };
 
   if (loading) {
     return (
@@ -242,18 +364,41 @@ export default function Home() {
         <AllUsers>
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-medium text-gray-900 mb-4">快速统计</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">$12,450</div>
+                <div className="text-2xl font-bold text-green-600">${stats.monthlyIncome.toFixed(2)}</div>
                 <div className="text-sm text-gray-600">本月收入</div>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">$8,230</div>
+                <div className="text-2xl font-bold text-red-600">${stats.monthlyExpense.toFixed(2)}</div>
                 <div className="text-sm text-gray-600">本月支出</div>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">$4,220</div>
+                <div className="text-2xl font-bold text-blue-600">${stats.monthlyBalance.toFixed(2)}</div>
                 <div className="text-sm text-gray-600">本月结余</div>
+              </div>
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600">${stats.cashInHand.toFixed(2)}</div>
+                <div className="text-sm text-gray-600">现金在手</div>
+              </div>
+            </div>
+            
+            {/* 总统计 */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className="text-md font-medium text-gray-700 mb-3">总体统计</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-lg font-bold text-green-600">${stats.totalIncome.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600">总收入</div>
+                </div>
+                <div className="text-center p-3 bg-red-50 rounded-lg">
+                  <div className="text-lg font-bold text-red-600">${stats.totalExpense.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600">总支出</div>
+                </div>
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-lg font-bold text-blue-600">${stats.totalBalance.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600">总结余</div>
+                </div>
               </div>
             </div>
           </div>
