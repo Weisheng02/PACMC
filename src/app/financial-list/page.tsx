@@ -71,11 +71,6 @@ export default function FinancialListPage() {
   };
 
   const handleAddCashInHand = async () => {
-    if (!cashForm.description.trim()) {
-      alert('请输入描述');
-      return;
-    }
-
     try {
       // 计算需要调整的金额（新金额 - 当前金额）
       const adjustmentAmount = cashForm.amount - cashInHand;
@@ -89,7 +84,7 @@ export default function FinancialListPage() {
           date: cashForm.date,
           type: 'Adjustment',
           amount: adjustmentAmount, // 发送调整金额
-          description: cashForm.description,
+          description: cashForm.description || '现金调整', // 如果没有描述，使用默认值
           createdBy: userProfile?.name || userProfile?.email || '未知用户',
         }),
       });
@@ -460,7 +455,18 @@ export default function FinancialListPage() {
                   </p>
                 </div>
 
-               
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    调整原因（可选）
+                  </label>
+                  <textarea
+                    value={cashForm.description}
+                    onChange={(e) => setCashForm({ ...cashForm, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    placeholder="例如：银行手续费、现金存取、账户调整等（可选）"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
