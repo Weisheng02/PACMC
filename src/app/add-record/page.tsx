@@ -44,7 +44,6 @@ export default function AddRecordPage() {
         amount: Number(formData.amount),
         description: formData.description,
         remark: formData.remark,
-        createdBy: userProfile?.name || '未知用户',
       });
       alert('记录添加成功！');
       router.push('/financial-list');
