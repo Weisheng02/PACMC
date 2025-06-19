@@ -27,6 +27,7 @@ export async function GET() {
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     const sheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
 
+  
     if (!spreadsheetId) {
       return NextResponse.json(
         { error: 'Google Sheet ID not configured' },

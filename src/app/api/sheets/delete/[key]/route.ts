@@ -6,7 +6,7 @@ const getSheetsClient = () => {
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\n/g, '\n'),
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
@@ -14,7 +14,7 @@ const getSheetsClient = () => {
   return google.sheets({ version: 'v4', auth });
 };
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request: NextRequest, { params }: { params: { key: string } }) {
   try {
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
@@ -86,7 +86,7 @@ export async function DELETE(request, { params }) {
   } catch (error) {
     console.error('Error deleting record:', error);
     return NextResponse.json(
-      { error: 'Failed to delete record', details: error },
+      { error: 'Failed to delete record', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

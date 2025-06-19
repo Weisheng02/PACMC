@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { FinanceOnly } from '@/components/PermissionGate';
@@ -12,7 +12,7 @@ const TYPES = ['Income', 'Expense'];
 
 export default function AddRecordPage() {
   const router = useRouter();
-  const { userProfile } = useAuth();
+  const { userProfile, authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     account: 'MIYF',
@@ -26,6 +26,18 @@ export default function AddRecordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 检查用户状态
+    if (authLoading) {
+      alert('请等待用户信息加载完成');
+      return;
+    }
+    
+    if (!userProfile) {
+      alert('请先登录系统');
+      return;
+    }
+    
     if (!formData.account || !formData.date || !formData.type || !formData.who || !formData.description || !formData.amount) {
       alert('请填写所有必填字段');
       return;
@@ -36,7 +48,7 @@ export default function AddRecordPage() {
     }
     setLoading(true);
     try {
-      await addFinancialRecord({
+      const recordData = {
         account: formData.account,
         date: formData.date,
         type: formData.type,
@@ -44,14 +56,47 @@ export default function AddRecordPage() {
         amount: Number(formData.amount),
         description: formData.description,
         remark: formData.remark,
-        status: 'Pending',
-        takePut: false,
+        createdBy: userProfile?.name || userProfile?.email || '未知用户',
+      };
+      
+      console.log('准备提交的记录数据:', recordData);
+      console.log('当前用户信息:', userProfile);
+      
+      const response = await fetch('/api/sheets/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recordData),
       });
+
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        console.error('服务器返回错误:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData
+        });
+        throw new Error(responseData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      console.log('记录添加成功:', responseData);
       alert('记录添加成功！');
       router.push('/financial-list');
     } catch (error) {
-      alert('添加记录失败，请重试');
-      console.error('Error adding record:', error);
+      console.error('添加记录时出错:', error);
+      let errorMessage = '添加记录失败，请重试\n';
+      
+      if (error instanceof Error) {
+        errorMessage += `错误详情: ${error.message}\n`;
+      }
+      
+      errorMessage += `\n当前用户: ${userProfile?.name || userProfile?.email || '未知用户'}\n`;
+      errorMessage += `用户角色: ${userProfile?.role || '未知'}\n`;
+      errorMessage += `请检查控制台(F12)以获取更多信息`;
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
