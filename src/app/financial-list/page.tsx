@@ -17,7 +17,6 @@ export default function FinancialListPage() {
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashForm, setCashForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    type: 'Adjustment' as 'Adjustment' | 'Transfer' | 'Other',
     amount: 0,
     description: '',
   });
@@ -35,6 +34,11 @@ export default function FinancialListPage() {
       if (cashResponse.ok) {
         const cashData = await cashResponse.json();
         setCashInHand(cashData.cashInHand || 0);
+        // 设置表单的默认金额为当前现金在手
+        setCashForm(prev => ({
+          ...prev,
+          amount: cashData.cashInHand || 0,
+        }));
       }
     } catch (err) {
       setError('加载财务记录失败');
@@ -72,25 +76,26 @@ export default function FinancialListPage() {
       return;
     }
 
-    if (cashForm.amount === 0) {
-      alert('请输入金额');
-      return;
-    }
-
     try {
+      // 计算需要调整的金额（新金额 - 当前金额）
+      const adjustmentAmount = cashForm.amount - cashInHand;
+      
       const response = await fetch('/api/sheets/cash-in-hand', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...cashForm,
+          date: cashForm.date,
+          type: 'Adjustment',
+          amount: adjustmentAmount, // 发送调整金额
+          description: cashForm.description,
           createdBy: userProfile?.name || userProfile?.email || '未知用户',
         }),
       });
 
       if (!response.ok) {
-        throw new Error('添加失败');
+        throw new Error('更新失败');
       }
 
       const result = await response.json();
@@ -105,14 +110,13 @@ export default function FinancialListPage() {
       setShowCashModal(false);
       setCashForm({
         date: new Date().toISOString().split('T')[0],
-        type: 'Adjustment',
         amount: 0,
         description: '',
       });
       
       alert(result.message || '现金在手更新成功！');
     } catch (err) {
-      console.error('Error adding cash in hand:', err);
+      console.error('Error updating cash in hand:', err);
       alert(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`);
     }
   };
@@ -185,7 +189,7 @@ export default function FinancialListPage() {
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
                 >
                   <Settings className="h-4 w-4" />
-                  管理现金
+                  设置现金
                 </button>
                 <Link
                   href="/add-record"
@@ -424,7 +428,7 @@ export default function FinancialListPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">管理现金在手</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">设置现金在手</h3>
               
               <div className="space-y-4">
                 <div>
@@ -441,22 +445,7 @@ export default function FinancialListPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    类型
-                  </label>
-                  <select
-                    value={cashForm.type}
-                    onChange={(e) => setCashForm({ ...cashForm, type: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Adjustment">调整</option>
-                    <option value="Transfer">转账</option>
-                    <option value="Other">其他</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    金额（正数为增加，负数为减少）
+                    现金在手金额
                   </label>
                   <input
                     type="number"
@@ -464,19 +453,23 @@ export default function FinancialListPage() {
                     onChange={(e) => setCashForm({ ...cashForm, amount: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     step="0.01"
+                    placeholder="输入新的现金在手金额"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    当前现金在手：{formatCurrency(cashInHand)}
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    描述
+                    调整原因
                   </label>
                   <textarea
                     value={cashForm.description}
                     onChange={(e) => setCashForm({ ...cashForm, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
-                    placeholder="例如：银行转账、现金存取、手续费等"
+                    placeholder="例如：银行手续费、现金存取、账户调整等"
                   />
                 </div>
               </div>
@@ -492,7 +485,7 @@ export default function FinancialListPage() {
                   onClick={handleAddCashInHand}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
                 >
-                  确认
+                  确认设置
                 </button>
               </div>
             </div>
