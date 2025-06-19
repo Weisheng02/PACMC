@@ -14,7 +14,6 @@ export default function FinancialListPage() {
   const [error, setError] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [cashInHand, setCashInHand] = useState(0);
-  const [autoCashInHand, setAutoCashInHand] = useState(0);
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashForm, setCashForm] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -48,30 +47,6 @@ export default function FinancialListPage() {
   useEffect(() => {
     loadRecords();
   }, []);
-
-  // 计算自动现金在手
-  useEffect(() => {
-    if (records.length > 0) {
-      let autoCash = 0;
-      
-      // 按日期排序，确保按时间顺序计算
-      const sortedRecords = [...records].sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
-      
-      sortedRecords.forEach(record => {
-        if (record.type === 'Income') {
-          // 收入：现金在手增加
-          autoCash += record.amount;
-        } else if (record.type === 'Expense') {
-          // 支出：现金在手减少
-          autoCash -= record.amount;
-        }
-      });
-      
-      setAutoCashInHand(autoCash);
-    }
-  }, [records]);
 
   const handleDelete = async (key: string) => {
     if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) {
@@ -228,7 +203,7 @@ export default function FinancialListPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -277,26 +252,10 @@ export default function FinancialListPage() {
                 <Wallet className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">实际现金</p>
+                <p className="text-sm font-medium text-gray-600">现金在手</p>
                 <p className={`text-2xl font-bold ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
                   {formatCurrency(cashInHand)}
                 </p>
-                <p className="text-xs text-gray-500">手动管理</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Wallet className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">理论现金</p>
-                <p className={`text-2xl font-bold ${autoCashInHand >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-                  {formatCurrency(autoCashInHand)}
-                </p>
-                <p className="text-xs text-gray-500">基于记录</p>
               </div>
             </div>
           </div>
@@ -315,32 +274,6 @@ export default function FinancialListPage() {
             </div>
           </div>
         </div>
-
-        {/* 现金差异提示 */}
-        {Math.abs(cashInHand - autoCashInHand) > 0.01 && (
-          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-md p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-orange-800">
-                  现金差异提醒
-                </h3>
-                <div className="mt-2 text-sm text-orange-700">
-                  <p>
-                    实际现金在手与理论现金在手存在差异：{formatCurrency(cashInHand - autoCashInHand)}
-                  </p>
-                  <p className="mt-1">
-                    这可能包含手续费、转账、汇率等因素。如需调整，请使用"管理现金"功能。
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (

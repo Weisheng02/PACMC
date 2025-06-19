@@ -21,47 +21,77 @@ export async function GET() {
     const sheets = google.sheets({ version: 'v4', auth });
     
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const cashSheetName = 'CashInHand'; // 现金在手工作表
+    const transactionSheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
+    const cashSheetName = 'CashInHand';
     
-    // 尝试读取现金在手工作表
+    let cashInHand = 0;
+    const records: CashInHandRecord[] = [];
+
+    // 1. 首先计算基于财务记录的现金在手
     try {
-      const response = await sheets.spreadsheets.values.get({
+      const transactionResponse = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `${cashSheetName}!A:F`,
+        range: `${transactionSheetName}!A:P`,
       });
 
-      const rows = response.data.values;
-      if (!rows || rows.length <= 1) {
-        return NextResponse.json({ cashInHand: 0, records: [] });
+      const transactionRows = transactionResponse.data.values;
+      if (transactionRows && transactionRows.length > 1) {
+        // 按日期排序，确保按时间顺序计算
+        const sortedRows = transactionRows.slice(1).sort((a, b) => {
+          const dateA = new Date(a[2] || '').getTime();
+          const dateB = new Date(b[2] || '').getTime();
+          return dateA - dateB;
+        });
+
+        sortedRows.forEach(row => {
+          if (row.length >= 6) {
+            const type = row[3]; // 类型列
+            const amount = parseFloat(row[5]) || 0; // 金额列
+            
+            if (type === 'Income') {
+              cashInHand += amount;
+            } else if (type === 'Expense') {
+              cashInHand -= amount;
+            }
+          }
+        });
       }
+    } catch (error) {
+      console.log('No transaction sheet found or error reading transactions');
+    }
 
-      // 计算现金在手余额
-      let cashInHand = 0;
-      const records: CashInHandRecord[] = [];
+    // 2. 然后加上手动调整的现金变动
+    try {
+      const cashResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${cashSheetName}!A:G`,
+      });
 
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.length >= 6) {
-          const amount = parseFloat(row[3]) || 0;
-          cashInHand += amount;
-          
-          records.push({
-            key: row[0] || '',
-            date: row[1] || '',
-            type: (row[2] as 'Adjustment' | 'Transfer' | 'Other') || 'Other',
-            amount: amount,
-            description: row[4] || '',
-            createdBy: row[5] || '',
-            createdDate: row[6] || '',
-          });
+      const cashRows = cashResponse.data.values;
+      if (cashRows && cashRows.length > 1) {
+        for (let i = 1; i < cashRows.length; i++) {
+          const row = cashRows[i];
+          if (row.length >= 6) {
+            const amount = parseFloat(row[3]) || 0;
+            cashInHand += amount;
+            
+            records.push({
+              key: row[0] || '',
+              date: row[1] || '',
+              type: (row[2] as 'Adjustment' | 'Transfer' | 'Other') || 'Other',
+              amount: amount,
+              description: row[4] || '',
+              createdBy: row[5] || '',
+              createdDate: row[6] || '',
+            });
+          }
         }
       }
-
-      return NextResponse.json({ cashInHand, records });
     } catch (error) {
-      // 如果现金在手工作表不存在，返回默认值
-      return NextResponse.json({ cashInHand: 0, records: [] });
+      console.log('No cash in hand sheet found or error reading cash records');
     }
+
+    return NextResponse.json({ cashInHand, records });
   } catch (error) {
     console.error('Error getting cash in hand:', error);
     return NextResponse.json(
