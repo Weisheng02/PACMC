@@ -54,7 +54,7 @@ export async function PUT(request: NextRequest, { params }: { params: { key: str
           // 格式化为 YYYY-MM-DD
           formattedDate = date.toISOString().split('T')[0];
         }
-      } catch (e) {
+      } catch (error) {
         console.warn('Date formatting failed:', body.date);
       }
     }

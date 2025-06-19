@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
 // 初始化 Google Sheets API

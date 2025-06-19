@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { PermissionGate, FinanceOnly } from '@/components/PermissionGate';
+import { FinanceOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, Download, CheckCircle, Clock } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 

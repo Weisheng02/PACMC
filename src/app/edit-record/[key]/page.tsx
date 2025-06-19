@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { FinanceOnly } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
-import { PermissionGate, FinanceOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, updateFinancialRecord } from '@/lib/googleSheets';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ export default function EditRecordPage() {
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<any>(null);
+  const [formData, setFormData] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // 加载记录

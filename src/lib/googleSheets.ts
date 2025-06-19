@@ -1,5 +1,3 @@
-import { google } from 'googleapis';
-
 // 财务记录接口 - 匹配实际的 Google Sheet 结构
 export interface FinancialRecord {
   key: string;
@@ -20,6 +18,21 @@ export interface FinancialRecord {
   lastDateUpdate: string;
 }
 
+// 读取所有财务记录
+export const readFinancialRecords = async (): Promise<FinancialRecord[]> => {
+  try {
+    const response = await fetch('/api/sheets/read');
+    if (!response.ok) {
+      throw new Error('Failed to read financial records');
+    }
+    const data = await response.json();
+    return data.records;
+  } catch (error) {
+    console.error('Error reading financial records:', error);
+    throw error;
+  }
+};
+
 // Google Sheets API 配置
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -38,21 +51,6 @@ const getSpreadsheetId = () => {
 // 获取工作表名称
 const getSheetName = () => {
   return process.env.GOOGLE_SHEET_NAME || 'Sheet1';
-};
-
-// 读取所有财务记录
-export const readFinancialRecords = async (): Promise<FinancialRecord[]> => {
-  try {
-    const response = await fetch('/api/sheets/read');
-    if (!response.ok) {
-      throw new Error('Failed to read financial records');
-    }
-    const data = await response.json();
-    return data.records;
-  } catch (error) {
-    console.error('Error reading financial records:', error);
-    throw error;
-  }
 };
 
 // 添加新的财务记录

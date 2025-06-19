@@ -1,6 +1,6 @@
 'use client';
 import { LoginButton } from '@/components/LoginButton';
-import { PermissionGate, FinanceOnly, CoreAndAbove, AllUsers } from '@/components/PermissionGate';
+import { FinanceOnly, CoreAndAbove, AllUsers } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, BarChart3, FileText, Plus, Users, Shield } from 'lucide-react';
 import Link from 'next/link';

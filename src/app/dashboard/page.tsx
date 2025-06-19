@@ -22,17 +22,13 @@ interface CategoryData {
 }
 
 export default function DashboardPage() {
-  const { userProfile } = useAuth();
+  const { userProfile: _userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [monthlyData, setMonthlyData] = useState<ChartData[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [cumulativeData, setCumulativeData] = useState<ChartData[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -46,6 +42,10 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const processChartData = (data: FinancialRecord[]) => {
     const monthlyMap = new Map<string, { income: number; expense: number }>();

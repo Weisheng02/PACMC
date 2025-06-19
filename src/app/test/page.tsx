@@ -6,8 +6,12 @@ import Link from 'next/link';
 
 export default function TestPage() {
   const { userProfile } = useAuth();
-  const [testResult, setTestResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+    details?: string;
+  } | null>(null);
 
   const testConnection = async () => {
     setLoading(true);
