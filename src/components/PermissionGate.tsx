@@ -1,10 +1,11 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/lib/firebase';
 
 interface PermissionGateProps {
   children: React.ReactNode;
-  allowedRoles: ('finance' | 'core' | 'leadership')[];
+  allowedRoles: UserRole[];
   fallback?: React.ReactNode;
 }
 
@@ -30,30 +31,41 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   return <>{children}</>;
 };
 
-// Convenience components for common permission checks
-export const FinanceOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+// Convenience components for new permission checks
+
+/**
+ * Renders children only for Super Admins.
+ */
+export const SuperAdminOnly: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
   children,
   fallback,
 }) => (
-  <PermissionGate allowedRoles={['finance']} fallback={fallback}>
+  <PermissionGate allowedRoles={['Super Admin']} fallback={fallback}>
     {children}
   </PermissionGate>
 );
 
-export const CoreAndAbove: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+/**
+ * Renders children for Admins and Super Admins.
+ * This is useful for forms and actions related to financial records.
+ */
+export const AdminOrSuperAdmin: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
   children,
   fallback,
 }) => (
-  <PermissionGate allowedRoles={['finance', 'core']} fallback={fallback}>
+  <PermissionGate allowedRoles={['Super Admin', 'Admin']} fallback={fallback}>
     {children}
   </PermissionGate>
 );
 
-export const AllUsers: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
+/**
+ * Renders children for any logged-in user.
+ */
+export const LoggedInUser: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({
   children,
   fallback,
 }) => (
-  <PermissionGate allowedRoles={['finance', 'core', 'leadership']} fallback={fallback}>
+  <PermissionGate allowedRoles={['Super Admin', 'Admin', 'Basic User']} fallback={fallback}>
     {children}
   </PermissionGate>
 ); 

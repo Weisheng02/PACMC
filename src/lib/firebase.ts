@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-RAupzAfGs4tjsu2a0xY0lvjoJ2sKX-0",
@@ -20,7 +20,7 @@ export const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 // User roles
-export type UserRole = 'finance' | 'core' | 'leadership';
+export type UserRole = 'Super Admin' | 'Admin' | 'Basic User';
 
 export interface UserProfile {
   uid: string;
@@ -30,8 +30,8 @@ export interface UserProfile {
   createdAt: Date;
 }
 
-// 管理员邮箱列表
-const ADMIN_EMAILS = ['weisheng020925@gmail.com'];
+// 超级管理员邮箱列表
+const SUPER_ADMIN_EMAILS = ['weisheng020925@gmail.com'];
 
 // Sign in with Google
 export const signInWithGoogle = async () => {
@@ -43,10 +43,10 @@ export const signInWithGoogle = async () => {
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     
     if (!userDoc.exists()) {
-      // New user - check if admin email
-      let defaultRole: UserRole = 'core';
-      if (ADMIN_EMAILS.includes(user.email || '')) {
-        defaultRole = 'finance';
+      // New user - check if super admin email
+      let defaultRole: UserRole = 'Basic User';
+      if (SUPER_ADMIN_EMAILS.includes(user.email || '')) {
+        defaultRole = 'Super Admin';
       }
       
       const newUser: UserProfile = {
@@ -74,6 +74,19 @@ export const signOutUser = async () => {
     await signOut(auth);
   } catch (error) {
     console.error('Error signing out:', error);
+    throw error;
+  }
+};
+
+// Get all users from Firestore (for admin panel)
+export const getAllUsers = async (): Promise<UserProfile[]> => {
+  try {
+    const usersCollection = collection(db, 'users');
+    const userSnapshot = await getDocs(usersCollection);
+    const userList = userSnapshot.docs.map(doc => doc.data() as UserProfile);
+    return userList;
+  } catch (error) {
+    console.error('Error getting all users:', error);
     throw error;
   }
 };

@@ -1,14 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { FinanceOnly } from '@/components/PermissionGate';
+import { AdminOrSuperAdmin, SuperAdminOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function FinancialListPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, isSuperAdmin, isAdmin } = useAuth();
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +178,16 @@ export default function FinancialListPage() {
                 <RefreshCw className="h-4 w-4" />
                 刷新
               </button>
-              <FinanceOnly>
+              <SuperAdminOnly>
+                <Link
+                  href="/admin/users"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                >
+                  <Users className="h-4 w-4" />
+                  管理用户
+                </Link>
+              </SuperAdminOnly>
+              <AdminOrSuperAdmin>
                 <button
                   onClick={() => setShowCashModal(true)}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
@@ -193,7 +202,7 @@ export default function FinancialListPage() {
                   <Plus className="h-4 w-4" />
                   新增记录
                 </Link>
-              </FinanceOnly>
+              </AdminOrSuperAdmin>
             </div>
           </div>
         </div>
@@ -294,7 +303,7 @@ export default function FinancialListPage() {
               <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">暂无记录</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {userProfile?.role === 'finance' ? '点击"新增记录"开始添加' : '等待财政成员添加记录'}
+                {isAdmin || isSuperAdmin ? '点击"新增记录"开始添加' : '等待管理员添加记录'}
               </p>
             </div>
           ) : (
@@ -382,8 +391,8 @@ export default function FinancialListPage() {
                         {record.remark || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <FinanceOnly>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          <AdminOrSuperAdmin>
                             <button
                               onClick={() => router.push(`/edit-record/${record.key}`)}
                               className="text-blue-600 hover:text-blue-900"
@@ -391,12 +400,14 @@ export default function FinancialListPage() {
                             >
                               <Edit className="h-4 w-4" />
                             </button>
+                          </AdminOrSuperAdmin>
+                          <SuperAdminOnly>
                             <button
                               onClick={() => handleDelete(record.key)}
                               disabled={deletingKey === record.key}
                               className={`${
-                                deletingKey === record.key 
-                                  ? 'text-gray-400 cursor-not-allowed' 
+                                deletingKey === record.key
+                                  ? 'text-gray-400 cursor-not-allowed'
                                   : 'text-red-600 hover:text-red-900'
                               }`}
                             >
@@ -406,8 +417,8 @@ export default function FinancialListPage() {
                                 <Trash2 className="h-4 w-4" />
                               )}
                             </button>
-                          </div>
-                        </FinanceOnly>
+                          </SuperAdminOnly>
+                        </div>
                       </td>
                     </tr>
                   ))}

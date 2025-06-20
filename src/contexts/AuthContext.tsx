@@ -8,9 +8,9 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  isFinance: boolean;
-  isCore: boolean;
-  isLeadership: boolean;
+  isSuperAdmin: boolean;
+  isAdmin: boolean;
+  isBasicUser: boolean;
   error: string | null;
 }
 
@@ -18,9 +18,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   userProfile: null,
   loading: true,
-  isFinance: false,
-  isCore: false,
-  isLeadership: false,
+  isSuperAdmin: false,
+  isAdmin: false,
+  isBasicUser: false,
   error: null,
 });
 
@@ -67,17 +67,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const isFinance = userProfile?.role === 'finance';
-  const isCore = userProfile?.role === 'core';
-  const isLeadership = userProfile?.role === 'leadership';
+  const isSuperAdmin = userProfile?.role === 'Super Admin';
+  const isAdmin = userProfile?.role === 'Admin';
+  const isBasicUser = userProfile?.role === 'Basic User';
 
   const value = {
     user,
     userProfile,
     loading,
-    isFinance,
-    isCore,
-    isLeadership,
+    isSuperAdmin,
+    isAdmin,
+    isBasicUser,
     error,
   };
 
