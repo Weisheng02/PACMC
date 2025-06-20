@@ -39,29 +39,48 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     
-    // Check if user exists in Firestore
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
     
     if (!userDoc.exists()) {
       // New user - check if super admin email
-      let defaultRole: UserRole = 'Basic User';
-      if (SUPER_ADMIN_EMAILS.includes(user.email || '')) {
-        defaultRole = 'Super Admin';
-      }
-      
-      const newUser: UserProfile = {
+      const newProfile: UserProfile = {
         uid: user.uid,
         email: user.email || '',
         name: user.displayName || '',
-        role: defaultRole,
+        role: SUPER_ADMIN_EMAILS.includes(user.email || '') ? 'Super Admin' : 'Basic User',
         createdAt: new Date()
       };
       
-      await setDoc(doc(db, 'users', user.uid), newUser);
-      return newUser;
+      await setDoc(userRef, newProfile);
+      return newProfile;
+
+    } else {
+      // Existing user - check and update role if necessary
+      const userProfile = userDoc.data() as UserProfile;
+      const validRoles: UserRole[] = ['Super Admin', 'Admin', 'Basic User'];
+      
+      let needsUpdate = false;
+      let updatedRole = userProfile.role;
+
+      // Ensure super admin has the correct role
+      if (SUPER_ADMIN_EMAILS.includes(userProfile.email) && userProfile.role !== 'Super Admin') {
+        updatedRole = 'Super Admin';
+        needsUpdate = true;
+      }
+      // If role is invalid or missing, set to Basic User
+      else if (!validRoles.includes(userProfile.role)) {
+        updatedRole = 'Basic User';
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        await setDoc(userRef, { role: updatedRole }, { merge: true });
+        userProfile.role = updatedRole; // Update the profile object to return
+      }
+      
+      return userProfile;
     }
-    
-    return userDoc.data() as UserProfile;
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;
