@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { FinanceOnly } from '@/components/PermissionGate';
+import { SuperAdminOnly } from '@/components/PermissionGate';
 import Link from 'next/link';
 
 export default function TestPage() {
@@ -27,25 +27,14 @@ export default function TestPage() {
   };
 
   return (
-    <FinanceOnly
+    <SuperAdminOnly
       fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900">权限不足</h3>
-            <p className="text-sm text-gray-500">只有财政成员可以访问测试页面</p>
-            <div className="mt-6">
-              <Link
-                href="/"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                返回首页
-              </Link>
-            </div>
-          </div>
+        <div className="p-8 text-center text-red-500">
+          <p>Access Denied. This is a test page for Super Admins only.</p>
         </div>
       }
     >
-      <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto p-8">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -131,6 +120,6 @@ export default function TestPage() {
           </div>
         </div>
       </div>
-    </FinanceOnly>
+    </SuperAdminOnly>
   );
 } 

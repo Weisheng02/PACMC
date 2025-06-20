@@ -2,31 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { CoreAndAbove } from '@/components/PermissionGate';
+import { LoggedInUser } from '@/components/PermissionGate';
 import { ArrowLeft, Download, FileText, BarChart3, Calendar, Filter } from 'lucide-react';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
-
-interface FinancialRecord {
-  key: string;
-  account: string;
-  date: string;
-  type: 'Income' | 'Expense';
-  who: string;
-  amount: number;
-  description: string;
-  status: string;
-  takePut: boolean;
-  remark: string;
-  createdDate: string;
-  createdBy: string;
-  approvedDate: string;
-  approvedBy: string;
-  lastUserUpdate: string;
-  lastDateUpdate: string;
-}
+import { readFinancialRecords, FinancialRecord } from '@/lib/googleSheets';
 
 export default function ExportPage() {
   const router = useRouter();
@@ -66,11 +48,8 @@ export default function ExportPage() {
 
   const fetchRecords = async () => {
     try {
-      const response = await fetch('/api/sheets/read');
-      if (response.ok) {
-        const data = await response.json();
-        setRecords(data.records || []);
-      }
+      const data = await readFinancialRecords();
+      setRecords(data.records || []);
     } catch (error) {
       console.error('获取记录失败:', error);
     }
@@ -269,22 +248,7 @@ export default function ExportPage() {
   };
 
   return (
-    <CoreAndAbove
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-red-400 text-6xl mb-4">🚫</div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">权限不足</h3>
-            <p className="mt-1 text-sm text-gray-500">只有核心团队或以上权限可以导出报表</p>
-            <div className="mt-6">
-              <Link href="/" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                返回首页
-              </Link>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <LoggedInUser>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
@@ -446,6 +410,6 @@ export default function ExportPage() {
           </div>
         </main>
       </div>
-    </CoreAndAbove>
+    </LoggedInUser>
   );
 } 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FinanceOnly } from '@/components/PermissionGate';
+import { AdminOrSuperAdmin } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
 import { readFinancialRecords, updateFinancialRecord } from '@/lib/googleSheets';
 import { ArrowLeft, Save, X } from 'lucide-react';
@@ -119,15 +119,15 @@ export default function EditRecordPage() {
   if (!formData) return null;
 
   return (
-    <FinanceOnly
+    <AdminOrSuperAdmin
       fallback={
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <X className="mx-auto h-12 w-12 text-red-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">权限不足</h3>
-            <p className="mt-1 text-sm text-gray-500">只有财政成员可以编辑财务记录</p>
+            <p className="mt-1 text-sm text-gray-500">只有管理员或超级管理员可以编辑财务记录</p>
             <div className="mt-6">
-              <Link href="/" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">返回首页</Link>
+              <Link href="/financial-list" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">返回财务列表</Link>
             </div>
           </div>
         </div>
@@ -268,6 +268,6 @@ export default function EditRecordPage() {
           </div>
         </main>
       </div>
-    </FinanceOnly>
+    </AdminOrSuperAdmin>
   );
 } 

@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { LoggedInUser } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
-import { FinanceOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, FinancialRecord } from '@/lib/googleSheets';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { BarChart3, PieChart as PieChartIcon, TrendingUp, DollarSign, Calendar, RefreshCw } from 'lucide-react';
+import { BarChart3, PieChart as PieChartIcon, TrendingUp, DollarSign, Calendar, RefreshCw, ArrowLeft, Download, Filter, X as XIcon } from 'lucide-react';
 import Link from 'next/link';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
@@ -178,24 +178,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <FinanceOnly
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900">权限不足</h3>
-            <p className="text-sm text-gray-500">只有财政成员可以访问图表页面</p>
-            <div className="mt-6">
-              <Link
-                href="/"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                返回首页
-              </Link>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <LoggedInUser>
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -391,6 +374,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </FinanceOnly>
+    </LoggedInUser>
   );
 } 
