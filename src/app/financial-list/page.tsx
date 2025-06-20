@@ -153,7 +153,7 @@ export default function FinancialListPage() {
   const approvedRecords = records.filter(record => record.status === 'Approved');
   const pendingRecords = records.filter(record => record.status === 'Pending');
 
-  const handleStatusToggle = async (key: string, newStatus: string) => {
+  const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
     // 保存原始状态以便回滚
     const originalRecords = [...records];
     const originalStatus = records.find(r => r.key === key)?.status;
@@ -598,7 +598,7 @@ export default function FinancialListPage() {
                               {(isAdmin || isSuperAdmin) ? (
                                 <select
                                   value={record.status}
-                                  onChange={(e) => handleStatusToggle(record.key, e.target.value)}
+                                  onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
                                   className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
                                     record.status === 'Approved'
                                       ? 'bg-green-100 text-green-800 hover:bg-green-200'

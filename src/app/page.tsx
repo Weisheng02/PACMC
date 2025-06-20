@@ -6,26 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, BarChart3, FileText, Plus, Users, Shield, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-
-interface FinancialRecord {
-  key: string;
-  account: string;
-  date: string;
-  type: 'Income' | 'Expense';
-  who: string;
-  amount: number;
-  description: string;
-  status: string;
-  takePut: boolean;
-  remark: string;
-  createdDate: string;
-  createdBy: string;
-  approvedDate: string;
-  approvedBy: string;
-  lastUserUpdate: string;
-  lastDateUpdate: string;
-  cashInHand?: number;
-}
+import { FinancialRecord } from '@/lib/googleSheets';
 
 // Main Home Component
 export default function Home() {
