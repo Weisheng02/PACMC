@@ -26,6 +26,7 @@ interface FinancialRecord {
   cashInHand?: number;
 }
 
+// Main Home Component
 export default function Home() {
   const { user, userProfile, loading, error } = useAuth();
   const [financialData, setFinancialData] = useState<FinancialRecord[]>([]);
