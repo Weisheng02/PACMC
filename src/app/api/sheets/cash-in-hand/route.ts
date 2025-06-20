@@ -60,14 +60,14 @@ export async function GET() {
 
     // 1. 首先计算基于财务记录的现金在手
     try {
-      const sheetNames = await getSheetNames(sheets, spreadsheetId);
+      const sheetNames = await getSheetNames(sheets, spreadsheetId!);
       const transactionSheetName = findTransactionSheet(sheetNames);
       
       if (transactionSheetName) {
         console.log('Using transaction sheet:', transactionSheetName);
         
         const transactionResponse = await sheets.spreadsheets.values.get({
-          spreadsheetId,
+          spreadsheetId: spreadsheetId!,
           range: `${transactionSheetName}!A:P`,
         });
 
@@ -101,7 +101,7 @@ export async function GET() {
     // 2. 然后加上手动调整的现金变动
     try {
       const cashResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId,
+        spreadsheetId: spreadsheetId!,
         range: `${cashSheetName}!A:G`,
       });
 
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     // 尝试添加到现金在手工作表
     try {
       await sheets.spreadsheets.values.append({
-        spreadsheetId,
+        spreadsheetId: spreadsheetId!,
         range: `${cashSheetName}!A:G`,
         valueInputOption: 'RAW',
         insertDataOption: 'INSERT_ROWS',
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       // 如果工作表不存在，先创建工作表
       await sheets.spreadsheets.batchUpdate({
-        spreadsheetId,
+        spreadsheetId: spreadsheetId!,
         requestBody: {
           requests: [
             {
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
 
       // 添加标题行
       await sheets.spreadsheets.values.update({
-        spreadsheetId,
+        spreadsheetId: spreadsheetId!,
         range: `${cashSheetName}!A1:G1`,
         valueInputOption: 'RAW',
         requestBody: {
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
 
       // 添加数据行
       await sheets.spreadsheets.values.append({
-        spreadsheetId,
+        spreadsheetId: spreadsheetId!,
         range: `${cashSheetName}!A:G`,
         valueInputOption: 'RAW',
         insertDataOption: 'INSERT_ROWS',
