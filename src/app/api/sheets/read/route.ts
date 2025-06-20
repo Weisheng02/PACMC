@@ -39,7 +39,7 @@ export async function GET() {
     });
 
     const sheetsList = spreadsheet.data.sheets;
-    console.log('Available sheets:', sheetsList?.map(s => s.properties?.title));
+    console.log('Available sheets:', sheetsList?.map((s: any) => s.properties?.title));
 
     // 查找包含财务数据的工作表
     let targetSheet = null;

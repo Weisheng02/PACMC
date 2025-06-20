@@ -21,7 +21,7 @@ const getSheetInfo = async (sheets: any, spreadsheetId: string, sheetName: strin
       spreadsheetId,
     });
     
-    const sheet = spreadsheet.data.sheets?.find(s => s.properties?.title === sheetName);
+    const sheet = spreadsheet.data.sheets?.find((s: any) => s.properties?.title === sheetName);
     return sheet?.properties;
   } catch (error) {
     console.error('Error getting sheet info:', error);
@@ -42,7 +42,7 @@ const findTransactionSheet = async (sheets: any, spreadsheetId: string) => {
     const possibleNames = ['Transaction', 'Transactions', 'Financial', 'Finance', 'Sheet1'];
     
     for (const name of possibleNames) {
-      const foundSheet = sheetsList.find(s => s.properties?.title === name);
+      const foundSheet = sheetsList.find((s: any) => s.properties?.title === name);
       if (foundSheet) {
         return foundSheet.properties;
       }

@@ -22,7 +22,7 @@ const getSheetNames = async (sheets: any, spreadsheetId: string) => {
     });
     
     const sheetsList = spreadsheet.data.sheets;
-    const sheetNames = sheetsList?.map(s => s.properties?.title) || [];
+    const sheetNames = sheetsList?.map((s: any) => s.properties?.title) || [];
     console.log('Available sheets:', sheetNames);
     
     return sheetNames;

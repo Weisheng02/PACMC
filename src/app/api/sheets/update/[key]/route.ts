@@ -21,7 +21,7 @@ const getSheetNames = async (sheets: any, spreadsheetId: string) => {
     });
     
     const sheetsList = spreadsheet.data.sheets;
-    const sheetNames = sheetsList?.map(s => s.properties?.title) || [];
+    const sheetNames = sheetsList?.map((s: any) => s.properties?.title) || [];
     return sheetNames;
   } catch (error) {
     console.error('Error getting sheet names:', error);
