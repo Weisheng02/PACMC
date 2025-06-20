@@ -23,8 +23,11 @@ interface CategoryData {
 
 export default function DashboardPage() {
   const { userProfile: _userProfile } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<FinancialRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const [monthlyData, setMonthlyData] = useState<ChartData[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [cumulativeData, setCumulativeData] = useState<ChartData[]>([]);
@@ -32,14 +35,18 @@ export default function DashboardPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    setRefreshing(true);
     try {
       const data = await readFinancialRecords();
       setRecords(data);
       processChartData(data);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('An error occurred while fetching data.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      setLastRefreshTime(new Date());
     }
   };
 
@@ -166,13 +173,40 @@ export default function DashboardPage() {
   };
 
   const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString()}`;
+    return `RM${value.toLocaleString()}`;
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Dashboard</h3>
+          <p className="text-gray-600">Please wait while we prepare your financial overview...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="mx-auto h-12 w-12 text-red-400 mb-4">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to Load Dashboard</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchData}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -185,26 +219,34 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <Link href="/" className="mr-4">
-                  <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
+                  <ArrowLeft className="h-8 w-8 text-gray-600" />
                 </Link>
-                <h1 className="text-xl font-semibold text-gray-900">财务图表分析</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Financial Dashboard</h1>
               </div>
               <div className="flex items-center gap-4">
                 <button
                   onClick={fetchData}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  disabled={refreshing}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  刷新数据
+                  {refreshing ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  {refreshing ? 'Refreshing...' : 'Refresh Data'}
                 </button>
+                {lastRefreshTime && (
+                  <span className="text-xs text-gray-500">
+                    Last updated: {lastRefreshTime.toLocaleTimeString()}
+                  </span>
+                )}
                 <Link
                   href="/financial-list"
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   <DollarSign className="h-4 w-4" />
-                  查看记录
+                  View Records
                 </Link>
               </div>
             </div>
@@ -219,9 +261,9 @@ export default function DashboardPage() {
                   <DollarSign className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">总收入</p>
+                  <p className="text-sm font-medium text-gray-600">Total Income</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0).toLocaleString()}
+                    {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
@@ -232,9 +274,9 @@ export default function DashboardPage() {
                   <DollarSign className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">总支出</p>
+                  <p className="text-sm font-medium text-gray-600">Total Expense</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    ${records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0).toLocaleString()}
+                    {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
@@ -245,10 +287,9 @@ export default function DashboardPage() {
                   <TrendingUp className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">当前结余</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    ${(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - 
-                       records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0)).toLocaleString()}
+                  <p className="text-sm font-medium text-gray-600">Balance</p>
+                  <p className={`text-2xl font-semibold ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
@@ -259,7 +300,7 @@ export default function DashboardPage() {
                   <Calendar className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">记录总数</p>
+                  <p className="text-sm font-medium text-gray-600">Total Records</p>
                   <p className="text-2xl font-semibold text-gray-900">{records.length}</p>
                 </div>
               </div>
@@ -271,7 +312,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  月度收支图
+                  Monthly Trend
                 </h2>
               </div>
               <ResponsiveContainer width="100%" height={300}>
@@ -291,8 +332,8 @@ export default function DashboardPage() {
                     labelFormatter={formatMonth}
                   />
                   <Legend />
-                  <Bar dataKey="income" fill="#10B981" name="收入" />
-                  <Bar dataKey="expense" fill="#EF4444" name="支出" />
+                  <Bar dataKey="income" fill="#10B981" name="Income" />
+                  <Bar dataKey="expense" fill="#EF4444" name="Expense" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -301,7 +342,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  累积结余图
+                  Cumulative Balance
                 </h2>
               </div>
               <ResponsiveContainer width="100%" height={300}>
@@ -325,7 +366,7 @@ export default function DashboardPage() {
                     dataKey="balance" 
                     stroke="#3B82F6" 
                     strokeWidth={2}
-                    name="累积结余"
+                    name="Cumulative Balance"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -335,7 +376,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
                   <PieChartIcon className="h-5 w-5" />
-                  类别支出比例图
+                  Category Distribution
                 </h2>
                 <select
                   value={selectedMonth}

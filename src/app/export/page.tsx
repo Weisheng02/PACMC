@@ -63,93 +63,90 @@ export default function ExportPage() {
   const exportToPDF = async () => {
     setLoading(true);
     try {
-      // 创建 PDF 内容
-      const pdfContent = document.createElement('div');
-      pdfContent.style.padding = '20px';
-      pdfContent.style.fontFamily = 'Arial, sans-serif';
-      pdfContent.style.width = '800px';
-      pdfContent.style.backgroundColor = 'white';
-
-      // 添加标题和 Logo
-      pdfContent.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #1f2937; margin-bottom: 10px;">PACMC 青少年团契</h1>
-          <h2 style="color: #6b7280; margin-bottom: 20px;">财务报告</h2>
-          <p style="color: #9ca3af; font-size: 14px;">
-            导出时间: ${new Date().toLocaleString('zh-TW')} | 
-            日期范围: ${dateRange.startDate} 至 ${dateRange.endDate} | 
-            记录数量: ${filteredRecords.length} 笔
-          </p>
-        </div>
-      `;
-
-      // 添加统计信息
-      const totalIncome = filteredRecords
-        .filter(r => r.type === 'Income')
-        .reduce((sum, r) => sum + r.amount, 0);
-      const totalExpense = filteredRecords
-        .filter(r => r.type === 'Expense')
-        .reduce((sum, r) => sum + r.amount, 0);
-      const balance = totalIncome - totalExpense;
-
-      pdfContent.innerHTML += `
-        <div style="margin-bottom: 30px; display: flex; justify-content: space-around;">
-          <div style="text-align: center; padding: 15px; background-color: #dcfce7; border-radius: 8px; min-width: 150px;">
-            <div style="font-size: 24px; font-weight: bold; color: #166534;">$${totalIncome.toFixed(2)}</div>
-            <div style="font-size: 14px; color: #166534;">总收入</div>
+      // Create PDF content
+      const pdfContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+          <!-- Add title and logo -->
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;">
+            <h1 style="color: #1f2937; margin-bottom: 10px;">PACMC Youth Fellowship</h1>
+            <h2 style="color: #6b7280; margin-bottom: 20px;">Financial Report</h2>
+            <div style="font-size: 12px; color: #6b7280;">
+              Export time: ${new Date().toLocaleString('en-US')} |
+              Date range: ${dateRange.startDate} to ${dateRange.endDate} |
+              Record count: ${filteredRecords.length} records
+            </div>
           </div>
-          <div style="text-align: center; padding: 15px; background-color: #fee2e2; border-radius: 8px; min-width: 150px;">
-            <div style="font-size: 24px; font-weight: bold; color: #991b1b;">$${totalExpense.toFixed(2)}</div>
-            <div style="font-size: 14px; color: #991b1b;">总支出</div>
-          </div>
-          <div style="text-align: center; padding: 15px; background-color: #dbeafe; border-radius: 8px; min-width: 150px;">
-            <div style="font-size: 24px; font-weight: bold; color: #1e40af;">$${balance.toFixed(2)}</div>
-            <div style="font-size: 14px; color: #1e40af;">结余</div>
-          </div>
-        </div>
-      `;
 
-      // 添加表格
-      if (filteredRecords.length > 0) {
-        pdfContent.innerHTML += `
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-              <tr style="background-color: #f3f4f6;">
-                <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">日期</th>
-                <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">类型</th>
-                <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">金额</th>
-                <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">描述</th>
-                <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">记录人</th>
-                <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">状态</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredRecords.map(record => `
-                <tr>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; font-size: 11px;">${record.date}</td>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; font-size: 11px; color: ${record.type === 'Income' ? '#166534' : '#991b1b'};">
-                    ${record.type === 'Income' ? '收入' : '支出'}
-                  </td>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; font-size: 11px; font-weight: bold; color: ${record.type === 'Income' ? '#166534' : '#991b1b'};">
-                    $${record.amount.toFixed(2)}
-                  </td>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; font-size: 11px;">${record.description}</td>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; font-size: 11px;">${record.who}</td>
-                  <td style="border: 1px solid #d1d5db; padding: 8px; font-size: 11px;">${record.status}</td>
+          <!-- Add statistics -->
+          <div style="margin-bottom: 30px;">
+            <h3 style="color: #1f2937; margin-bottom: 15px;">Summary Statistics</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
+              <div style="text-align: center; padding: 15px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+                <div style="font-size: 24px; font-weight: bold; color: #166534;">
+                  RM${filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                </div>
+                <div style="font-size: 14px; color: #166534;">Total Income</div>
+              </div>
+              <div style="text-align: center; padding: 15px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+                <div style="font-size: 24px; font-weight: bold; color: #991b1b;">
+                  RM${filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                </div>
+                <div style="font-size: 14px; color: #991b1b;">Total Expense</div>
+              </div>
+              <div style="text-align: center; padding: 15px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;">
+                <div style="font-size: 24px; font-weight: bold; color: #1e40af;">
+                  RM${(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
+                     filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)).toFixed(2)}
+                </div>
+                <div style="font-size: 14px; color: #1e40af;">Balance</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add table -->
+          <div>
+            <h3 style="color: #1f2937; margin-bottom: 15px;">Detailed Records</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+              <thead>
+                <tr style="background-color: #f9fafb;">
+                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Date</th>
+                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Type</th>
+                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Amount</th>
+                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Description</th>
+                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Name</th>
+                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Status</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-      }
+              </thead>
+              <tbody>
+                ${filteredRecords.map(record => `
+                  <tr>
+                    <td style="border: 1px solid #d1d5db; padding: 8px;">${new Date(record.date).toLocaleDateString()}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 8px; color: ${record.type === 'Income' ? '#166534' : '#991b1b'};">
+                      ${record.type === 'Income' ? 'Income' : 'Expense'}
+                    </td>
+                    <td style="border: 1px solid #d1d5db; padding: 8px; text-align: right;">RM${record.amount.toFixed(2)}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 8px;">${record.description}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 8px;">${record.createdBy || 'Unknown'}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 8px; color: ${record.status === 'Approved' ? '#166534' : '#d97706'};">
+                      ${record.status === 'Approved' ? 'Approved' : 'Pending'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
 
       // 将内容添加到页面（隐藏）
-      pdfContent.style.position = 'absolute';
-      pdfContent.style.left = '-9999px';
-      document.body.appendChild(pdfContent);
+      const pdfContentElement = document.createElement('div');
+      pdfContentElement.style.position = 'absolute';
+      pdfContentElement.style.left = '-9999px';
+      pdfContentElement.innerHTML = pdfContent;
+      document.body.appendChild(pdfContentElement);
 
       // 转换为 PDF
-      const canvas = await html2canvas(pdfContent, {
+      const canvas = await html2canvas(pdfContentElement, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -179,7 +176,7 @@ export default function ExportPage() {
       pdf.save(fileName);
 
       // 清理
-      document.body.removeChild(pdfContent);
+      document.body.removeChild(pdfContentElement);
     } catch (error) {
       console.error('导出 PDF 失败:', error);
       alert('导出 PDF 失败，请重试');
@@ -262,7 +259,7 @@ export default function ExportPage() {
                 <Link href="/" className="mr-4">
                   <ArrowLeft className="h-8 w-8 text-gray-600" />
                 </Link>
-                <h1 className="text-xl font-semibold text-gray-900">报表导出</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Report Export</h1>
               </div>
             </div>
           </div>
@@ -270,102 +267,102 @@ export default function ExportPage() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* 筛选设置 */}
+          {/* Filter Settings */}
           <div className="bg-white shadow-sm border rounded-lg p-6 mb-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <Filter className="h-5 w-5 mr-2" />
-              筛选设置
+              Filter Settings
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* 日期范围 */}
+              {/* Date Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">开始日期</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                 <input
                   type="date"
                   value={dateRange.startDate}
                   onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">结束日期</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                 <input
                   type="date"
                   value={dateRange.endDate}
                   onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">记录类型</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Record Type</label>
                 <select
                   value={exportType}
                   onChange={(e) => setExportType(e.target.value as 'all' | 'income' | 'expense')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 >
-                  <option value="all">全部记录</option>
-                  <option value="income">仅收入</option>
-                  <option value="expense">仅支出</option>
+                  <option value="all">All Records</option>
+                  <option value="income">Income Only</option>
+                  <option value="expense">Expense Only</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* 统计信息 */}
+          {/* Statistics */}
           <div className="bg-white shadow-sm border rounded-lg p-6 mb-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <BarChart3 className="h-5 w-5 mr-2" />
-              统计信息
+              Statistics
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">{filteredRecords.length}</div>
-                <div className="text-sm text-gray-600">记录数量</div>
+                <div className="text-sm text-gray-600">Record Count</div>
               </div>
               
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  ${filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                  RM${filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">总收入</div>
+                <div className="text-sm text-gray-600">Total Income</div>
               </div>
               
               <div className="text-center p-4 bg-red-50 rounded-lg">
                 <div className="text-2xl font-bold text-red-600">
-                  ${filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                  RM${filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">总支出</div>
+                <div className="text-sm text-gray-600">Total Expense</div>
               </div>
               
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  ${(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
+                  RM${(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
                      filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)).toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">结余</div>
+                <div className="text-sm text-gray-600">Balance</div>
               </div>
             </div>
           </div>
 
-          {/* 导出按钮 */}
+          {/* Export Options */}
           <div className="bg-white shadow-sm border rounded-lg p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <Download className="h-5 w-5 mr-2" />
-              导出选项
+              Export Options
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* PDF 导出 */}
+              {/* PDF Export */}
               <div className="border border-gray-200 rounded-lg p-6">
                 <div className="flex items-center mb-4">
                   <FileText className="h-8 w-8 text-red-600 mr-3" />
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">PDF 报表</h3>
-                    <p className="text-sm text-gray-500">包含统计图表和详细记录</p>
+                    <h3 className="text-lg font-medium text-gray-900">PDF Report</h3>
+                    <p className="text-sm text-gray-500">Includes statistics and detailed records</p>
                   </div>
                 </div>
                 <button
@@ -378,17 +375,17 @@ export default function ExportPage() {
                   ) : (
                     <FileText className="h-4 w-4 mr-2" />
                   )}
-                  {loading ? '生成中...' : '导出 PDF'}
+                  {loading ? 'Generating...' : 'Export PDF'}
                 </button>
               </div>
 
-              {/* Excel 导出 */}
+              {/* Excel Export */}
               <div className="border border-gray-200 rounded-lg p-6">
                 <div className="flex items-center mb-4">
                   <BarChart3 className="h-8 w-8 text-green-600 mr-3" />
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Excel 文件</h3>
-                    <p className="text-sm text-gray-500">原始数据格式，便于进一步分析</p>
+                    <h3 className="text-lg font-medium text-gray-900">Excel File</h3>
+                    <p className="text-sm text-gray-500">Raw data format for further analysis</p>
                   </div>
                 </div>
                 <button
@@ -401,14 +398,14 @@ export default function ExportPage() {
                   ) : (
                     <BarChart3 className="h-4 w-4 mr-2" />
                   )}
-                  {loading ? '生成中...' : '导出 Excel'}
+                  {loading ? 'Generating...' : 'Export Excel'}
                 </button>
               </div>
             </div>
 
             {filteredRecords.length === 0 && (
               <div className="mt-4 text-center text-gray-500">
-                当前筛选条件下没有记录可导出
+                No records available for export under current filter conditions
               </div>
             )}
           </div>

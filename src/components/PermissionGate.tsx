@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/lib/firebase';
+import Link from 'next/link';
 
 interface PermissionGateProps {
   children: React.ReactNode;

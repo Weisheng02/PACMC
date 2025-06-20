@@ -15,11 +15,11 @@ export default function AddRecordPage() {
   const { userProfile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    type: 'Income' as 'Income' | 'Expense',
+    date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }),
     account: 'MIYF',
-    date: new Date().toISOString().split('T')[0],
-    type: 'Expense' as 'Income' | 'Expense',
     who: '',
-    amount: '',
+    amount: 0,
     description: '',
     remark: '',
   });
@@ -27,23 +27,23 @@ export default function AddRecordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 检查用户状态
+    // Check user status
     if (authLoading) {
-      alert('请等待用户信息加载完成');
+      alert('Please wait for user information to load');
       return;
     }
     
     if (!userProfile) {
-      alert('请先登录系统');
+      alert('Please log in to the system');
       return;
     }
     
     if (!formData.account || !formData.date || !formData.type || !formData.who || !formData.description || !formData.amount) {
-      alert('请填写所有必填字段');
+      alert('Please fill in all required fields');
       return;
     }
     if (isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
-      alert('请输入有效的金额');
+      alert('Please enter a valid amount');
       return;
     }
     setLoading(true);
@@ -56,11 +56,11 @@ export default function AddRecordPage() {
         amount: Number(formData.amount),
         description: formData.description,
         remark: formData.remark,
-        createdBy: userProfile?.name || userProfile?.email || '未知用户',
+        createdBy: userProfile?.name || userProfile?.email || 'Unknown User',
       };
       
-      console.log('准备提交的记录数据:', recordData);
-      console.log('当前用户信息:', userProfile);
+      console.log('Preparing to submit record data:', recordData);
+      console.log('Current user information:', userProfile);
       
       const response = await fetch('/api/sheets/create', {
         method: 'POST',
@@ -73,7 +73,7 @@ export default function AddRecordPage() {
       const responseData = await response.json();
       
       if (!response.ok) {
-        console.error('服务器返回错误:', {
+        console.error('Server returned error:', {
           status: response.status,
           statusText: response.statusText,
           data: responseData
@@ -81,20 +81,20 @@ export default function AddRecordPage() {
         throw new Error(responseData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      console.log('记录添加成功:', responseData);
-      alert('记录添加成功！');
+      console.log('Record added successfully:', responseData);
+      alert('Record added successfully!');
       router.push('/financial-list');
     } catch (error) {
-      console.error('添加记录时出错:', error);
-      let errorMessage = '添加记录失败，请重试\n';
+      console.error('Error adding record:', error);
+      let errorMessage = 'Record addition failed, please try again\n';
       
       if (error instanceof Error) {
-        errorMessage += `错误详情: ${error.message}\n`;
+        errorMessage += `Error details: ${error.message}\n`;
       }
       
-      errorMessage += `\n当前用户: ${userProfile?.name || userProfile?.email || '未知用户'}\n`;
-      errorMessage += `用户角色: ${userProfile?.role || '未知'}\n`;
-      errorMessage += `请检查控制台(F12)以获取更多信息`;
+      errorMessage += `\nCurrent user: ${userProfile?.name || userProfile?.email || 'Unknown User'}\n`;
+      errorMessage += `User role: ${userProfile?.role || 'Unknown'}\n`;
+      errorMessage += `Please check the console (F12) for more information`;
       
       alert(errorMessage);
     } finally {
@@ -108,10 +108,10 @@ export default function AddRecordPage() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <X className="mx-auto h-12 w-12 text-red-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">权限不足</h3>
-            <p className="mt-1 text-sm text-gray-500">只有管理员或超级管理员可以添加财务记录</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Permission Denied</h3>
+            <p className="mt-1 text-sm text-gray-500">Only administrators or super administrators can add financial records</p>
             <div className="mt-6">
-              <Link href="/" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">返回首页</Link>
+              <Link href="/" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Return to Homepage</Link>
             </div>
           </div>
         </div>
@@ -123,10 +123,10 @@ export default function AddRecordPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <Link href="/financial-list" className="mr-4">
+                <Link href="/" className="mr-4">
                   <ArrowLeft className="h-8 w-8 text-gray-600" />
                 </Link>
-                <h1 className="text-xl font-semibold text-gray-900">新增财务记录</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Add Financial Record</h1>
               </div>
             </div>
           </div>
@@ -135,119 +135,141 @@ export default function AddRecordPage() {
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white shadow-sm border rounded-lg p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 账户 */}
+              {/* Record Type */}
               <div>
-                <label htmlFor="account" className="block text-sm font-medium text-gray-700 mb-2">账户 *</label>
-                <select
-                  id="account"
-                  value={formData.account}
-                  onChange={(e) => setFormData(prev => ({ ...prev, account: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  required
-                >
-                  {ACCOUNTS.map((account) => (
-                    <option key={account} value={account}>{account}</option>
-                  ))}
-                </select>
-              </div>
-              {/* 日期 */}
-              <div>
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">日期 *</label>
-                <input
-                  type="date"
-                  id="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  required
-                />
-              </div>
-              {/* 类型 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">类型 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Record Type *
+                </label>
                 <div className="flex gap-4">
-                  {TYPES.map((type) => (
-                    <label key={type} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="type"
-                        value={type}
-                        checked={formData.type === type}
-                        onChange={() => setFormData(prev => ({ ...prev, type: type as 'Income' | 'Expense' }))}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">{type === 'Income' ? '收入' : '支出'}</span>
-                    </label>
-                  ))}
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="type"
+                      value="Income"
+                      checked={formData.type === 'Income'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Income</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="type"
+                      value="Expense"
+                      checked={formData.type === 'Expense'}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Expense</span>
+                  </label>
                 </div>
               </div>
-              {/* 记录人 */}
+
+              {/* Date */}
               <div>
-                <label htmlFor="who" className="block text-sm font-medium text-gray-700 mb-2">记录人 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date *
+                </label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                />
+              </div>
+
+              {/* Account */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Account *
+                </label>
+                <select
+                  value={formData.account}
+                  onChange={(e) => setFormData(prev => ({ ...prev, account: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                >
+                  <option value="MIYF">MIYF</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Who */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name *
+                </label>
                 <input
                   type="text"
-                  id="who"
                   value={formData.who}
                   onChange={(e) => setFormData(prev => ({ ...prev, who: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="请输入记录人姓名"
                   required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Enter the name"
                 />
               </div>
-              {/* 描述 */}
+
+              {/* Amount */}
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">描述 *</label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="请输入详细描述..."
-                  required
-                />
-              </div>
-              {/* 金额 */}
-              <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">金额 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Amount *
+                </label>
                 <input
                   type="number"
-                  id="amount"
                   value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="请输入金额"
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
                   required
-                  min={0.01}
-                  step={0.01}
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="0.00"
                 />
               </div>
-              {/* 备注 */}
+
+              {/* Description */}
               <div>
-                <label htmlFor="remark" className="block text-sm font-medium text-gray-700 mb-2">备注</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description *
+                </label>
                 <input
                   type="text"
-                  id="remark"
-                  value={formData.remark}
-                  onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="请输入备注（可选）"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Enter description"
                 />
               </div>
-              {/* 提交按钮 */}
-              <div className="flex justify-end gap-4 pt-6 border-t">
-                <Link href="/financial-list" className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">取消</Link>
+
+              {/* Remark */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Remark (Optional)
+                </label>
+                <textarea
+                  value={formData.remark}
+                  onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Additional notes (optional)"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-4">
+                <Link
+                  href="/"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </Link>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  {loading ? '保存中...' : '保存记录'}
+                  {loading ? 'Adding...' : 'Add Record'}
                 </button>
               </div>
             </form>
