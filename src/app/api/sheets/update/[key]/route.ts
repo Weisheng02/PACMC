@@ -6,11 +6,40 @@ const getSheetsClient = () => {
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\n/g, '\n'),
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
   return google.sheets({ version: 'v4', auth });
+};
+
+// 获取工作表名称
+const getSheetNames = async (sheets: any, spreadsheetId: string) => {
+  try {
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId,
+    });
+    
+    const sheetsList = spreadsheet.data.sheets;
+    const sheetNames = sheetsList?.map(s => s.properties?.title) || [];
+    return sheetNames;
+  } catch (error) {
+    console.error('Error getting sheet names:', error);
+    return [];
+  }
+};
+
+// 查找财务数据工作表
+const findTransactionSheet = (sheetNames: string[]) => {
+  const possibleNames = ['Transaction', 'Transactions', 'Financial', 'Finance', 'Sheet1'];
+  
+  for (const name of possibleNames) {
+    if (sheetNames.includes(name)) {
+      return name;
+    }
+  }
+  
+  return sheetNames[0] || null;
 };
 
 export async function PUT(
@@ -21,16 +50,26 @@ export async function PUT(
     const { key } = await params;
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const sheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
+
     if (!spreadsheetId) {
       return NextResponse.json({ error: 'Google Sheet ID not configured' }, { status: 500 });
     }
+
+    const sheetNames = await getSheetNames(sheets, spreadsheetId);
+    const targetSheet = findTransactionSheet(sheetNames);
+
+    if (!targetSheet) {
+      return NextResponse.json({ error: 'No suitable worksheet found' }, { status: 500 });
+    }
+    
+    console.log('Using sheet for update:', targetSheet);
+
     const body = await request.json();
 
     // 读取所有数据来找到要更新的行
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A:P`,
+      range: `${targetSheet}!A:P`,
     });
     const rows = response.data.values;
     if (!rows || rows.length === 0) {
@@ -82,7 +121,7 @@ export async function PUT(
     // 更新该行
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${sheetName}!A${rowIndex}:P${rowIndex}`,
+      range: `${targetSheet}!A${rowIndex}:P${rowIndex}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [updatedRow],

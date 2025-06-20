@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection
+    match /users/{userId} {
+      // Allow anyone to create their own user document
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Allow users to read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Allow users to update their own profile (except for the role)
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role;
+
+      // Allow Super Admins to read or update any user's role
+      allow read, update: if request.auth != null 
+                         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+
+    // Allow Super Admins to list all users
+    match /users/{document=**} {
+       allow list: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Super Admin';
+    }
+  }
+} 

@@ -14,6 +14,38 @@ const getAuthClient = () => {
   return auth;
 };
 
+// 获取工作表名称
+const getSheetNames = async (sheets: any, spreadsheetId: string) => {
+  try {
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId,
+    });
+    
+    const sheetsList = spreadsheet.data.sheets;
+    const sheetNames = sheetsList?.map(s => s.properties?.title) || [];
+    console.log('Available sheets:', sheetNames);
+    
+    return sheetNames;
+  } catch (error) {
+    console.error('Error getting sheet names:', error);
+    return [];
+  }
+};
+
+// 查找财务数据工作表
+const findTransactionSheet = (sheetNames: string[]) => {
+  const possibleNames = ['Transaction', 'Transactions', 'Financial', 'Finance', 'Sheet1'];
+  
+  for (const name of possibleNames) {
+    if (sheetNames.includes(name)) {
+      return name;
+    }
+  }
+  
+  // 如果没找到，返回第一个工作表
+  return sheetNames[0] || null;
+};
+
 // 获取现金在手余额
 export async function GET() {
   try {
@@ -21,7 +53,6 @@ export async function GET() {
     const sheets = google.sheets({ version: 'v4', auth });
     
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const transactionSheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
     const cashSheetName = 'CashInHand';
     
     let cashInHand = 0;
@@ -29,32 +60,39 @@ export async function GET() {
 
     // 1. 首先计算基于财务记录的现金在手
     try {
-      const transactionResponse = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: `${transactionSheetName}!A:P`,
-      });
-
-      const transactionRows = transactionResponse.data.values;
-      if (transactionRows && transactionRows.length > 1) {
-        // 按日期排序，确保按时间顺序计算
-        const sortedRows = transactionRows.slice(1).sort((a, b) => {
-          const dateA = new Date(a[2] || '').getTime();
-          const dateB = new Date(b[2] || '').getTime();
-          return dateA - dateB;
+      const sheetNames = await getSheetNames(sheets, spreadsheetId);
+      const transactionSheetName = findTransactionSheet(sheetNames);
+      
+      if (transactionSheetName) {
+        console.log('Using transaction sheet:', transactionSheetName);
+        
+        const transactionResponse = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range: `${transactionSheetName}!A:P`,
         });
 
-        sortedRows.forEach(row => {
-          if (row.length >= 6) {
-            const type = row[3]; // 类型列
-            const amount = parseFloat(row[5]) || 0; // 金额列
-            
-            if (type === 'Income') {
-              cashInHand += amount;
-            } else if (type === 'Expense') {
-              cashInHand -= amount;
+        const transactionRows = transactionResponse.data.values;
+        if (transactionRows && transactionRows.length > 1) {
+          // 按日期排序，确保按时间顺序计算
+          const sortedRows = transactionRows.slice(1).sort((a, b) => {
+            const dateA = new Date(a[2] || '').getTime();
+            const dateB = new Date(b[2] || '').getTime();
+            return dateA - dateB;
+          });
+
+          sortedRows.forEach(row => {
+            if (row.length >= 6) {
+              const type = row[3]; // 类型列
+              const amount = parseFloat(row[5]) || 0; // 金额列
+              
+              if (type === 'Income') {
+                cashInHand += amount;
+              } else if (type === 'Expense') {
+                cashInHand -= amount;
+              }
             }
-          }
-        });
+          });
+        }
       }
     } catch (error) {
       console.log('No transaction sheet found or error reading transactions');

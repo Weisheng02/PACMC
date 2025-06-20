@@ -23,6 +23,7 @@ export function LoginButton() {
   const handleSignOut = async () => {
     try {
       await signOutUser();
+      setIsOpen(false);
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -39,16 +40,39 @@ export function LoginButton() {
   if (user) {
     return (
       <div className="relative">
-        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-3">
+        <button 
+          onClick={() => setIsOpen(!isOpen)} 
+          className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+            {userProfile?.name?.charAt(0) || user.displayName?.charAt(0) || 'U'}
+          </div>
           <div className="text-right">
-            <div className="font-medium">{userProfile?.name || user.displayName}</div>
-            <div className="text-gray-500 text-sm">
-             {userProfile?.role}
+            <div className="font-medium text-gray-900">{userProfile?.name || user.displayName}</div>
+            <div className="text-gray-500 text-xs">
+              {userProfile?.role || '用户'}
             </div>
           </div>
-          {/* ... (avatar) */}
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
-        {/* ... (dropdown menu) */}
+        
+        {isOpen && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+            <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+              <div className="font-medium">{userProfile?.name || user.displayName}</div>
+              <div className="text-gray-500">{userProfile?.email || user.email}</div>
+              <div className="text-xs text-blue-600 mt-1">{userProfile?.role || '用户'}</div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
+            >
+              登出
+            </button>
+          </div>
+        )}
       </div>
     );
   }

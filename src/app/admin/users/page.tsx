@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SuperAdminOnly } from '@/components/PermissionGate';
 import { getAllUsers, updateUserRole, UserProfile, UserRole } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function UserManagementPage() {
   const { userProfile } = useAuth();
@@ -52,9 +53,14 @@ export default function UserManagementPage() {
     <SuperAdminOnly fallback={<p className="text-center text-red-500 mt-10">Access Denied. You must be a Super Admin to view this page.</p>}>
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md border">
-          <header className="px-6 py-4 border-b">
-            <h1 className="text-2xl font-bold text-gray-800">User Role Management</h1>
-            <p className="text-sm text-gray-600">Assign roles to users. Changes are saved automatically.</p>
+          <header className="px-6 py-4 border-b flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">User Role Management</h1>
+              <p className="text-sm text-gray-600">Assign roles to users. Changes are saved automatically.</p>
+            </div>
+            <Link href="/financial-list" className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+              Back to List
+            </Link>
           </header>
           
           <main className="p-6">
@@ -94,14 +100,6 @@ export default function UserManagementPage() {
                 </table>
               </div>
             )}
-             <div className="mt-6 text-center">
-              <button
-                onClick={() => router.push('/financial-list')}
-                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-              >
-                Back to Financial List
-              </button>
-            </div>
           </main>
         </div>
       </div>

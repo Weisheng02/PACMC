@@ -25,9 +25,7 @@ export async function GET() {
 
     const sheets = getSheetsClient();
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const sheetName = process.env.GOOGLE_SHEET_NAME || 'Transaction';
 
-  
     if (!spreadsheetId) {
       return NextResponse.json(
         { error: 'Google Sheet ID not configured' },
@@ -35,14 +33,49 @@ export async function GET() {
       );
     }
 
-    // 只读取 Transaction 工作表
+    // 首先获取所有工作表信息
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId,
+    });
+
+    const sheetsList = spreadsheet.data.sheets;
+    console.log('Available sheets:', sheetsList?.map(s => s.properties?.title));
+
+    // 查找包含财务数据的工作表
+    let targetSheet = null;
+    const possibleNames = ['Transaction', 'Transactions', 'Financial', 'Finance', 'Sheet1'];
+    
+    for (const sheet of sheetsList || []) {
+      const title = sheet.properties?.title;
+      if (title && possibleNames.includes(title)) {
+        targetSheet = title;
+        break;
+      }
+    }
+
+    // 如果没找到，使用第一个工作表
+    if (!targetSheet && sheetsList && sheetsList.length > 0) {
+      targetSheet = sheetsList[0].properties?.title;
+    }
+
+    if (!targetSheet) {
+      return NextResponse.json(
+        { error: 'No suitable worksheet found' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Using sheet:', targetSheet);
+
+    // 读取数据
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!A:P`,
+      range: `${targetSheet}!A:P`,
     });
 
     const rows = response.data.values;
     if (!rows || rows.length === 0) {
+      console.log('No transaction sheet found or error reading transactions');
       return NextResponse.json({ records: [] });
     }
 
@@ -66,9 +99,10 @@ export async function GET() {
       lastDateUpdate: row[15] || '',
     }));
 
+    console.log(`Found ${records.length} records`);
     return NextResponse.json({ records });
   } catch (error) {
-    console.error('Error reading Google Sheets:', error, JSON.stringify(error));
+    console.error('Error reading Google Sheets:', error);
     return NextResponse.json(
       { error: 'Failed to read financial records', details: error },
       { status: 500 }
