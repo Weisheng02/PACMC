@@ -1,6 +1,6 @@
 'use client';
 import { LoginButton } from '@/components/LoginButton';
-import { FinanceOnly, CoreAndAbove, AllUsers } from '@/components/PermissionGate';
+import { SuperAdminOnly, AdminOrSuperAdmin, LoggedInUser } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, BarChart3, FileText, Plus, Users, Shield, Wallet } from 'lucide-react';
 import Link from 'next/link';
@@ -196,58 +196,36 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">欢迎回来，{userProfile?.name}！</h2>
           <p className="text-gray-600 mb-1">邮箱：{userProfile?.email}</p>
           <p className="text-gray-600">
-            您的权限：{userProfile?.role === 'finance' && '财政成员'}
-            {userProfile?.role === 'core' && '核心团队'}
-            {userProfile?.role === 'leadership' && '高层顾问'}
+            您的权限：<span className="font-semibold">{userProfile?.role}</span>
           </p>
         </div>
 
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* 财务列表 */}
-          <CoreAndAbove
-            fallback={
-              <div className="bg-gray-100 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="flex items-center mb-4">
-                  <FileText className="h-6 w-6 text-gray-400 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-400">财务列表</h3>
-                </div>
-                <p className="text-gray-400 text-sm">需要核心团队或以上权限</p>
-              </div>
-            }
-          >
-            <Link href="/financial-list">
-              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+          <LoggedInUser>
+            <Link href="/financial-list" className="block h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer h-full">
                 <div className="flex items-center mb-4">
                   <FileText className="h-6 w-6 text-blue-600 mr-3" />
                   <h3 className="text-lg font-medium text-gray-900">财务列表</h3>
                 </div>
                 <p className="text-gray-600 text-sm mb-4">
-                  查看所有收入和支出记录
+                  查看所有收入和支出记录，并根据权限进行管理
                 </p>
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {userProfile?.role === 'finance' ? '可编辑' : '仅查看'}
+                    所有用户可查看
                   </span>
                 </div>
               </div>
             </Link>
-          </CoreAndAbove>
+          </LoggedInUser>
 
           {/* 图表分析 */}
-          <FinanceOnly
-            fallback={
-              <div className="bg-gray-100 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="flex items-center mb-4">
-                  <BarChart3 className="h-6 w-6 text-gray-400 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-400">图表分析</h3>
-                </div>
-                <p className="text-gray-400 text-sm">仅财政成员可访问</p>
-              </div>
-            }
-          >
-            <Link href="/dashboard">
-              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+          <LoggedInUser>
+            <Link href="/dashboard" className="block h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer h-full">
                 <div className="flex items-center mb-4">
                   <BarChart3 className="h-6 w-6 text-green-600 mr-3" />
                   <h3 className="text-lg font-medium text-gray-900">图表分析</h3>
@@ -257,27 +235,17 @@ export default function Home() {
                 </p>
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                    仅财政成员
+                    所有用户可查看
                   </span>
                 </div>
               </div>
             </Link>
-          </FinanceOnly>
+          </LoggedInUser>
 
           {/* 新增记录 */}
-          <FinanceOnly
-            fallback={
-              <div className="bg-gray-100 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="flex items-center mb-4">
-                  <Plus className="h-6 w-6 text-gray-400 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-400">新增记录</h3>
-                </div>
-                <p className="text-gray-400 text-sm">仅财政成员可访问</p>
-              </div>
-            }
-          >
-            <Link href="/add-record">
-              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+          <AdminOrSuperAdmin>
+            <Link href="/add-record" className="block h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer h-full">
                 <div className="flex items-center mb-4">
                   <Plus className="h-6 w-6 text-purple-600 mr-3" />
                   <h3 className="text-lg font-medium text-gray-900">新增记录</h3>
@@ -287,27 +255,17 @@ export default function Home() {
                 </p>
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                    仅财政成员
+                    管理员及以上
                   </span>
                 </div>
               </div>
             </Link>
-          </FinanceOnly>
+          </AdminOrSuperAdmin>
 
           {/* 用户管理 */}
-          <FinanceOnly
-            fallback={
-              <div className="bg-gray-100 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="flex items-center mb-4">
-                  <Users className="h-6 w-6 text-gray-400 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-400">用户管理</h3>
-                </div>
-                <p className="text-gray-400 text-sm">仅财政成员可访问</p>
-              </div>
-            }
-          >
-            <Link href="/user-management">
-              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+          <SuperAdminOnly>
+            <Link href="/admin/users" className="block h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer h-full">
                 <div className="flex items-center mb-4">
                   <Users className="h-6 w-6 text-orange-600 mr-3" />
                   <h3 className="text-lg font-medium text-gray-900">用户管理</h3>
@@ -317,27 +275,17 @@ export default function Home() {
                 </p>
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                    仅财政成员
+                    仅超级管理员
                   </span>
                 </div>
               </div>
             </Link>
-          </FinanceOnly>
+          </SuperAdminOnly>
 
           {/* 报表导出 */}
-          <CoreAndAbove
-            fallback={
-              <div className="bg-gray-100 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="flex items-center mb-4">
-                  <Shield className="h-6 w-6 text-gray-400 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-400">报表导出</h3>
-                </div>
-                <p className="text-gray-400 text-sm">需要核心团队或以上权限</p>
-              </div>
-            }
-          >
-            <Link href="/export">
-              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+          <LoggedInUser>
+            <Link href="/export" className="block h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer h-full">
                 <div className="flex items-center mb-4">
                   <Shield className="h-6 w-6 text-red-600 mr-3" />
                   <h3 className="text-lg font-medium text-gray-900">报表导出</h3>
@@ -347,16 +295,16 @@ export default function Home() {
                 </p>
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                    核心团队以上
+                    所有用户可查看
                   </span>
                 </div>
               </div>
             </Link>
-          </CoreAndAbove>
+          </LoggedInUser>
         </div>
 
         {/* Quick Stats */}
-        <AllUsers>
+        <LoggedInUser>
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-medium text-gray-900 mb-4">快速统计</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -397,7 +345,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </AllUsers>
+        </LoggedInUser>
       </main>
     </div>
   );
