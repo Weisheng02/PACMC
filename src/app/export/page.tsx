@@ -21,9 +21,22 @@ export default function ExportPage() {
     endDate: new Date().toISOString().split('T')[0],
   });
   const [exportType, setExportType] = useState<'all' | 'income' | 'expense'>('all');
+  const [error, setError] = useState<string | null>(null);
 
   // 获取财务记录
   useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const data = await readFinancialRecords();
+        setRecords(data || []);
+      } catch (error) {
+        console.error('获取记录失败:', error);
+        setError('加载财务数据失败，请稍后重试。');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchRecords();
   }, []);
 
@@ -45,15 +58,6 @@ export default function ExportPage() {
 
     setFilteredRecords(filtered);
   }, [records, dateRange, exportType]);
-
-  const fetchRecords = async () => {
-    try {
-      const data = await readFinancialRecords();
-      setRecords(data.records || []);
-    } catch (error) {
-      console.error('获取记录失败:', error);
-    }
-  };
 
   // 导出 PDF
   const exportToPDF = async () => {
