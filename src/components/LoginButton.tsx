@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { signInWithGoogle, signOutUser } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const LoginButton = () => {
+export function LoginButton() {
   const { user, userProfile, loading } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSignIn = async () => {
     setIsSigningIn(true);
@@ -37,21 +38,17 @@ export const LoginButton = () => {
 
   if (user) {
     return (
-      <div className="flex items-center gap-4">
-        <div className="text-sm">
-          <div className="font-medium">{userProfile?.name || user.displayName}</div>
-          <div className="text-gray-500">
-            {userProfile?.role === 'finance' && '财政成员'}
-            {userProfile?.role === 'core' && '核心团队'}
-            {userProfile?.role === 'leadership' && '高层顾问'}
+      <div className="relative">
+        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="font-medium">{userProfile?.name || user.displayName}</div>
+            <div className="text-gray-500 text-sm">
+             {userProfile?.role}
+            </div>
           </div>
-        </div>
-        <button
-          onClick={handleSignOut}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          登出
+          {/* ... (avatar) */}
         </button>
+        {/* ... (dropdown menu) */}
       </div>
     );
   }
@@ -87,4 +84,4 @@ export const LoginButton = () => {
       {isSigningIn ? '登录中...' : '使用 Google 登录'}
     </button>
   );
-}; 
+} 
