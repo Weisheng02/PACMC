@@ -369,12 +369,19 @@ export default function FinancialListPage() {
       });
 
       if (response.ok) {
-        const updatedRecord = await response.json();
+        const result = await response.json();
         
-        // 更新本地状态
+        // 更新本地状态 - 使用编辑的数据而不是API返回的数据
         setRecords(prevRecords =>
           prevRecords.map(record =>
-            record.key === editingKey ? { ...record, ...updatedRecord.record } : record
+            record.key === editingKey ? { 
+              ...record, 
+              ...editingRecord,
+              // 确保日期格式正确
+              date: editingRecord.date || record.date,
+              // 确保金额是数字
+              amount: typeof editingRecord.amount === 'number' ? editingRecord.amount : record.amount,
+            } : record
           )
         );
         
@@ -1054,7 +1061,7 @@ export default function FinancialListPage() {
                                   <select
                                     value={editingRecord?.type || 'Income'}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                   >
                                     <option value="Income">Income</option>
                                     <option value="Expense">Expense</option>
@@ -1077,11 +1084,11 @@ export default function FinancialListPage() {
                                     type="text"
                                     value={editingRecord?.who || ''}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
                                     placeholder="Name"
                                   />
                                 ) : (
-                                  record.who
+                                  <span className="text-sm text-gray-700">{record.who}</span>
                                 )}
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
@@ -1090,7 +1097,7 @@ export default function FinancialListPage() {
                                     type="text"
                                     value={editingRecord?.description || ''}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
                                     placeholder="Description"
                                   />
                                 ) : (
@@ -1104,14 +1111,14 @@ export default function FinancialListPage() {
                                     step="0.01"
                                     value={editingRecord?.amount || 0}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-gray-900"
                                     placeholder="0.00"
                                   />
                                 ) : (
                                   <span
-                                    className={
+                                    className={`text-sm font-medium ${
                                       record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                    }
+                                    }`}
                                   >
                                     {formatCurrency(record.amount)}
                                   </span>
@@ -1156,7 +1163,7 @@ export default function FinancialListPage() {
                                     type="text"
                                     value={editingRecord?.remark || ''}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
                                     placeholder="Remark"
                                   />
                                 ) : (
@@ -1233,7 +1240,7 @@ export default function FinancialListPage() {
                                   <select
                                     value={editingRecord?.type || 'Income'}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
-                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                   >
                                     <option value="Income">Income</option>
                                     <option value="Expense">Expense</option>
@@ -1301,7 +1308,7 @@ export default function FinancialListPage() {
                                     type="text"
                                     value={editingRecord?.who || ''}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
-                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
                                     placeholder="Name"
                                   />
                                 ) : (
@@ -1317,7 +1324,7 @@ export default function FinancialListPage() {
                                     step="0.01"
                                     value={editingRecord?.amount || 0}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-gray-900"
                                     placeholder="0.00"
                                   />
                                 ) : (
@@ -1338,7 +1345,7 @@ export default function FinancialListPage() {
                                     type="text"
                                     value={editingRecord?.description || ''}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
-                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
                                     placeholder="Description"
                                   />
                                 ) : (
@@ -1353,7 +1360,7 @@ export default function FinancialListPage() {
                                     type="text"
                                     value={editingRecord?.remark || ''}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
-                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
                                     placeholder="Remark"
                                   />
                                 ) : (
