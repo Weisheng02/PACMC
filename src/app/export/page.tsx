@@ -63,77 +63,154 @@ export default function ExportPage() {
   const exportToPDF = async () => {
     setLoading(true);
     try {
-      // Create PDF content
+      // 计算统计数据
+      const totalIncome = filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0);
+      const totalExpense = filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0);
+      const balance = totalIncome - totalExpense;
+      const approvedRecords = filteredRecords.filter(r => r.status === 'Approved').length;
+      const pendingRecords = filteredRecords.filter(r => r.status === 'Pending').length;
+      
+      // 按月份分组统计
+      const monthlyStats = filteredRecords.reduce((acc, record) => {
+        const month = new Date(record.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        if (!acc[month]) {
+          acc[month] = { income: 0, expense: 0, count: 0 };
+        }
+        if (record.type === 'Income') {
+          acc[month].income += record.amount;
+        } else {
+          acc[month].expense += record.amount;
+        }
+        acc[month].count += 1;
+        return acc;
+      }, {} as Record<string, { income: number; expense: number; count: number }>);
+
+      // Create PDF content with better styling and more information
       const pdfContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-          <!-- Add title and logo -->
-          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;">
-            <h1 style="color: #1f2937; margin-bottom: 10px;">PACMC Youth Fellowship</h1>
-            <h2 style="color: #6b7280; margin-bottom: 20px;">Financial Report</h2>
-            <div style="font-size: 12px; color: #6b7280;">
-              Export time: ${new Date().toLocaleString('en-US')} |
-              Date range: ${dateRange.startDate} to ${dateRange.endDate} |
-              Record count: ${filteredRecords.length} records
+        <div style="font-family: 'Arial', 'Helvetica', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: white; color: #333;">
+          <!-- Header with Logo and Title -->
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2563eb; padding-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+              <img src="/logo.jpg" alt="PACMC Logo" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover;" />
+              <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: bold;">PACMC Youth Fellowship</h1>
+            </div>
+            <h2 style="color: #6b7280; margin: 10px 0; font-size: 20px;">Financial Report</h2>
+            <div style="font-size: 12px; color: #6b7280; line-height: 1.5;">
+              <strong>Report Period:</strong> ${new Date(dateRange.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} - ${new Date(dateRange.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
+              <strong>Generated:</strong> ${new Date().toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}<br>
+              <strong>Total Records:</strong> ${filteredRecords.length} | <strong>Type:</strong> ${exportType === 'all' ? 'All Records' : exportType === 'income' ? 'Income Only' : 'Expense Only'}
             </div>
           </div>
 
-          <!-- Add statistics -->
+          <!-- Summary Statistics -->
           <div style="margin-bottom: 30px;">
-            <h3 style="color: #1f2937; margin-bottom: 15px;">Summary Statistics</h3>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Summary Statistics</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #bbf7d0; border-radius: 10px;">
+                <div style="font-size: 24px; font-weight: bold; color: #166534; margin-bottom: 5px;">
+                  RM${totalIncome.toFixed(2)}
+                </div>
+                <div style="font-size: 14px; color: #166534; font-weight: 500;">Total Income</div>
+              </div>
+              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fecaca; border-radius: 10px;">
+                <div style="font-size: 24px; font-weight: bold; color: #991b1b; margin-bottom: 5px;">
+                  RM${totalExpense.toFixed(2)}
+                </div>
+                <div style="font-size: 14px; color: #991b1b; font-weight: 500;">Total Expense</div>
+              </div>
+              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #bfdbfe; border-radius: 10px;">
+                <div style="font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px;">
+                  RM${balance.toFixed(2)}
+                </div>
+                <div style="font-size: 14px; color: #1e40af; font-weight: 500;">Net Balance</div>
+              </div>
+              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 2px solid #e9d5ff; border-radius: 10px;">
+                <div style="font-size: 24px; font-weight: bold; color: #7c3aed; margin-bottom: 5px;">
+                  ${filteredRecords.length}
+                </div>
+                <div style="font-size: 14px; color: #7c3aed; font-weight: 500;">Total Records</div>
+              </div>
+            </div>
+            
+            <!-- Status Breakdown -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
               <div style="text-align: center; padding: 15px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-                <div style="font-size: 24px; font-weight: bold; color: #166534;">
-                  RM${filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
-                </div>
-                <div style="font-size: 14px; color: #166534;">Total Income</div>
+                <div style="font-size: 20px; font-weight: bold; color: #166534;">${approvedRecords}</div>
+                <div style="font-size: 12px; color: #166534;">Approved Records</div>
               </div>
-              <div style="text-align: center; padding: 15px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
-                <div style="font-size: 24px; font-weight: bold; color: #991b1b;">
-                  RM${filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
-                </div>
-                <div style="font-size: 14px; color: #991b1b;">Total Expense</div>
-              </div>
-              <div style="text-align: center; padding: 15px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;">
-                <div style="font-size: 24px; font-weight: bold; color: #1e40af;">
-                  RM${(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
-                     filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)).toFixed(2)}
-                </div>
-                <div style="font-size: 14px; color: #1e40af;">Balance</div>
+              <div style="text-align: center; padding: 15px; background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;">
+                <div style="font-size: 20px; font-weight: bold; color: #d97706;">${pendingRecords}</div>
+                <div style="font-size: 12px; color: #d97706;">Pending Records</div>
               </div>
             </div>
           </div>
 
-          <!-- Add table -->
-          <div>
-            <h3 style="color: #1f2937; margin-bottom: 15px;">Detailed Records</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <!-- Monthly Breakdown -->
+          ${Object.keys(monthlyStats).length > 0 ? `
+          <div style="margin-bottom: 30px;">
+            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Monthly Breakdown</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px;">
               <thead>
-                <tr style="background-color: #f9fafb;">
-                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Date</th>
-                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Type</th>
-                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Amount</th>
-                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Description</th>
-                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Name</th>
-                  <th style="border: 1px solid #d1d5db; padding: 8px; text-align: left; font-size: 12px;">Status</th>
+                <tr style="background-color: #f8fafc;">
+                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-weight: bold;">Month</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">Income</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">Expense</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">Balance</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold;">Records</th>
                 </tr>
               </thead>
               <tbody>
-                ${filteredRecords.map(record => `
+                ${Object.entries(monthlyStats).map(([month, stats]) => `
                   <tr>
-                    <td style="border: 1px solid #d1d5db; padding: 8px;">${new Date(record.date).toLocaleDateString()}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 8px; color: ${record.type === 'Income' ? '#166534' : '#991b1b'};">
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: 500;">${month}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: #166534;">RM${stats.income.toFixed(2)}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: #991b1b;">RM${stats.expense.toFixed(2)}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: ${stats.income - stats.expense >= 0 ? '#166534' : '#991b1b'}; font-weight: 500;">RM${(stats.income - stats.expense).toFixed(2)}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${stats.count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
+
+          <!-- Detailed Records Table -->
+          <div>
+            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Detailed Records</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+              <thead>
+                <tr style="background-color: #f8fafc;">
+                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Date</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Type</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-weight: bold; font-size: 10px;">Amount</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Description</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Created By</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-weight: bold; font-size: 10px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filteredRecords.map((record, index) => `
+                  <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px;">${new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px; color: ${record.type === 'Income' ? '#166534' : '#991b1b'}; font-weight: 500;">
                       ${record.type === 'Income' ? 'Income' : 'Expense'}
                     </td>
-                    <td style="border: 1px solid #d1d5db; padding: 8px; text-align: right;">RM${record.amount.toFixed(2)}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 8px;">${record.description}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 8px;">${record.createdBy || 'Unknown'}</td>
-                    <td style="border: 1px solid #d1d5db; padding: 8px; color: ${record.status === 'Approved' ? '#166534' : '#d97706'};">
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-size: 10px; font-weight: 500;">RM${record.amount.toFixed(2)}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px; max-width: 150px; word-wrap: break-word;">${record.description || '-'}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px;">${record.createdBy || 'Unknown'}</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 10px; color: ${record.status === 'Approved' ? '#166534' : '#d97706'}; font-weight: 500;">
                       ${record.status === 'Approved' ? 'Approved' : 'Pending'}
                     </td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; font-size: 10px; color: #6b7280;">
+            <p>This report was generated automatically by PACMC Financial Management System</p>
+            <p>For any questions, please contact the system administrator</p>
           </div>
         </div>
       `;
@@ -142,6 +219,9 @@ export default function ExportPage() {
       const pdfContentElement = document.createElement('div');
       pdfContentElement.style.position = 'absolute';
       pdfContentElement.style.left = '-9999px';
+      pdfContentElement.style.top = '0';
+      pdfContentElement.style.width = '800px';
+      pdfContentElement.style.backgroundColor = 'white';
       pdfContentElement.innerHTML = pdfContent;
       document.body.appendChild(pdfContentElement);
 
@@ -150,6 +230,9 @@ export default function ExportPage() {
         scale: 2,
         useCORS: true,
         allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: pdfContentElement.scrollHeight,
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -171,15 +254,15 @@ export default function ExportPage() {
         heightLeft -= pageHeight;
       }
 
-      // 下载 PDF
-      const fileName = `PACMC_财务报告_${dateRange.startDate}_${dateRange.endDate}.pdf`;
+      // 下载 PDF with English filename
+      const fileName = `PACMC_Financial_Report_${dateRange.startDate}_${dateRange.endDate}.pdf`;
       pdf.save(fileName);
 
       // 清理
       document.body.removeChild(pdfContentElement);
     } catch (error) {
-      console.error('导出 PDF 失败:', error);
-      alert('导出 PDF 失败，请重试');
+      console.error('Export PDF failed:', error);
+      alert('Export PDF failed, please try again');
     } finally {
       setLoading(false);
     }
@@ -238,7 +321,7 @@ export default function ExportPage() {
       XLSX.utils.book_append_sheet(wb, ws, '财务记录');
 
       // 下载文件
-      const fileName = `PACMC_财务记录_${dateRange.startDate}_${dateRange.endDate}.xlsx`;
+      const fileName = `PACMC_Financial_Records_${dateRange.startDate}_${dateRange.endDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error('导出 Excel 失败:', error);
