@@ -301,7 +301,9 @@ export default function FinancialListPage() {
               </Link>
               <h1 className="text-xl font-semibold text-gray-900">Financial Records</h1>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            
+            {/* Desktop buttons */}
+            <div className="hidden sm:flex items-center gap-4">
               <Link
                 href="/"
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
@@ -309,8 +311,7 @@ export default function FinancialListPage() {
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span className="hidden sm:inline">Back to Home</span>
-                <span className="sm:hidden">Home</span>
+                Back to Home
               </Link>
               <button
                 onClick={loadRecords}
@@ -322,10 +323,10 @@ export default function FinancialListPage() {
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
               {lastRefreshTime && (
-                <span className="text-xs text-gray-500 hidden sm:inline">
+                <span className="text-xs text-gray-500">
                   Last updated: {lastRefreshTime.toLocaleTimeString()}
                 </span>
               )}
@@ -335,8 +336,7 @@ export default function FinancialListPage() {
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
                 >
                   <Users className="h-4 w-4" />
-                  <span className="hidden sm:inline">Manage Users</span>
-                  <span className="sm:hidden">Users</span>
+                  Manage Users
                 </Link>
               </SuperAdminOnly>
               <AdminOrSuperAdmin>
@@ -345,17 +345,67 @@ export default function FinancialListPage() {
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
                 >
                   <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">Set Cash</span>
-                  <span className="sm:hidden">Cash</span>
+                  Set Cash
                 </button>
                 <Link
                   href="/add-record"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
                 >
                   <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Add Record</span>
-                  <span className="sm:hidden">Add</span>
+                  Add Record
                 </Link>
+              </AdminOrSuperAdmin>
+            </div>
+
+            {/* Mobile buttons - simplified */}
+            <div className="flex items-center gap-2 w-full sm:hidden">
+              <Link
+                href="/"
+                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                title="Back to Home"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </Link>
+              <button
+                onClick={loadRecords}
+                disabled={refreshing}
+                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={refreshing ? 'Refreshing...' : 'Refresh'}
+              >
+                {refreshing ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
+                ) : (
+                  <RefreshCw className="h-5 w-5" />
+                )}
+              </button>
+              <AdminOrSuperAdmin>
+                <Link
+                  href="/add-record"
+                  className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  title="Add Record"
+                >
+                  <Plus className="h-5 w-5" />
+                </Link>
+              </AdminOrSuperAdmin>
+              <SuperAdminOnly>
+                <Link
+                  href="/admin/users"
+                  className="flex items-center justify-center w-10 h-10 text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                  title="Manage Users"
+                >
+                  <Users className="h-5 w-5" />
+                </Link>
+              </SuperAdminOnly>
+              <AdminOrSuperAdmin>
+                <button
+                  onClick={() => setShowCashModal(true)}
+                  className="flex items-center justify-center w-10 h-10 text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
+                  title="Set Cash"
+                >
+                  <Settings className="h-5 w-5" />
+                </button>
               </AdminOrSuperAdmin>
             </div>
           </div>

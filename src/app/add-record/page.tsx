@@ -124,9 +124,12 @@ export default function AddRecordPage() {
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <Link href="/" className="mr-4">
-                  <ArrowLeft className="h-8 w-8 text-gray-600" />
+                  <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
                 </Link>
-                <h1 className="text-xl font-semibold text-gray-900">Add Financial Record</h1>
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  <span className="hidden sm:inline">Add Financial Record</span>
+                  <span className="sm:hidden">Add Record</span>
+                </h1>
               </div>
             </div>
           </div>
