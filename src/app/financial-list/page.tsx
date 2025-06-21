@@ -355,6 +355,16 @@ export default function FinancialListPage() {
       
       // 如果日期相同，按创建时间排序（最新的创建时间在上）
       if (dateA === dateB) {
+        // 优先使用key作为排序依据（key通常是时间戳，数字大的表示最新的）
+        const keyA = parseInt(a.key) || 0;
+        const keyB = parseInt(b.key) || 0;
+        
+        // 如果key都有效且不同，使用key排序
+        if (keyA > 0 && keyB > 0 && keyA !== keyB) {
+          return keyB - keyA; // 数字大的在上（最新的）
+        }
+        
+        // 如果key相同或无效，尝试使用createdDate
         let createdTimeA = 0;
         let createdTimeB = 0;
         
@@ -362,24 +372,25 @@ export default function FinancialListPage() {
           try {
             createdTimeA = new Date(a.createdDate).getTime();
           } catch (e) {
-            // 如果创建时间无效，使用key
-            createdTimeA = parseInt(a.key) || 0;
+            createdTimeA = 0;
           }
-        } else {
-          createdTimeA = parseInt(a.key) || 0;
         }
         
         if (b.createdDate) {
           try {
             createdTimeB = new Date(b.createdDate).getTime();
           } catch (e) {
-            createdTimeB = parseInt(b.key) || 0;
+            createdTimeB = 0;
           }
-        } else {
-          createdTimeB = parseInt(b.key) || 0;
         }
         
-        return createdTimeB - createdTimeA; // 最新的创建时间在上
+        // 如果createdDate都有效，使用它
+        if (createdTimeA > 0 && createdTimeB > 0) {
+          return createdTimeB - createdTimeA; // 最新的创建时间在上
+        }
+        
+        // 如果createdDate无效，回退到key排序
+        return keyB - keyA;
       }
       
       return dateB - dateA; // 最新的日期在上
