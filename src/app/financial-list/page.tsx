@@ -356,9 +356,59 @@ export default function FinancialListPage() {
       }
       
       // 如果日期相同，按创建时间排序（最新的创建时间在上）
-      const createdDateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
-      const createdDateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
-      return createdDateB - createdDateA;
+      // 使用多种方法来确定创建时间
+      let createdDateA = 0;
+      let createdDateB = 0;
+      
+      // 尝试使用 createdDate
+      if (a.createdDate) {
+        try {
+          createdDateA = new Date(a.createdDate).getTime();
+        } catch (e) {
+          console.warn('Invalid createdDate for record A:', a.createdDate);
+        }
+      }
+      
+      if (b.createdDate) {
+        try {
+          createdDateB = new Date(b.createdDate).getTime();
+        } catch (e) {
+          console.warn('Invalid createdDate for record B:', b.createdDate);
+        }
+      }
+      
+      // 如果 createdDate 都有效，使用它
+      if (createdDateA > 0 && createdDateB > 0) {
+        return createdDateB - createdDateA;
+      }
+      
+      // 如果 createdDate 无效，尝试使用 lastDateUpdate
+      if (a.lastDateUpdate) {
+        try {
+          createdDateA = new Date(a.lastDateUpdate).getTime();
+        } catch (e) {
+          console.warn('Invalid lastDateUpdate for record A:', a.lastDateUpdate);
+        }
+      }
+      
+      if (b.lastDateUpdate) {
+        try {
+          createdDateB = new Date(b.lastDateUpdate).getTime();
+        } catch (e) {
+          console.warn('Invalid lastDateUpdate for record B:', b.lastDateUpdate);
+        }
+      }
+      
+      // 如果 lastDateUpdate 都有效，使用它
+      if (createdDateA > 0 && createdDateB > 0) {
+        return createdDateB - createdDateA;
+      }
+      
+      // 如果都没有有效的时间，使用 key 作为最后的排序依据（假设 key 包含时间信息）
+      // 通常 key 是时间戳，所以数字大的应该在前
+      const keyA = parseInt(a.key) || 0;
+      const keyB = parseInt(b.key) || 0;
+      return keyB - keyA;
     });
 
     // 按月份分组
