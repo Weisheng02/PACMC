@@ -43,6 +43,14 @@ const findTransactionSheet = (sheetNames: string[]) => {
 };
 
 export async function POST(request: NextRequest) {
+  return handleStatusUpdate(request);
+}
+
+export async function PUT(request: NextRequest) {
+  return handleStatusUpdate(request);
+}
+
+async function handleStatusUpdate(request: NextRequest) {
   try {
     const { key, status, approvedBy } = await request.json();
     
