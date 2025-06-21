@@ -151,16 +151,113 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="max-w-md w-full mx-auto p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">PACMC Youth Fellowship</h1>
-            <h2 className="text-xl text-gray-600 mb-6">Financial Management System</h2>
-            <p className="text-gray-500">Please login to access financial management features</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        </div>
+
+        {/* Main content */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            {/* Logo and Title Section */}
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <img
+                    src="/logo.jpg"
+                    alt="PACMC Logo"
+                    className="h-20 w-20 rounded-full object-cover shadow-lg border-4 border-white"
+                  />
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <h1 className="text-4xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                PACMC Youth Fellowship
+              </h1>
+              <h2 className="text-xl text-gray-600 mb-2 font-medium">
+                Financial Management System
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full mb-6"></div>
+              
+              <p className="text-gray-500 mb-8 leading-relaxed">
+                Secure, efficient, and transparent financial management for our community
+              </p>
+            </div>
+
+            {/* Login Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Welcome Back</h3>
+                <p className="text-gray-600 text-sm">Please login to access financial management features</p>
+              </div>
+              
+              <div className="space-y-4">
+                <LoginButton />
+                
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">
+                    By logging in, you agree to our terms of service and privacy policy
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Features Preview */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <DollarSign className="h-6 w-6 text-blue-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">Financial Tracking</h4>
+                <p className="text-xs text-gray-600">Monitor income and expenses</p>
+              </div>
+              
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BarChart3 className="h-6 w-6 text-green-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">Reports & Analytics</h4>
+                <p className="text-xs text-gray-600">Generate detailed reports</p>
+              </div>
+              
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Shield className="h-6 w-6 text-purple-600" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">Secure Access</h4>
+                <p className="text-xs text-gray-600">Role-based permissions</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-8 text-center">
+              <p className="text-xs text-gray-500">
+                © 2024 PACMC Youth Fellowship. All rights reserved.
+              </p>
+              <div className="flex justify-center space-x-4 mt-2">
+                <span className="text-xs text-gray-400">Privacy Policy</span>
+                <span className="text-xs text-gray-400">Terms of Service</span>
+                <span className="text-xs text-gray-400">Contact Support</span>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-center">
-            <LoginButton />
-          </div>
+        </div>
+
+        {/* Floating elements */}
+        <div className="absolute top-20 left-10 animate-bounce">
+          <div className="w-4 h-4 bg-blue-400 rounded-full opacity-60"></div>
+        </div>
+        <div className="absolute bottom-20 right-10 animate-bounce animation-delay-1000">
+          <div className="w-3 h-3 bg-purple-400 rounded-full opacity-60"></div>
+        </div>
+        <div className="absolute top-1/2 left-5 animate-pulse">
+          <div className="w-2 h-2 bg-indigo-400 rounded-full opacity-40"></div>
         </div>
       </div>
     );
