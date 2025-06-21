@@ -216,14 +216,19 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
+              <div className="flex items-center mb-4 sm:mb-0">
                 <Link href="/" className="mr-4">
-                  <ArrowLeft className="h-8 w-8 text-gray-600" />
+                  <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
                 </Link>
-                <h1 className="text-xl font-semibold text-gray-900">Financial Dashboard</h1>
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  <span className="hidden sm:inline">Financial Dashboard</span>
+                  <span className="sm:hidden">Dashboard</span>
+                </h1>
               </div>
-              <div className="flex items-center gap-4">
+              
+              {/* Desktop buttons */}
+              <div className="hidden sm:flex items-center gap-4">
                 <button
                   onClick={fetchData}
                   disabled={refreshing}
@@ -249,59 +254,91 @@ export default function DashboardPage() {
                   View Records
                 </Link>
               </div>
+
+              {/* Mobile buttons - simplified */}
+              <div className="flex items-center gap-2 w-full sm:hidden">
+                <Link
+                  href="/"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  title="Back to Home"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </Link>
+                <button
+                  onClick={fetchData}
+                  disabled={refreshing}
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={refreshing ? 'Refreshing...' : 'Refresh Data'}
+                >
+                  {refreshing ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
+                  ) : (
+                    <RefreshCw className="h-5 w-5" />
+                  )}
+                </button>
+                <Link
+                  href="/financial-list"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  title="View Records"
+                >
+                  <DollarSign className="h-5 w-5" />
+                </Link>
+              </div>
             </div>
           </div>
         </header>
 
         <div className="max-w-7xl mx-auto p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-600" />
+                <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Income</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Income</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate">
                     {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-red-600" />
+                <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Expense</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Expense</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate">
                     {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-blue-600" />
+                <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
+                  <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Balance</p>
-                  <p className={`text-2xl font-semibold ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Balance</p>
+                  <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                     {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Calendar className="h-6 w-6 text-purple-600" />
+                <div className="flex-shrink-0 p-2 bg-purple-100 rounded-lg">
+                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Records</p>
-                  <p className="text-2xl font-semibold text-gray-900">{records.length}</p>
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Records</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate">{records.length}</p>
                 </div>
               </div>
             </div>
