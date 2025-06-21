@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminOrSuperAdmin, SuperAdminOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,9 @@ export default function FinancialListPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editingRecord, setEditingRecord] = useState<Partial<FinancialRecord> | null>(null);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [cashInHand, setCashInHand] = useState(0);
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashForm, setCashForm] = useState({
@@ -306,39 +309,87 @@ export default function FinancialListPage() {
   }, []);
 
   const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
-    // 保存原始状态以便回滚
-    const originalRecords = [...records];
-    const originalStatus = records.find(r => r.key === key)?.status;
-
-    // 立即更新本地状态，实现即时反馈
-    setRecords(records.map(record =>
-      record.key === key ? { ...record, status: newStatus } : record
-    ));
-
-    // 后台发送API请求，不阻塞UI
     try {
       const response = await fetch('/api/sheets/update-record-status', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          key,
-          status: newStatus,
-          approvedBy: userProfile?.name || userProfile?.email || 'Unknown User',
-        }),
+        body: JSON.stringify({ key, status: newStatus }),
       });
 
-      if (!response.ok) {
-        // 如果API失败，回滚到原状态
-        const errorText = await response.text();
-        console.error('Status update failed:', response.status, errorText);
-        setRecords(originalRecords);
+      if (response.ok) {
+        // 更新本地状态
+        setRecords(prevRecords =>
+          prevRecords.map(record =>
+            record.key === key ? { ...record, status: newStatus } : record
+          )
+        );
+      } else {
+        console.error('Failed to update status');
       }
-    } catch (err) {
-      console.error('Error updating record status:', err);
-      // 如果API失败，回滚到原状态
-      setRecords(originalRecords);
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  // 开始内联编辑
+  const startInlineEdit = (record: FinancialRecord) => {
+    setEditingKey(record.key);
+    setEditingRecord({
+      date: record.date,
+      type: record.type,
+      who: record.who,
+      description: record.description,
+      amount: record.amount,
+      remark: record.remark,
+      account: record.account,
+      takePut: record.takePut,
+    });
+  };
+
+  // 取消内联编辑
+  const cancelInlineEdit = () => {
+    setEditingKey(null);
+    setEditingRecord(null);
+  };
+
+  // 保存内联编辑
+  const saveInlineEdit = async () => {
+    if (!editingKey || !editingRecord) return;
+
+    setSavingKey(editingKey);
+    try {
+      const response = await fetch(`/api/sheets/update/${editingKey}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingRecord),
+      });
+
+      if (response.ok) {
+        const updatedRecord = await response.json();
+        
+        // 更新本地状态
+        setRecords(prevRecords =>
+          prevRecords.map(record =>
+            record.key === editingKey ? { ...record, ...updatedRecord.record } : record
+          )
+        );
+        
+        // 重置编辑状态
+        setEditingKey(null);
+        setEditingRecord(null);
+      } else {
+        console.error('Failed to update record');
+        alert('Failed to update record. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating record:', error);
+      alert('Error updating record. Please try again.');
+    } finally {
+      setSavingKey(null);
     }
   };
 
@@ -987,33 +1038,84 @@ export default function FinancialListPage() {
                           {groupRecords.map((record) => (
                             <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                                {formatDate(record.date)}
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="date"
+                                    value={editingRecord?.date || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, date: e.target.value }))}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                ) : (
+                                  formatDate(record.date)
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    record.type === 'Income'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {record.type === 'Income' ? 'Income' : 'Expense'}
-                                </span>
+                                {editingKey === record.key ? (
+                                  <select
+                                    value={editingRecord?.type || 'Income'}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  >
+                                    <option value="Income">Income</option>
+                                    <option value="Expense">Expense</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                      record.type === 'Income'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}
+                                  >
+                                    {record.type === 'Income' ? 'Income' : 'Expense'}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                                {record.who}
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="text"
+                                    value={editingRecord?.who || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Name"
+                                  />
+                                ) : (
+                                  record.who
+                                )}
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
-                                {record.description}
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="text"
+                                    value={editingRecord?.description || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Description"
+                                  />
+                                ) : (
+                                  record.description
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
-                                <span
-                                  className={
-                                    record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                  }
-                                >
-                                  {formatCurrency(record.amount)}
-                                </span>
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingRecord?.amount || 0}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="0.00"
+                                  />
+                                ) : (
+                                  <span
+                                    className={
+                                      record.type === 'Income' ? 'text-green-600' : 'text-red-600'
+                                    }
+                                  >
+                                    {formatCurrency(record.amount)}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
                                 <div className="flex items-center">
@@ -1049,25 +1151,58 @@ export default function FinancialListPage() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
-                                {record.remark || '-'}
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="text"
+                                    value={editingRecord?.remark || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Remark"
+                                  />
+                                ) : (
+                                  record.remark || '-'
+                                )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex items-center gap-2">
                                   <AdminOrSuperAdmin>
-                                    <button
-                                      onClick={() => router.push(`/edit-record/${record.key}`)}
-                                      className="text-blue-600 hover:text-blue-900"
-                                      disabled={deletingKey === record.key}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </button>
+                                    {editingKey === record.key ? (
+                                      <>
+                                        <button
+                                          onClick={saveInlineEdit}
+                                          disabled={savingKey === record.key}
+                                          className="text-green-600 hover:text-green-900"
+                                        >
+                                          {savingKey === record.key ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                          ) : (
+                                            <Check className="h-4 w-4" />
+                                          )}
+                                        </button>
+                                        <button
+                                          onClick={cancelInlineEdit}
+                                          disabled={savingKey === record.key}
+                                          className="text-gray-600 hover:text-gray-900"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <button
+                                        onClick={() => startInlineEdit(record)}
+                                        className="text-blue-600 hover:text-blue-900"
+                                        disabled={deletingKey === record.key}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                    )}
                                   </AdminOrSuperAdmin>
                                   <SuperAdminOnly>
                                     <button
                                       onClick={() => handleDelete(record.key)}
-                                      disabled={deletingKey === record.key}
+                                      disabled={deletingKey === record.key || editingKey === record.key}
                                       className={`${
-                                        deletingKey === record.key
+                                        deletingKey === record.key || editingKey === record.key
                                           ? 'text-gray-400 cursor-not-allowed'
                                           : 'text-red-600 hover:text-red-900'
                                       }`}
@@ -1094,16 +1229,36 @@ export default function FinancialListPage() {
                           <div key={record.key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex items-center gap-2">
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    record.type === 'Income'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {record.type === 'Income' ? 'Income' : 'Expense'}
-                                </span>
-                                <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+                                {editingKey === record.key ? (
+                                  <select
+                                    value={editingRecord?.type || 'Income'}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
+                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  >
+                                    <option value="Income">Income</option>
+                                    <option value="Expense">Expense</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                      record.type === 'Income'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}
+                                  >
+                                    {record.type === 'Income' ? 'Income' : 'Expense'}
+                                  </span>
+                                )}
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="date"
+                                    value={editingRecord?.date || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, date: e.target.value }))}
+                                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                ) : (
+                                  <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 {record.status === 'Approved' ? (
@@ -1141,49 +1296,111 @@ export default function FinancialListPage() {
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-900">Name:</span>
-                                <span className="text-sm text-gray-700">{record.who}</span>
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="text"
+                                    value={editingRecord?.who || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                                    placeholder="Name"
+                                  />
+                                ) : (
+                                  <span className="text-sm text-gray-700">{record.who}</span>
+                                )}
                               </div>
                               
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium text-gray-900">Amount:</span>
-                                <span
-                                  className={`text-sm font-medium ${
-                                    record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                  }`}
-                                >
-                                  {formatCurrency(record.amount)}
-                                </span>
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingRecord?.amount || 0}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24"
+                                    placeholder="0.00"
+                                  />
+                                ) : (
+                                  <span
+                                    className={`text-sm font-medium ${
+                                      record.type === 'Income' ? 'text-green-600' : 'text-red-600'
+                                    }`}
+                                  >
+                                    {formatCurrency(record.amount)}
+                                  </span>
+                                )}
                               </div>
                               
                               <div className="flex justify-between items-start">
                                 <span className="text-sm font-medium text-gray-900">Description:</span>
-                                <span className="text-sm text-gray-700 text-right max-w-[60%]">{record.description}</span>
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="text"
+                                    value={editingRecord?.description || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                                    placeholder="Description"
+                                  />
+                                ) : (
+                                  <span className="text-sm text-gray-700 text-right max-w-[60%]">{record.description}</span>
+                                )}
                               </div>
                               
-                              {record.remark && (
-                                <div className="flex justify-between items-start">
-                                  <span className="text-sm font-medium text-gray-900">Remark:</span>
-                                  <span className="text-sm text-gray-500 text-right max-w-[60%]">{record.remark}</span>
-                                </div>
-                              )}
+                              <div className="flex justify-between items-start">
+                                <span className="text-sm font-medium text-gray-900">Remark:</span>
+                                {editingKey === record.key ? (
+                                  <input
+                                    type="text"
+                                    value={editingRecord?.remark || ''}
+                                    onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                                    placeholder="Remark"
+                                  />
+                                ) : (
+                                  <span className="text-sm text-gray-500 text-right max-w-[60%]">{record.remark || '-'}</span>
+                                )}
+                              </div>
                             </div>
                             
                             <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-200">
                               <AdminOrSuperAdmin>
-                                <button
-                                  onClick={() => router.push(`/edit-record/${record.key}`)}
-                                  className="text-blue-600 hover:text-blue-900 p-1"
-                                  disabled={deletingKey === record.key}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
+                                {editingKey === record.key ? (
+                                  <>
+                                    <button
+                                      onClick={saveInlineEdit}
+                                      disabled={savingKey === record.key}
+                                      className="text-green-600 hover:text-green-900 p-1"
+                                    >
+                                      {savingKey === record.key ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                                      ) : (
+                                        <Check className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={cancelInlineEdit}
+                                      disabled={savingKey === record.key}
+                                      className="text-gray-600 hover:text-gray-900 p-1"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => startInlineEdit(record)}
+                                    className="text-blue-600 hover:text-blue-900 p-1"
+                                    disabled={deletingKey === record.key}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                )}
                               </AdminOrSuperAdmin>
                               <SuperAdminOnly>
                                 <button
                                   onClick={() => handleDelete(record.key)}
-                                  disabled={deletingKey === record.key}
+                                  disabled={deletingKey === record.key || editingKey === record.key}
                                   className={`p-1 ${
-                                    deletingKey === record.key
+                                    deletingKey === record.key || editingKey === record.key
                                       ? 'text-gray-400 cursor-not-allowed'
                                       : 'text-red-600 hover:text-red-900'
                                   }`}
