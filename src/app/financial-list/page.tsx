@@ -16,7 +16,6 @@ export default function FinancialListPage() {
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<Partial<FinancialRecord> | null>(null);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [cashInHand, setCashInHand] = useState(0);
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashForm, setCashForm] = useState({
@@ -91,16 +90,23 @@ export default function FinancialListPage() {
       return;
     }
 
+    // 保存原始状态以便回滚
+    const originalRecords = [...records];
+    const deletedRecord = records.find(r => r.key === key);
+
+    // 立即从本地状态中移除，实现即时反馈
+    setRecords(prevRecords => prevRecords.filter(record => record.key !== key));
+
+    // 后台发送删除请求，不阻塞UI
     try {
-      setDeletingKey(key);
       await deleteFinancialRecord(key);
-      setRecords(records.filter(record => record.key !== key));
-      alert('记录删除成功！');
+      // 删除成功，不需要做任何操作
     } catch (err) {
+      // 如果删除失败，回滚到原状态
       console.error('Error deleting record:', err);
-      alert(`删除失败: ${err instanceof Error ? err.message : '未知错误'}`);
-    } finally {
-      setDeletingKey(null);
+      setRecords(originalRecords);
+      console.warn('Delete failed, reverted to original state');
+      // 可以添加一个小的toast通知
     }
   };
 
@@ -309,6 +315,18 @@ export default function FinancialListPage() {
   }, []);
 
   const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
+    // 保存原始状态以便回滚
+    const originalRecords = [...records];
+    const originalStatus = records.find(r => r.key === key)?.status;
+
+    // 立即更新本地状态，实现即时反馈
+    setRecords(prevRecords =>
+      prevRecords.map(record =>
+        record.key === key ? { ...record, status: newStatus } : record
+      )
+    );
+
+    // 后台发送API请求，不阻塞UI
     try {
       const response = await fetch('/api/sheets/update-record-status', {
         method: 'PUT',
@@ -318,18 +336,18 @@ export default function FinancialListPage() {
         body: JSON.stringify({ key, status: newStatus }),
       });
 
-      if (response.ok) {
-        // 更新本地状态
-        setRecords(prevRecords =>
-          prevRecords.map(record =>
-            record.key === key ? { ...record, status: newStatus } : record
-          )
-        );
-      } else {
-        console.error('Failed to update status');
+      if (!response.ok) {
+        // 如果API失败，回滚到原状态
+        console.error('Failed to update status:', response.status);
+        setRecords(originalRecords);
+        // 可以添加一个小的toast通知
+        console.warn('Status update failed, reverted to original state');
       }
     } catch (error) {
+      // 如果API失败，回滚到原状态
       console.error('Error updating status:', error);
+      setRecords(originalRecords);
+      console.warn('Status update failed, reverted to original state');
     }
   };
 
@@ -358,7 +376,29 @@ export default function FinancialListPage() {
   const saveInlineEdit = async () => {
     if (!editingKey || !editingRecord) return;
 
-    setSavingKey(editingKey);
+    // 保存原始状态以便回滚
+    const originalRecords = [...records];
+    const originalRecord = records.find(r => r.key === editingKey);
+
+    // 立即更新本地状态，实现即时反馈
+    setRecords(prevRecords =>
+      prevRecords.map(record =>
+        record.key === editingKey ? { 
+          ...record, 
+          ...editingRecord,
+          // 确保日期格式正确
+          date: editingRecord.date || record.date,
+          // 确保金额是数字
+          amount: typeof editingRecord.amount === 'number' ? editingRecord.amount : record.amount,
+        } : record
+      )
+    );
+    
+    // 立即重置编辑状态，让用户看到更新结果
+    setEditingKey(null);
+    setEditingRecord(null);
+
+    // 后台发送API请求，不阻塞UI
     try {
       const response = await fetch(`/api/sheets/update/${editingKey}`, {
         method: 'PUT',
@@ -368,35 +408,45 @@ export default function FinancialListPage() {
         body: JSON.stringify(editingRecord),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        
-        // 更新本地状态 - 使用编辑的数据而不是API返回的数据
-        setRecords(prevRecords =>
-          prevRecords.map(record =>
-            record.key === editingKey ? { 
-              ...record, 
-              ...editingRecord,
-              // 确保日期格式正确
-              date: editingRecord.date || record.date,
-              // 确保金额是数字
-              amount: typeof editingRecord.amount === 'number' ? editingRecord.amount : record.amount,
-            } : record
-          )
-        );
-        
-        // 重置编辑状态
-        setEditingKey(null);
-        setEditingRecord(null);
-      } else {
-        console.error('Failed to update record');
-        alert('Failed to update record. Please try again.');
+      if (!response.ok) {
+        // 如果API失败，回滚到原状态
+        console.error('Failed to update record:', response.status);
+        setRecords(originalRecords);
+        // 恢复编辑状态
+        if (originalRecord) {
+          setEditingKey(editingKey);
+          setEditingRecord({
+            date: originalRecord.date,
+            type: originalRecord.type,
+            who: originalRecord.who,
+            description: originalRecord.description,
+            amount: originalRecord.amount,
+            remark: originalRecord.remark,
+            account: originalRecord.account,
+            takePut: originalRecord.takePut,
+          });
+        }
+        console.warn('Record update failed, reverted to original state');
       }
     } catch (error) {
+      // 如果API失败，回滚到原状态
       console.error('Error updating record:', error);
-      alert('Error updating record. Please try again.');
-    } finally {
-      setSavingKey(null);
+      setRecords(originalRecords);
+      // 恢复编辑状态
+      if (originalRecord) {
+        setEditingKey(editingKey);
+        setEditingRecord({
+          date: originalRecord.date,
+          type: originalRecord.type,
+          who: originalRecord.who,
+          description: originalRecord.description,
+          amount: originalRecord.amount,
+          remark: originalRecord.remark,
+          account: originalRecord.account,
+          takePut: originalRecord.takePut,
+        });
+      }
+      console.warn('Record update failed, reverted to original state');
     }
   };
 
@@ -1177,18 +1227,12 @@ export default function FinancialListPage() {
                                       <>
                                         <button
                                           onClick={saveInlineEdit}
-                                          disabled={savingKey === record.key}
                                           className="text-green-600 hover:text-green-900"
                                         >
-                                          {savingKey === record.key ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                                          ) : (
-                                            <Check className="h-4 w-4" />
-                                          )}
+                                          <Check className="h-4 w-4" />
                                         </button>
                                         <button
                                           onClick={cancelInlineEdit}
-                                          disabled={savingKey === record.key}
                                           className="text-gray-600 hover:text-gray-900"
                                         >
                                           <X className="h-4 w-4" />
@@ -1375,18 +1419,12 @@ export default function FinancialListPage() {
                                   <>
                                     <button
                                       onClick={saveInlineEdit}
-                                      disabled={savingKey === record.key}
                                       className="text-green-600 hover:text-green-900 p-1"
                                     >
-                                      {savingKey === record.key ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                                      ) : (
-                                        <Check className="h-4 w-4" />
-                                      )}
+                                      <Check className="h-4 w-4" />
                                     </button>
                                     <button
                                       onClick={cancelInlineEdit}
-                                      disabled={savingKey === record.key}
                                       className="text-gray-600 hover:text-gray-900 p-1"
                                     >
                                       <X className="h-4 w-4" />
