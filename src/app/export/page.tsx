@@ -85,181 +85,277 @@ export default function ExportPage() {
         return acc;
       }, {} as Record<string, { income: number; expense: number; count: number }>);
 
-      // Create PDF content with better styling and more information
-      const pdfContent = `
-        <div style="font-family: 'Arial', 'Helvetica', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: white; color: #333;">
-          <!-- Header with Logo and Title -->
-          <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2563eb; padding-bottom: 20px;">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-              <img src="/logo.jpg" alt="PACMC Logo" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover;" />
-              <h1 style="color: #1f2937; margin: 0; font-size: 28px; font-weight: bold;">PACMC Youth Fellowship</h1>
-            </div>
-            <h2 style="color: #6b7280; margin: 10px 0; font-size: 20px;">Financial Report</h2>
-            <div style="font-size: 12px; color: #6b7280; line-height: 1.5;">
-              <strong>Report Period:</strong> ${new Date(dateRange.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} - ${new Date(dateRange.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
-              <strong>Generated:</strong> ${new Date().toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}<br>
-              <strong>Total Records:</strong> ${filteredRecords.length} | <strong>Type:</strong> ${exportType === 'all' ? 'All Records' : exportType === 'income' ? 'Income Only' : 'Expense Only'}
-            </div>
-          </div>
+      // 创建PDF文档
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const contentWidth = pageWidth - (margin * 2);
+      let currentY = margin;
 
-          <!-- Summary Statistics -->
-          <div style="margin-bottom: 30px;">
-            <h3 style="color: #1f2937; margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Summary Statistics</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #bbf7d0; border-radius: 10px;">
-                <div style="font-size: 24px; font-weight: bold; color: #166534; margin-bottom: 5px;">
-                  RM${totalIncome.toFixed(2)}
-                </div>
-                <div style="font-size: 14px; color: #166534; font-weight: 500;">Total Income</div>
-              </div>
-              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fecaca; border-radius: 10px;">
-                <div style="font-size: 24px; font-weight: bold; color: #991b1b; margin-bottom: 5px;">
-                  RM${totalExpense.toFixed(2)}
-                </div>
-                <div style="font-size: 14px; color: #991b1b; font-weight: 500;">Total Expense</div>
-              </div>
-              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #bfdbfe; border-radius: 10px;">
-                <div style="font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px;">
-                  RM${balance.toFixed(2)}
-                </div>
-                <div style="font-size: 14px; color: #1e40af; font-weight: 500;">Net Balance</div>
-              </div>
-              <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 2px solid #e9d5ff; border-radius: 10px;">
-                <div style="font-size: 24px; font-weight: bold; color: #7c3aed; margin-bottom: 5px;">
-                  ${filteredRecords.length}
-                </div>
-                <div style="font-size: 14px; color: #7c3aed; font-weight: 500;">Total Records</div>
-              </div>
-            </div>
-            
-            <!-- Status Breakdown -->
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-              <div style="text-align: center; padding: 15px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-                <div style="font-size: 20px; font-weight: bold; color: #166534;">${approvedRecords}</div>
-                <div style="font-size: 12px; color: #166534;">Approved Records</div>
-              </div>
-              <div style="text-align: center; padding: 15px; background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;">
-                <div style="font-size: 20px; font-weight: bold; color: #d97706;">${pendingRecords}</div>
-                <div style="font-size: 12px; color: #d97706;">Pending Records</div>
-              </div>
-            </div>
-          </div>
+      // 设置字体
+      pdf.setFont('helvetica');
+      
+      // 第一页：头部和统计信息
+      // Header
+      pdf.setFontSize(24);
+      pdf.setTextColor(31, 41, 55);
+      pdf.text('PACMC Youth Fellowship', pageWidth / 2, currentY, { align: 'center' });
+      currentY += 15;
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Financial Report', pageWidth / 2, currentY, { align: 'center' });
+      currentY += 20;
 
-          <!-- Monthly Breakdown -->
-          ${Object.keys(monthlyStats).length > 0 ? `
-          <div style="margin-bottom: 30px;">
-            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Monthly Breakdown</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px;">
-              <thead>
-                <tr style="background-color: #f8fafc;">
-                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-weight: bold;">Month</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">Income</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">Expense</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold;">Balance</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold;">Records</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${Object.entries(monthlyStats).map(([month, stats]) => `
-                  <tr>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: 500;">${month}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: #166534;">RM${stats.income.toFixed(2)}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: #991b1b;">RM${stats.expense.toFixed(2)}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: ${stats.income - stats.expense >= 0 ? '#166534' : '#991b1b'}; font-weight: 500;">RM${(stats.income - stats.expense).toFixed(2)}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">${stats.count}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-          ` : ''}
+      // Report info
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128);
+      const reportInfo = [
+        `Report Period: ${new Date(dateRange.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} - ${new Date(dateRange.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+        `Generated: ${new Date().toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+        `Total Records: ${filteredRecords.length} | Type: ${exportType === 'all' ? 'All Records' : exportType === 'income' ? 'Income Only' : 'Expense Only'}`
+      ];
+      
+      reportInfo.forEach(info => {
+        pdf.text(info, margin, currentY);
+        currentY += 6;
+      });
+      currentY += 10;
 
-          <!-- Detailed Records Table -->
-          <div>
-            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Detailed Records</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-              <thead>
-                <tr style="background-color: #f8fafc;">
-                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Date</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Type</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-weight: bold; font-size: 10px;">Amount</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Description</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-weight: bold; font-size: 10px;">Created By</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-weight: bold; font-size: 10px;">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${filteredRecords.map((record, index) => `
-                  <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px;">${new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px; color: ${record.type === 'Income' ? '#166534' : '#991b1b'}; font-weight: 500;">
-                      ${record.type === 'Income' ? 'Income' : 'Expense'}
-                    </td>
-                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-size: 10px; font-weight: 500;">RM${record.amount.toFixed(2)}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px; max-width: 150px; word-wrap: break-word;">${record.description || '-'}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 10px;">${record.createdBy || 'Unknown'}</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 10px; color: ${record.status === 'Approved' ? '#166534' : '#d97706'}; font-weight: 500;">
-                      ${record.status === 'Approved' ? 'Approved' : 'Pending'}
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
+      // Summary Statistics
+      pdf.setFontSize(14);
+      pdf.setTextColor(31, 41, 55);
+      pdf.text('Summary Statistics', margin, currentY);
+      currentY += 15;
 
-          <!-- Footer -->
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; font-size: 10px; color: #6b7280;">
-            <p>This report was generated automatically by PACMC Financial Management System</p>
-            <p>For any questions, please contact the system administrator</p>
-          </div>
-        </div>
-      `;
+      // Statistics boxes
+      const boxWidth = (contentWidth - 15) / 2;
+      const boxHeight = 25;
+      
+      // Income box
+      pdf.setFillColor(240, 253, 244);
+      pdf.rect(margin, currentY, boxWidth, boxHeight, 'F');
+      pdf.setDrawColor(187, 247, 208);
+      pdf.rect(margin, currentY, boxWidth, boxHeight, 'S');
+      pdf.setFontSize(16);
+      pdf.setTextColor(22, 101, 52);
+      pdf.text(`RM${totalIncome.toFixed(2)}`, margin + boxWidth/2, currentY + 8, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text('Total Income', margin + boxWidth/2, currentY + 18, { align: 'center' });
 
-      // 将内容添加到页面（隐藏）
-      const pdfContentElement = document.createElement('div');
-      pdfContentElement.style.position = 'absolute';
-      pdfContentElement.style.left = '-9999px';
-      pdfContentElement.style.top = '0';
-      pdfContentElement.style.width = '800px';
-      pdfContentElement.style.backgroundColor = 'white';
-      pdfContentElement.innerHTML = pdfContent;
-      document.body.appendChild(pdfContentElement);
+      // Expense box
+      pdf.setFillColor(254, 242, 242);
+      pdf.rect(margin + boxWidth + 15, currentY, boxWidth, boxHeight, 'F');
+      pdf.setDrawColor(254, 202, 202);
+      pdf.rect(margin + boxWidth + 15, currentY, boxWidth, boxHeight, 'S');
+      pdf.setFontSize(16);
+      pdf.setTextColor(153, 27, 27);
+      pdf.text(`RM${totalExpense.toFixed(2)}`, margin + boxWidth + 15 + boxWidth/2, currentY + 8, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text('Total Expense', margin + boxWidth + 15 + boxWidth/2, currentY + 18, { align: 'center' });
+      currentY += boxHeight + 15;
 
-      // 转换为 PDF
-      const canvas = await html2canvas(pdfContentElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 800,
-        height: pdfContentElement.scrollHeight,
+      // Balance and Records boxes
+      pdf.setFillColor(239, 246, 255);
+      pdf.rect(margin, currentY, boxWidth, boxHeight, 'F');
+      pdf.setDrawColor(191, 219, 254);
+      pdf.rect(margin, currentY, boxWidth, boxHeight, 'S');
+      pdf.setFontSize(16);
+      pdf.setTextColor(30, 64, 175);
+      pdf.text(`RM${balance.toFixed(2)}`, margin + boxWidth/2, currentY + 8, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text('Net Balance', margin + boxWidth/2, currentY + 18, { align: 'center' });
+
+      pdf.setFillColor(250, 245, 255);
+      pdf.rect(margin + boxWidth + 15, currentY, boxWidth, boxHeight, 'F');
+      pdf.setDrawColor(233, 213, 255);
+      pdf.rect(margin + boxWidth + 15, currentY, boxWidth, boxHeight, 'S');
+      pdf.setFontSize(16);
+      pdf.setTextColor(124, 58, 237);
+      pdf.text(`${filteredRecords.length}`, margin + boxWidth + 15 + boxWidth/2, currentY + 8, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text('Total Records', margin + boxWidth + 15 + boxWidth/2, currentY + 18, { align: 'center' });
+      currentY += boxHeight + 20;
+
+      // Status breakdown
+      pdf.setFontSize(12);
+      pdf.setTextColor(31, 41, 55);
+      pdf.text('Status Breakdown:', margin, currentY);
+      currentY += 10;
+
+      const statusBoxWidth = (contentWidth - 15) / 2;
+      const statusBoxHeight = 20;
+
+      // Approved records
+      pdf.setFillColor(240, 253, 244);
+      pdf.rect(margin, currentY, statusBoxWidth, statusBoxHeight, 'F');
+      pdf.setDrawColor(187, 247, 208);
+      pdf.rect(margin, currentY, statusBoxWidth, statusBoxHeight, 'S');
+      pdf.setFontSize(14);
+      pdf.setTextColor(22, 101, 52);
+      pdf.text(`${approvedRecords}`, margin + statusBoxWidth/2, currentY + 8, { align: 'center' });
+      pdf.setFontSize(9);
+      pdf.text('Approved Records', margin + statusBoxWidth/2, currentY + 16, { align: 'center' });
+
+      // Pending records
+      pdf.setFillColor(254, 243, 199);
+      pdf.rect(margin + statusBoxWidth + 15, currentY, statusBoxWidth, statusBoxHeight, 'F');
+      pdf.setDrawColor(253, 230, 138);
+      pdf.rect(margin + statusBoxWidth + 15, currentY, statusBoxWidth, statusBoxHeight, 'S');
+      pdf.setFontSize(14);
+      pdf.setTextColor(217, 119, 6);
+      pdf.text(`${pendingRecords}`, margin + statusBoxWidth + 15 + statusBoxWidth/2, currentY + 8, { align: 'center' });
+      pdf.setFontSize(9);
+      pdf.text('Pending Records', margin + statusBoxWidth + 15 + statusBoxWidth/2, currentY + 16, { align: 'center' });
+      currentY += statusBoxHeight + 20;
+
+      // Monthly breakdown (if exists)
+      if (Object.keys(monthlyStats).length > 0) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(31, 41, 55);
+        pdf.text('Monthly Breakdown:', margin, currentY);
+        currentY += 10;
+
+        // Monthly table headers
+        const monthlyColWidths = [50, 30, 30, 30, 25];
+        const monthlyHeaders = ['Month', 'Income', 'Expense', 'Balance', 'Records'];
+        
+        pdf.setFontSize(9);
+        pdf.setTextColor(31, 41, 55);
+        let xPos = margin;
+        monthlyHeaders.forEach((header, index) => {
+          pdf.rect(xPos, currentY, monthlyColWidths[index], 8, 'S');
+          pdf.text(header, xPos + 2, currentY + 6);
+          xPos += monthlyColWidths[index];
+        });
+        currentY += 8;
+
+        // Monthly data
+        pdf.setFontSize(8);
+        Object.entries(monthlyStats).forEach(([month, stats]) => {
+          if (currentY > pageHeight - 40) {
+            pdf.addPage();
+            currentY = margin;
+          }
+          
+          xPos = margin;
+          pdf.rect(xPos, currentY, monthlyColWidths[0], 6, 'S');
+          pdf.text(month, xPos + 2, currentY + 4);
+          xPos += monthlyColWidths[0];
+          
+          pdf.rect(xPos, currentY, monthlyColWidths[1], 6, 'S');
+          pdf.setTextColor(22, 101, 52);
+          pdf.text(`RM${stats.income.toFixed(2)}`, xPos + 2, currentY + 4);
+          xPos += monthlyColWidths[1];
+          
+          pdf.rect(xPos, currentY, monthlyColWidths[2], 6, 'S');
+          pdf.setTextColor(153, 27, 27);
+          pdf.text(`RM${stats.expense.toFixed(2)}`, xPos + 2, currentY + 4);
+          xPos += monthlyColWidths[2];
+          
+          pdf.rect(xPos, currentY, monthlyColWidths[3], 6, 'S');
+          pdf.setTextColor(stats.income - stats.expense >= 0 ? 22 : 153, stats.income - stats.expense >= 0 ? 101 : 27, stats.income - stats.expense >= 0 ? 52 : 27);
+          pdf.text(`RM${(stats.income - stats.expense).toFixed(2)}`, xPos + 2, currentY + 4);
+          xPos += monthlyColWidths[3];
+          
+          pdf.rect(xPos, currentY, monthlyColWidths[4], 6, 'S');
+          pdf.setTextColor(31, 41, 55);
+          pdf.text(`${stats.count}`, xPos + 2, currentY + 4);
+          
+          currentY += 6;
+        });
+        currentY += 15;
+      }
+
+      // Detailed records table
+      pdf.setFontSize(12);
+      pdf.setTextColor(31, 41, 55);
+      pdf.text('Detailed Records:', margin, currentY);
+      currentY += 10;
+
+      // Table headers
+      const colWidths = [25, 20, 25, 60, 30, 20];
+      const headers = ['Date', 'Type', 'Amount', 'Description', 'Created By', 'Status'];
+      
+      pdf.setFontSize(8);
+      pdf.setTextColor(31, 41, 55);
+      let xPos = margin;
+      headers.forEach((header, index) => {
+        pdf.rect(xPos, currentY, colWidths[index], 8, 'S');
+        pdf.text(header, xPos + 2, currentY + 6);
+        xPos += colWidths[index];
+      });
+      currentY += 8;
+
+      // Table data
+      pdf.setFontSize(7);
+      filteredRecords.forEach((record, index) => {
+        // Check if we need a new page
+        if (currentY > pageHeight - 30) {
+          pdf.addPage();
+          currentY = margin;
+          
+          // Add table headers on new page
+          xPos = margin;
+          headers.forEach((header, headerIndex) => {
+            pdf.rect(xPos, currentY, colWidths[headerIndex], 8, 'S');
+            pdf.setFontSize(8);
+            pdf.setTextColor(31, 41, 55);
+            pdf.text(header, xPos + 2, currentY + 6);
+            xPos += colWidths[headerIndex];
+          });
+          currentY += 8;
+        }
+
+        // Row data
+        xPos = margin;
+        
+        // Date
+        pdf.rect(xPos, currentY, colWidths[0], 6, 'S');
+        pdf.setTextColor(31, 41, 55);
+        pdf.text(new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), xPos + 2, currentY + 4);
+        xPos += colWidths[0];
+        
+        // Type
+        pdf.rect(xPos, currentY, colWidths[1], 6, 'S');
+        pdf.setTextColor(record.type === 'Income' ? 22 : 153, record.type === 'Income' ? 101 : 27, record.type === 'Income' ? 52 : 27);
+        pdf.text(record.type === 'Income' ? 'Income' : 'Expense', xPos + 2, currentY + 4);
+        xPos += colWidths[1];
+        
+        // Amount
+        pdf.rect(xPos, currentY, colWidths[2], 6, 'S');
+        pdf.setTextColor(31, 41, 55);
+        pdf.text(`RM${record.amount.toFixed(2)}`, xPos + 2, currentY + 4);
+        xPos += colWidths[2];
+        
+        // Description
+        pdf.rect(xPos, currentY, colWidths[3], 6, 'S');
+        pdf.text(record.description || '-', xPos + 2, currentY + 4);
+        xPos += colWidths[3];
+        
+        // Created By
+        pdf.rect(xPos, currentY, colWidths[4], 6, 'S');
+        pdf.text(record.createdBy || 'Unknown', xPos + 2, currentY + 4);
+        xPos += colWidths[4];
+        
+        // Status
+        pdf.rect(xPos, currentY, colWidths[5], 6, 'S');
+        pdf.setTextColor(record.status === 'Approved' ? 22 : 217, record.status === 'Approved' ? 101 : 119, record.status === 'Approved' ? 52 : 6);
+        pdf.text(record.status === 'Approved' ? 'Approved' : 'Pending', xPos + 2, currentY + 4);
+        
+        currentY += 6;
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
+      // Footer on last page
+      pdf.setFontSize(8);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('This report was generated automatically by PACMC Financial Management System', pageWidth / 2, pageHeight - 15, { align: 'center' });
+      pdf.text('For any questions, please contact the system administrator', pageWidth / 2, pageHeight - 10, { align: 'center' });
 
       // 下载 PDF with English filename
       const fileName = `PACMC_Financial_Report_${dateRange.startDate}_${dateRange.endDate}.pdf`;
       pdf.save(fileName);
-
-      // 清理
-      document.body.removeChild(pdfContentElement);
     } catch (error) {
       console.error('Export PDF failed:', error);
       alert('Export PDF failed, please try again');
@@ -412,21 +508,21 @@ export default function ExportPage() {
               
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 truncate">
-                  RM${filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                  RM{filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 truncate">Total Income</div>
               </div>
               
               <div className="text-center p-4 bg-red-50 rounded-lg">
                 <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 truncate">
-                  RM${filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                  RM{filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 truncate">Total Expense</div>
               </div>
               
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-purple-600 truncate">
-                  RM${(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
+                  RM{(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
                      filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)).toFixed(2)}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 truncate">Balance</div>
