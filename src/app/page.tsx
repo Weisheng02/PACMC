@@ -324,20 +324,20 @@ export default function Home() {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-lg sm:text-2xl font-bold text-green-600">RM{stats.monthlyIncome.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Monthly Income</div>
+                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 truncate">RM{stats.monthlyIncome.toFixed(2)}</div>
+                <div className="text-xs sm:text-sm text-gray-600 truncate">Monthly Income</div>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-lg sm:text-2xl font-bold text-red-600">RM{stats.monthlyExpense.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Monthly Expense</div>
+                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 truncate">RM{stats.monthlyExpense.toFixed(2)}</div>
+                <div className="text-xs sm:text-sm text-gray-600 truncate">Monthly Expense</div>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-lg sm:text-2xl font-bold text-blue-600">RM{stats.monthlyBalance.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Monthly Balance</div>
+                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-blue-600 truncate">RM{stats.monthlyBalance.toFixed(2)}</div>
+                <div className="text-xs sm:text-sm text-gray-600 truncate">Monthly Balance</div>
               </div>
               <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div className="text-lg sm:text-2xl font-bold text-yellow-600">RM{stats.cashInHand.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Cash in Hand</div>
+                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-yellow-600 truncate">RM{stats.cashInHand.toFixed(2)}</div>
+                <div className="text-xs sm:text-sm text-gray-600 truncate">Cash in Hand</div>
               </div>
             </div>
             
@@ -346,16 +346,16 @@ export default function Home() {
               <h4 className="text-md font-medium text-gray-700 mb-3">Overall Statistics</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-base sm:text-lg font-bold text-green-600">RM{stats.totalIncome.toFixed(2)}</div>
-                  <div className="text-xs text-gray-600">Total Income</div>
+                  <div className="text-xs sm:text-base lg:text-lg font-bold text-green-600 truncate">RM{stats.totalIncome.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600 truncate">Total Income</div>
                 </div>
                 <div className="text-center p-3 bg-red-50 rounded-lg border border-red-200">
-                  <div className="text-base sm:text-lg font-bold text-red-600">RM{stats.totalExpense.toFixed(2)}</div>
-                  <div className="text-xs text-gray-600">Total Expense</div>
+                  <div className="text-xs sm:text-base lg:text-lg font-bold text-red-600 truncate">RM{stats.totalExpense.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600 truncate">Total Expense</div>
                 </div>
                 <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-base sm:text-lg font-bold text-blue-600">RM{stats.totalBalance.toFixed(2)}</div>
-                  <div className="text-xs text-gray-600">Total Balance</div>
+                  <div className="text-xs sm:text-base lg:text-lg font-bold text-blue-600 truncate">RM{stats.totalBalance.toFixed(2)}</div>
+                  <div className="text-xs text-gray-600 truncate">Total Balance</div>
                 </div>
               </div>
             </div>

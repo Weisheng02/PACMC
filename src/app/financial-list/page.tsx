@@ -418,12 +418,12 @@ export default function FinancialListPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
+              <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg">
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Income</p>
-                <p className="text-lg sm:text-2xl font-bold text-green-600">
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Income</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 truncate">
                   {formatCurrency(totalIncome)}
                 </p>
               </div>
@@ -432,12 +432,12 @@ export default function FinancialListPage() {
 
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
+              <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg">
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
               </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expense</p>
-                <p className="text-lg sm:text-2xl font-bold text-red-600">
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Expense</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 truncate">
                   {formatCurrency(totalExpense)}
                 </p>
               </div>
@@ -446,12 +446,12 @@ export default function FinancialListPage() {
 
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Balance</p>
-                <p className={`text-lg sm:text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Balance</p>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                   {formatCurrency(balance)}
                 </p>
               </div>
@@ -460,12 +460,12 @@ export default function FinancialListPage() {
 
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
+              <div className="flex-shrink-0 p-2 bg-yellow-100 rounded-lg">
                 <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Cash in Hand</p>
-                <p className={`text-lg sm:text-2xl font-bold ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Cash in Hand</p>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
                   {formatCurrency(cashInHand)}
                 </p>
               </div>
@@ -474,12 +474,12 @@ export default function FinancialListPage() {
 
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border col-span-2 md:col-span-1">
             <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
+              <div className="flex-shrink-0 p-2 bg-orange-100 rounded-lg">
                 <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-lg sm:text-2xl font-bold text-orange-600">
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-orange-600 truncate">
                   {pendingRecords.length}
                 </p>
               </div>
