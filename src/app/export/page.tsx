@@ -318,32 +318,32 @@ export default function ExportPage() {
               Statistics
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{filteredRecords.length}</div>
-                <div className="text-sm text-gray-600">Record Count</div>
+                <div className="text-lg sm:text-2xl font-bold text-blue-600">{filteredRecords.length}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Record Count</div>
               </div>
               
               <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-lg sm:text-2xl font-bold text-green-600">
                   RM${filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">Total Income</div>
+                <div className="text-xs sm:text-sm text-gray-600">Total Income</div>
               </div>
               
               <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-lg sm:text-2xl font-bold text-red-600">
                   RM${filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">Total Expense</div>
+                <div className="text-xs sm:text-sm text-gray-600">Total Expense</div>
               </div>
               
               <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-lg sm:text-2xl font-bold text-purple-600">
                   RM${(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
                      filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)).toFixed(2)}
                 </div>
-                <div className="text-sm text-gray-600">Balance</div>
+                <div className="text-xs sm:text-sm text-gray-600">Balance</div>
               </div>
             </div>
           </div>

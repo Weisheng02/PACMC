@@ -294,14 +294,14 @@ export default function FinancialListPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
+            <div className="flex items-center mb-4 sm:mb-0">
               <Link href="/" className="mr-4">
                 <DollarSign className="h-8 w-8 text-blue-600" />
               </Link>
               <h1 className="text-xl font-semibold text-gray-900">Financial Records</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
               <Link
                 href="/"
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
@@ -309,7 +309,8 @@ export default function FinancialListPage() {
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Back to Home
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Home</span>
               </Link>
               <button
                 onClick={loadRecords}
@@ -321,10 +322,10 @@ export default function FinancialListPage() {
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                {refreshing ? 'Refreshing...' : 'Refresh'}
+                <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
               {lastRefreshTime && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 hidden sm:inline">
                   Last updated: {lastRefreshTime.toLocaleTimeString()}
                 </span>
               )}
@@ -334,7 +335,8 @@ export default function FinancialListPage() {
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
                 >
                   <Users className="h-4 w-4" />
-                  Manage Users
+                  <span className="hidden sm:inline">Manage Users</span>
+                  <span className="sm:hidden">Users</span>
                 </Link>
               </SuperAdminOnly>
               <AdminOrSuperAdmin>
@@ -343,14 +345,16 @@ export default function FinancialListPage() {
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
                 >
                   <Settings className="h-4 w-4" />
-                  Set Cash
+                  <span className="hidden sm:inline">Set Cash</span>
+                  <span className="sm:hidden">Cash</span>
                 </button>
                 <Link
                   href="/add-record"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Record
+                  <span className="hidden sm:inline">Add Record</span>
+                  <span className="sm:hidden">Add</span>
                 </Link>
               </AdminOrSuperAdmin>
             </div>
@@ -361,71 +365,71 @@ export default function FinancialListPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Income</p>
-                <p className="text-2xl font-bold text-green-600">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Income</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600">
                   {formatCurrency(totalIncome)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-red-600" />
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Expense</p>
-                <p className="text-2xl font-bold text-red-600">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expense</p>
+                <p className="text-lg sm:text-2xl font-bold text-red-600">
                   {formatCurrency(totalExpense)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-blue-600" />
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Balance</p>
-                <p className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Balance</p>
+                <p className={`text-lg sm:text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                   {formatCurrency(balance)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
-                <Wallet className="h-6 w-6 text-yellow-600" />
+                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Cash in Hand</p>
-                <p className={`text-2xl font-bold ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Cash in Hand</p>
+                <p className={`text-lg sm:text-2xl font-bold ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
                   {formatCurrency(cashInHand)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border col-span-2 md:col-span-1">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
-                <Clock className="h-6 w-6 text-orange-600" />
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-orange-600">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-lg sm:text-2xl font-bold text-orange-600">
                   {pendingRecords.length}
                 </p>
               </div>
@@ -443,20 +447,20 @@ export default function FinancialListPage() {
         {/* Records Table */}
         <div className="bg-white shadow-sm border rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-lg font-medium text-gray-900">
                 Financial Records ({records.length} records)
               </h2>
               
               {/* 分组和排序控件 */}
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                 {/* 分组选择 */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Group:</label>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Group:</label>
                   <select
                     value={groupBy}
                     onChange={(e) => setGroupBy(e.target.value as 'none' | 'status' | 'month')}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 flex-1 sm:flex-none"
                   >
                     <option value="none">No Group</option>
                     <option value="status">By Status</option>
@@ -465,12 +469,12 @@ export default function FinancialListPage() {
                 </div>
 
                 {/* 排序选择 */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Sort:</label>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Sort:</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as 'date' | 'amount' | 'type')}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 flex-1 sm:flex-none"
                   >
                     <option value="date">By Date</option>
                     <option value="amount">By Amount</option>
@@ -503,12 +507,12 @@ export default function FinancialListPage() {
                 <div key={groupName} className="border-b border-gray-200 last:border-b-0">
                   {/* 分组标题和统计 */}
                   <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <h3 className="text-sm font-medium text-gray-900">
                         {groupName} ({groupRecords.length} records)
                       </h3>
                       {groupRecords.length > 0 && (
-                        <div className="flex items-center gap-4 text-xs text-gray-600">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-600">
                           <span>
                             Income: {formatCurrency(groupRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0))}
                           </span>
@@ -526,74 +530,164 @@ export default function FinancialListPage() {
                     </div>
                   </div>
 
-                  {/* 分组内的表格 */}
-                  <table className="min-w-full border border-gray-300">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Description
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Amount
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                          Remark
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white">
+                  {/* 桌面端表格布局 */}
+                  <div className="hidden md:block">
+                    <table className="min-w-full border border-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Type
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Description
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Amount
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Remark
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {groupRecords.map((record) => (
+                          <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
+                              {formatDate(record.date)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  record.type === 'Income'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {record.type === 'Income' ? 'Income' : 'Expense'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
+                              {record.who}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
+                              {record.description}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
+                              <span
+                                className={
+                                  record.type === 'Income' ? 'text-green-600' : 'text-red-600'
+                                }
+                              >
+                                {formatCurrency(record.amount)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
+                              <div className="flex items-center">
+                                {record.status === 'Approved' ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                                ) : (
+                                  <Clock className="h-4 w-4 text-yellow-500 mr-1" />
+                                )}
+                                {(isAdmin || isSuperAdmin) ? (
+                                  <select
+                                    value={record.status}
+                                    onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
+                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
+                                      record.status === 'Approved'
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                    }`}
+                                  >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                      record.status === 'Approved'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {record.status === 'Approved' ? 'Approved' : 'Pending'}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
+                              {record.remark || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                <AdminOrSuperAdmin>
+                                  <button
+                                    onClick={() => router.push(`/edit-record/${record.key}`)}
+                                    className="text-blue-600 hover:text-blue-900"
+                                    disabled={deletingKey === record.key}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                </AdminOrSuperAdmin>
+                                <SuperAdminOnly>
+                                  <button
+                                    onClick={() => handleDelete(record.key)}
+                                    disabled={deletingKey === record.key}
+                                    className={`${
+                                      deletingKey === record.key
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-red-600 hover:text-red-900'
+                                    }`}
+                                  >
+                                    {deletingKey === record.key ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </SuperAdminOnly>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 手机端卡片布局 */}
+                  <div className="md:hidden">
+                    <div className="space-y-4 p-4">
                       {groupRecords.map((record) => (
-                        <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                            {formatDate(record.date)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                record.type === 'Income'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {record.type === 'Income' ? 'Income' : 'Expense'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                            {record.who}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
-                            {record.description}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
-                            <span
-                              className={
-                                record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                              }
-                            >
-                              {formatCurrency(record.amount)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                            <div className="flex items-center">
+                        <div key={record.key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  record.type === 'Income'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {record.type === 'Income' ? 'Income' : 'Expense'}
+                              </span>
+                              <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
                               {record.status === 'Approved' ? (
-                                <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                                <CheckCircle className="h-4 w-4 text-green-500" />
                               ) : (
-                                <Clock className="h-4 w-4 text-yellow-500 mr-1" />
+                                <Clock className="h-4 w-4 text-yellow-500" />
                               )}
                               {(isAdmin || isSuperAdmin) ? (
                                 <select
@@ -620,44 +714,70 @@ export default function FinancialListPage() {
                                 </span>
                               )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
-                            {record.remark || '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center gap-2">
-                              <AdminOrSuperAdmin>
-                                <button
-                                  onClick={() => router.push(`/edit-record/${record.key}`)}
-                                  className="text-blue-600 hover:text-blue-900"
-                                  disabled={deletingKey === record.key}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                              </AdminOrSuperAdmin>
-                              <SuperAdminOnly>
-                                <button
-                                  onClick={() => handleDelete(record.key)}
-                                  disabled={deletingKey === record.key}
-                                  className={`${
-                                    deletingKey === record.key
-                                      ? 'text-gray-400 cursor-not-allowed'
-                                      : 'text-red-600 hover:text-red-900'
-                                  }`}
-                                >
-                                  {deletingKey === record.key ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </SuperAdminOnly>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-gray-900">Name:</span>
+                              <span className="text-sm text-gray-700">{record.who}</span>
                             </div>
-                          </td>
-                        </tr>
+                            
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-gray-900">Amount:</span>
+                              <span
+                                className={`text-sm font-medium ${
+                                  record.type === 'Income' ? 'text-green-600' : 'text-red-600'
+                                }`}
+                              >
+                                {formatCurrency(record.amount)}
+                              </span>
+                            </div>
+                            
+                            <div className="flex justify-between items-start">
+                              <span className="text-sm font-medium text-gray-900">Description:</span>
+                              <span className="text-sm text-gray-700 text-right max-w-[60%]">{record.description}</span>
+                            </div>
+                            
+                            {record.remark && (
+                              <div className="flex justify-between items-start">
+                                <span className="text-sm font-medium text-gray-900">Remark:</span>
+                                <span className="text-sm text-gray-500 text-right max-w-[60%]">{record.remark}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-200">
+                            <AdminOrSuperAdmin>
+                              <button
+                                onClick={() => router.push(`/edit-record/${record.key}`)}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                disabled={deletingKey === record.key}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            </AdminOrSuperAdmin>
+                            <SuperAdminOnly>
+                              <button
+                                onClick={() => handleDelete(record.key)}
+                                disabled={deletingKey === record.key}
+                                className={`p-1 ${
+                                  deletingKey === record.key
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-red-600 hover:text-red-900'
+                                }`}
+                              >
+                                {deletingKey === record.key ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </button>
+                            </SuperAdminOnly>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

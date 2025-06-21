@@ -132,15 +132,15 @@ export default function AddRecordPage() {
           </div>
         </header>
         {/* Main Content */}
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white shadow-sm border rounded-lg p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="bg-white shadow-sm border rounded-lg p-4 sm:p-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Record Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Record Type *
                 </label>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <label className="flex items-center">
                     <input
                       type="radio"
@@ -166,65 +166,71 @@ export default function AddRecordPage() {
                 </div>
               </div>
 
-              {/* Date */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date *
-                </label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                />
+              {/* Date and Account in a row on larger screens */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  />
+                </div>
+
+                {/* Account */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Account *
+                  </label>
+                  <select
+                    value={formData.account}
+                    onChange={(e) => setFormData(prev => ({ ...prev, account: e.target.value }))}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  >
+                    <option value="MIYF">MIYF</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Account */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Account *
-                </label>
-                <select
-                  value={formData.account}
-                  onChange={(e) => setFormData(prev => ({ ...prev, account: e.target.value }))}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                >
-                  <option value="MIYF">MIYF</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+              {/* Who and Amount in a row on larger screens */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                {/* Who */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.who}
+                    onChange={(e) => setFormData(prev => ({ ...prev, who: e.target.value }))}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    placeholder="Enter the name"
+                  />
+                </div>
 
-              {/* Who */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.who}
-                  onChange={(e) => setFormData(prev => ({ ...prev, who: e.target.value }))}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="Enter the name"
-                />
-              </div>
-
-              {/* Amount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Amount *
-                </label>
-                <input
-                  type="number"
-                  value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
-                  required
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="0.00"
-                />
+                {/* Amount */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Amount *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.amount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) }))}
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
 
               {/* Description */}
@@ -257,10 +263,10 @@ export default function AddRecordPage() {
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end space-x-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 pt-4">
                 <Link
                   href="/"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 text-center"
                 >
                   Cancel
                 </Link>
