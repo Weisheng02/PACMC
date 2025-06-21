@@ -347,47 +347,45 @@ export default function FinancialListPage() {
     // 首先应用搜索过滤器
     let processedRecords = applyFilters([...records]);
 
-    // 完全按时间倒序排序（最新的在上）
+    // 按日期排序（最新的在上）
     processedRecords.sort((a, b) => {
-      // 获取记录的完整时间戳（日期 + 时间）
-      let timeA = 0;
-      let timeB = 0;
+      // 按date字段排序，最新的日期在上
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
       
-      // 尝试组合日期和创建时间
-      if (a.date && a.createdDate) {
-        try {
-          // 使用创建时间作为主要排序依据
-          timeA = new Date(a.createdDate).getTime();
-        } catch (e) {
-          // 如果创建时间无效，使用日期
-          timeA = new Date(a.date).getTime();
+      // 如果日期相同，按创建时间排序（最新的创建时间在上）
+      if (dateA === dateB) {
+        let createdTimeA = 0;
+        let createdTimeB = 0;
+        
+        if (a.createdDate) {
+          try {
+            createdTimeA = new Date(a.createdDate).getTime();
+          } catch (e) {
+            // 如果创建时间无效，使用key
+            createdTimeA = parseInt(a.key) || 0;
+          }
+        } else {
+          createdTimeA = parseInt(a.key) || 0;
         }
-      } else if (a.date) {
-        timeA = new Date(a.date).getTime();
-      }
-      
-      if (b.date && b.createdDate) {
-        try {
-          timeB = new Date(b.createdDate).getTime();
-        } catch (e) {
-          timeB = new Date(b.date).getTime();
+        
+        if (b.createdDate) {
+          try {
+            createdTimeB = new Date(b.createdDate).getTime();
+          } catch (e) {
+            createdTimeB = parseInt(b.key) || 0;
+          }
+        } else {
+          createdTimeB = parseInt(b.key) || 0;
         }
-      } else if (b.date) {
-        timeB = new Date(b.date).getTime();
+        
+        return createdTimeB - createdTimeA; // 最新的创建时间在上
       }
       
-      // 如果时间戳都有效，直接比较
-      if (timeA > 0 && timeB > 0) {
-        return timeB - timeA; // 最新的在上
-      }
-      
-      // 如果时间戳无效，使用key作为最后排序依据
-      const keyA = parseInt(a.key) || 0;
-      const keyB = parseInt(b.key) || 0;
-      return keyB - keyA; // 数字大的在上
+      return dateB - dateA; // 最新的日期在上
     });
 
-    // 按月份分组
+    // 按月份分组（基于date字段）
     const grouped: { [key: string]: FinancialRecord[] } = {};
     
     processedRecords.forEach(record => {
