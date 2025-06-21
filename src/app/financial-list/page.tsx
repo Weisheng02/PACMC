@@ -347,9 +347,18 @@ export default function FinancialListPage() {
     // 首先应用搜索过滤器
     let processedRecords = applyFilters([...records]);
 
-    // 按日期排序（最新的在上）
+    // 按创建时间排序（最新的在上）
     processedRecords.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+      // 首先按日期排序（最新的日期在上）
+      const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateComparison !== 0) {
+        return dateComparison;
+      }
+      
+      // 如果日期相同，按创建时间排序（最新的创建时间在上）
+      const createdDateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+      const createdDateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+      return createdDateB - createdDateA;
     });
 
     // 按月份分组
