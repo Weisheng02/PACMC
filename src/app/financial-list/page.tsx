@@ -347,68 +347,44 @@ export default function FinancialListPage() {
     // 首先应用搜索过滤器
     let processedRecords = applyFilters([...records]);
 
-    // 按创建时间排序（最新的在上）
+    // 完全按时间倒序排序（最新的在上）
     processedRecords.sort((a, b) => {
-      // 首先按日期排序（最新的日期在上）
-      const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (dateComparison !== 0) {
-        return dateComparison;
-      }
+      // 获取记录的完整时间戳（日期 + 时间）
+      let timeA = 0;
+      let timeB = 0;
       
-      // 如果日期相同，按创建时间排序（最新的创建时间在上）
-      // 使用多种方法来确定创建时间
-      let createdDateA = 0;
-      let createdDateB = 0;
-      
-      // 尝试使用 createdDate
-      if (a.createdDate) {
+      // 尝试组合日期和创建时间
+      if (a.date && a.createdDate) {
         try {
-          createdDateA = new Date(a.createdDate).getTime();
+          // 使用创建时间作为主要排序依据
+          timeA = new Date(a.createdDate).getTime();
         } catch (e) {
-          console.warn('Invalid createdDate for record A:', a.createdDate);
+          // 如果创建时间无效，使用日期
+          timeA = new Date(a.date).getTime();
         }
+      } else if (a.date) {
+        timeA = new Date(a.date).getTime();
       }
       
-      if (b.createdDate) {
+      if (b.date && b.createdDate) {
         try {
-          createdDateB = new Date(b.createdDate).getTime();
+          timeB = new Date(b.createdDate).getTime();
         } catch (e) {
-          console.warn('Invalid createdDate for record B:', b.createdDate);
+          timeB = new Date(b.date).getTime();
         }
+      } else if (b.date) {
+        timeB = new Date(b.date).getTime();
       }
       
-      // 如果 createdDate 都有效，使用它
-      if (createdDateA > 0 && createdDateB > 0) {
-        return createdDateB - createdDateA;
+      // 如果时间戳都有效，直接比较
+      if (timeA > 0 && timeB > 0) {
+        return timeB - timeA; // 最新的在上
       }
       
-      // 如果 createdDate 无效，尝试使用 lastDateUpdate
-      if (a.lastDateUpdate) {
-        try {
-          createdDateA = new Date(a.lastDateUpdate).getTime();
-        } catch (e) {
-          console.warn('Invalid lastDateUpdate for record A:', a.lastDateUpdate);
-        }
-      }
-      
-      if (b.lastDateUpdate) {
-        try {
-          createdDateB = new Date(b.lastDateUpdate).getTime();
-        } catch (e) {
-          console.warn('Invalid lastDateUpdate for record B:', b.lastDateUpdate);
-        }
-      }
-      
-      // 如果 lastDateUpdate 都有效，使用它
-      if (createdDateA > 0 && createdDateB > 0) {
-        return createdDateB - createdDateA;
-      }
-      
-      // 如果都没有有效的时间，使用 key 作为最后的排序依据（假设 key 包含时间信息）
-      // 通常 key 是时间戳，所以数字大的应该在前
+      // 如果时间戳无效，使用key作为最后排序依据
       const keyA = parseInt(a.key) || 0;
       const keyB = parseInt(b.key) || 0;
-      return keyB - keyA;
+      return keyB - keyA; // 数字大的在上
     });
 
     // 按月份分组
