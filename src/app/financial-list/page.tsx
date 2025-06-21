@@ -403,10 +403,22 @@ export default function FinancialListPage() {
     // 按月份排序（最新的在上）
     return Object.fromEntries(
       Object.entries(grouped)
-        .sort(([a], [b]) => {
-          const dateA = new Date(a.replace(/年|月/g, '-'));
-          const dateB = new Date(b.replace(/年|月/g, '-'));
-          return dateB.getTime() - dateA.getTime(); // 最新的在上
+        .sort(([monthKeyA], [monthKeyB]) => {
+          // 解析月份字符串，格式：2025年5月
+          const parseMonthKey = (monthKey: string) => {
+            const match = monthKey.match(/(\d{4})年(\d{1,2})月/);
+            if (match) {
+              const year = parseInt(match[1]);
+              const month = parseInt(match[2]);
+              return new Date(year, month - 1, 1).getTime(); // 月份从0开始，所以减1
+            }
+            return 0;
+          };
+          
+          const timeA = parseMonthKey(monthKeyA);
+          const timeB = parseMonthKey(monthKeyB);
+          
+          return timeB - timeA; // 最新的月份在上
         })
     );
   };
