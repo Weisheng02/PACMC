@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminOrSuperAdmin, SuperAdminOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -21,10 +21,29 @@ export default function FinancialListPage() {
     amount: 0,
     description: '',
   });
-  const [groupBy, setGroupBy] = useState<'none' | 'status' | 'month'>('status');
+  const [groupBy, setGroupBy] = useState<'none' | 'status' | 'month'>('month');
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'type'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  
+  // 高级搜索和过滤状态
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({
+    keyword: '',
+    type: 'all' as 'all' | 'Income' | 'Expense',
+    status: 'all' as 'all' | 'Pending' | 'Approved',
+    dateFrom: '',
+    dateTo: '',
+    amountFrom: '',
+    amountTo: '',
+    account: 'all' as 'all' | 'MIYF' | 'Other',
+  });
+  const [savedSearches, setSavedSearches] = useState<Array<{
+    id: string;
+    name: string;
+    filters: typeof searchFilters;
+  }>>([]);
+  
   const router = useRouter();
 
   const loadRecords = async () => {
@@ -153,6 +172,139 @@ export default function FinancialListPage() {
   const approvedRecords = records.filter(record => record.status === 'Approved');
   const pendingRecords = records.filter(record => record.status === 'Pending');
 
+  // 应用搜索过滤器
+  const applyFilters = (records: FinancialRecord[]) => {
+    return records.filter(record => {
+      // 关键词搜索（搜索描述、姓名、备注）
+      if (searchFilters.keyword) {
+        const keyword = searchFilters.keyword.toLowerCase();
+        const searchableText = [
+          record.description,
+          record.who,
+          record.remark,
+          record.account
+        ].join(' ').toLowerCase();
+        
+        if (!searchableText.includes(keyword)) {
+          return false;
+        }
+      }
+
+      // 类型过滤
+      if (searchFilters.type !== 'all' && record.type !== searchFilters.type) {
+        return false;
+      }
+
+      // 状态过滤
+      if (searchFilters.status !== 'all' && record.status !== searchFilters.status) {
+        return false;
+      }
+
+      // 账户过滤
+      if (searchFilters.account !== 'all' && record.account !== searchFilters.account) {
+        return false;
+      }
+
+      // 日期范围过滤
+      if (searchFilters.dateFrom) {
+        const recordDate = new Date(record.date);
+        const fromDate = new Date(searchFilters.dateFrom);
+        if (recordDate < fromDate) {
+          return false;
+        }
+      }
+
+      if (searchFilters.dateTo) {
+        const recordDate = new Date(record.date);
+        const toDate = new Date(searchFilters.dateTo);
+        if (recordDate > toDate) {
+          return false;
+        }
+      }
+
+      // 金额范围过滤
+      if (searchFilters.amountFrom) {
+        const fromAmount = parseFloat(searchFilters.amountFrom);
+        if (record.amount < fromAmount) {
+          return false;
+        }
+      }
+
+      if (searchFilters.amountTo) {
+        const toAmount = parseFloat(searchFilters.amountTo);
+        if (record.amount > toAmount) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  // 保存当前搜索
+  const saveCurrentSearch = () => {
+    const searchName = prompt('请输入搜索名称：');
+    if (!searchName) return;
+
+    const newSearch = {
+      id: Date.now().toString(),
+      name: searchName,
+      filters: { ...searchFilters }
+    };
+
+    setSavedSearches(prev => [...prev, newSearch]);
+    
+    // 保存到本地存储
+    const saved = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+    saved.push(newSearch);
+    localStorage.setItem('savedSearches', JSON.stringify(saved));
+    
+    alert('搜索已保存！');
+  };
+
+  // 加载保存的搜索
+  const loadSavedSearch = (savedSearch: typeof savedSearches[0]) => {
+    setSearchFilters(savedSearch.filters);
+  };
+
+  // 删除保存的搜索
+  const deleteSavedSearch = (searchId: string) => {
+    if (!confirm('确定要删除这个保存的搜索吗？')) return;
+    
+    setSavedSearches(prev => prev.filter(s => s.id !== searchId));
+    
+    // 从本地存储删除
+    const saved = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+    const updated = saved.filter((s: any) => s.id !== searchId);
+    localStorage.setItem('savedSearches', JSON.stringify(updated));
+  };
+
+  // 清除所有过滤器
+  const clearAllFilters = () => {
+    setSearchFilters({
+      keyword: '',
+      type: 'all',
+      status: 'all',
+      dateFrom: '',
+      dateTo: '',
+      amountFrom: '',
+      amountTo: '',
+      account: 'all',
+    });
+  };
+
+  // 加载保存的搜索从本地存储
+  useEffect(() => {
+    const saved = localStorage.getItem('savedSearches');
+    if (saved) {
+      try {
+        setSavedSearches(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading saved searches:', error);
+      }
+    }
+  }, []);
+
   const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
     // 保存原始状态以便回滚
     const originalRecords = [...records];
@@ -192,67 +344,53 @@ export default function FinancialListPage() {
 
   // 分组和排序逻辑
   const getGroupedAndSortedRecords = () => {
-    let processedRecords = [...records];
+    // 首先应用搜索过滤器
+    let processedRecords = applyFilters([...records]);
 
-    // 排序
+    // 按日期排序（最新的在上）
     processedRecords.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (sortBy) {
-        case 'date':
-          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-          break;
-        case 'amount':
-          comparison = a.amount - b.amount;
-          break;
-        case 'type':
-          comparison = a.type.localeCompare(b.type);
-          break;
-      }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
-    // 分组
-    if (groupBy === 'none') {
-      return { 'All Records': processedRecords };
-    }
-
-    if (groupBy === 'status') {
-      const grouped = {
-        'Pending': processedRecords.filter(r => r.status === 'Pending'),
-        'Approved': processedRecords.filter(r => r.status === 'Approved'),
-      };
-      return grouped;
-    }
-
-    if (groupBy === 'month') {
-      const grouped: { [key: string]: FinancialRecord[] } = {};
+    // 按月份分组
+    const grouped: { [key: string]: FinancialRecord[] } = {};
+    
+    processedRecords.forEach(record => {
+      const date = new Date(record.date);
+      const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`;
       
-      processedRecords.forEach(record => {
-        const date = new Date(record.date);
-        const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`;
-        
-        if (!grouped[monthKey]) {
-          grouped[monthKey] = [];
-        }
-        grouped[monthKey].push(record);
-      });
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey].push(record);
+    });
 
-      // 按月份排序
-      return Object.fromEntries(
-        Object.entries(grouped).sort(([a], [b]) => {
+    // 按月份排序（最新的在上）
+    return Object.fromEntries(
+      Object.entries(grouped)
+        .sort(([a], [b]) => {
           const dateA = new Date(a.replace(/年|月/g, '-'));
           const dateB = new Date(b.replace(/年|月/g, '-'));
-          return sortOrder === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
+          return dateB.getTime() - dateA.getTime(); // 最新的在上
         })
-      );
-    }
-
-    return { 'All Records': processedRecords };
+    );
   };
 
   const groupedRecords = getGroupedAndSortedRecords();
+
+  // 计算过滤后的记录总数
+  const filteredRecordsCount = Object.values(groupedRecords).reduce((total, group) => total + group.length, 0);
+
+  // 计算过滤后的统计数据
+  const filteredRecords = applyFilters(records);
+  const filteredTotalIncome = filteredRecords
+    .filter(record => record.type === 'Income')
+    .reduce((sum, record) => sum + record.amount, 0);
+  const filteredTotalExpense = filteredRecords
+    .filter(record => record.type === 'Expense')
+    .reduce((sum, record) => sum + record.amount, 0);
+  const filteredBalance = filteredTotalIncome - filteredTotalExpense;
+  const filteredPendingRecords = filteredRecords.filter(record => record.status === 'Pending');
 
   if (loading) {
     return (
@@ -293,7 +431,7 @@ export default function FinancialListPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
             <div className="flex items-center mb-4 sm:mb-0">
               <Link href="/" className="mr-4">
@@ -413,18 +551,18 @@ export default function FinancialListPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 mb-8">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg">
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Income</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 truncate">
-                  {formatCurrency(totalIncome)}
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Income</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 break-words">
+                  {formatCurrency(filteredTotalIncome)}
                 </p>
               </div>
             </div>
@@ -436,9 +574,9 @@ export default function FinancialListPage() {
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Expense</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 truncate">
-                  {formatCurrency(totalExpense)}
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expense</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 break-words">
+                  {formatCurrency(filteredTotalExpense)}
                 </p>
               </div>
             </div>
@@ -450,9 +588,9 @@ export default function FinancialListPage() {
                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Balance</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                  {formatCurrency(balance)}
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Balance</p>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold break-words ${filteredBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  {formatCurrency(filteredBalance)}
                 </p>
               </div>
             </div>
@@ -464,23 +602,23 @@ export default function FinancialListPage() {
                 <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Cash in Hand</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Cash in Hand</p>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold break-words ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
                   {formatCurrency(cashInHand)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border col-span-2 md:col-span-1">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="flex-shrink-0 p-2 bg-orange-100 rounded-lg">
                 <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-orange-600 truncate">
-                  {pendingRecords.length}
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-orange-600">
+                  {filteredPendingRecords.length}
                 </p>
               </div>
             </div>
@@ -499,48 +637,215 @@ export default function FinancialListPage() {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-lg font-medium text-gray-900">
-                Financial Records ({records.length} records)
+                Financial Records ({filteredRecordsCount} records)
               </h2>
               
-              {/* 分组和排序控件 */}
+              {/* 高级搜索控件 */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-                {/* 分组选择 */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Group:</label>
-                  <select
-                    value={groupBy}
-                    onChange={(e) => setGroupBy(e.target.value as 'none' | 'status' | 'month')}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 flex-1 sm:flex-none"
-                  >
-                    <option value="none">No Group</option>
-                    <option value="status">By Status</option>
-                    <option value="month">By Month</option>
-                  </select>
-                </div>
-
-                {/* 排序选择 */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Sort:</label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'date' | 'amount' | 'type')}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 flex-1 sm:flex-none"
-                  >
-                    <option value="date">By Date</option>
-                    <option value="amount">By Amount</option>
-                    <option value="type">By Type</option>
-                  </select>
-                  
-                  <button
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                    title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-                  >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
-                  </button>
-                </div>
+                {/* 高级搜索按钮 */}
+                <button
+                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Search className="h-4 w-4" />
+                  Advanced Search
+                </button>
               </div>
             </div>
+
+            {/* 高级搜索面板 */}
+            {showAdvancedSearch && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* 关键词搜索 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Keyword Search</label>
+                    <input
+                      type="text"
+                      placeholder="Search description, name, remark..."
+                      value={searchFilters.keyword}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, keyword: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    />
+                  </div>
+
+                  {/* 类型过滤 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select
+                      value={searchFilters.type}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, type: e.target.value as any }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    >
+                      <option value="all">All Types</option>
+                      <option value="Income">Income</option>
+                      <option value="Expense">Expense</option>
+                    </select>
+                  </div>
+
+                  {/* 状态过滤 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      value={searchFilters.status}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, status: e.target.value as any }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                    </select>
+                  </div>
+
+                  {/* 账户过滤 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account</label>
+                    <select
+                      value={searchFilters.account}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, account: e.target.value as any }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    >
+                      <option value="all">All Accounts</option>
+                      <option value="MIYF">MIYF</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* 日期范围 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                    <input
+                      type="date"
+                      value={searchFilters.dateFrom}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                    <input
+                      type="date"
+                      value={searchFilters.dateTo}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    />
+                  </div>
+
+                  {/* 金额范围 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount From (RM)</label>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={searchFilters.amountFrom}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountFrom: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount To (RM)</label>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={searchFilters.amountTo}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountTo: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                {/* 搜索操作按钮 */}
+                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={saveCurrentSearch}
+                    className="px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Save Search
+                  </button>
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                  
+                  {/* 保存的搜索列表 */}
+                  {savedSearches.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Saved:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {savedSearches.map((savedSearch) => (
+                          <div key={savedSearch.id} className="flex items-center gap-1">
+                            <button
+                              onClick={() => loadSavedSearch(savedSearch)}
+                              className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                            >
+                              {savedSearch.name}
+                            </button>
+                            <button
+                              onClick={() => deleteSavedSearch(savedSearch.id)}
+                              className="text-red-500 hover:text-red-700 text-xs"
+                              title="Delete saved search"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 当前过滤器显示 */}
+            {Object.values(searchFilters).some(value => value !== '' && value !== 'all') && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {searchFilters.keyword && (
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                    Keyword: {searchFilters.keyword}
+                  </span>
+                )}
+                {searchFilters.type !== 'all' && (
+                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
+                    Type: {searchFilters.type}
+                  </span>
+                )}
+                {searchFilters.status !== 'all' && (
+                  <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
+                    Status: {searchFilters.status}
+                  </span>
+                )}
+                {searchFilters.account !== 'all' && (
+                  <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
+                    Account: {searchFilters.account}
+                  </span>
+                )}
+                {searchFilters.dateFrom && (
+                  <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
+                    From: {searchFilters.dateFrom}
+                  </span>
+                )}
+                {searchFilters.dateTo && (
+                  <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
+                    To: {searchFilters.dateTo}
+                  </span>
+                )}
+                {searchFilters.amountFrom && (
+                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                    Amount ≥ RM {searchFilters.amountFrom}
+                  </span>
+                )}
+                {searchFilters.amountTo && (
+                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                    Amount ≤ RM {searchFilters.amountTo}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {records.length === 0 ? (
@@ -553,102 +858,198 @@ export default function FinancialListPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              {Object.entries(groupedRecords).map(([groupName, groupRecords]) => (
-                <div key={groupName} className="border-b border-gray-200 last:border-b-0">
-                  {/* 分组标题和统计 */}
-                  <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {groupName} ({groupRecords.length} records)
-                      </h3>
-                      {groupRecords.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-600">
-                          <span>
-                            Income: {formatCurrency(groupRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0))}
-                          </span>
-                          <span>
-                            Expense: {formatCurrency(groupRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0))}
-                          </span>
-                          <span>
-                            Balance: {formatCurrency(
-                              groupRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) -
-                              groupRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)
-                            )}
-                          </span>
-                        </div>
-                      )}
+              {Object.entries(groupedRecords)
+                .filter(([groupName, groupRecords]) => groupRecords.length > 0)
+                .map(([groupName, groupRecords]) => (
+                  <div key={groupName} className="border-b border-gray-200 last:border-b-0">
+                    {/* 分组标题和统计 */}
+                    <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <h3 className="text-sm font-medium text-gray-900">
+                          {(() => {
+                            // 转换为 YYYY-MM 格式
+                            const [year, month] = groupName.replace('年', '-').replace('月', '').split('-');
+                            return `${year}-${month.padStart(2, '0')}`;
+                          })()}
+                          {' '}({groupRecords.length} records)
+                        </h3>
+                        {groupRecords.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-600">
+                            <span>
+                              Income: {formatCurrency(groupRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0))}
+                            </span>
+                            <span>
+                              Expense: {formatCurrency(groupRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0))}
+                            </span>
+                            <span>
+                              Balance: {formatCurrency(
+                                groupRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) -
+                                groupRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* 桌面端表格布局 */}
-                  <div className="hidden md:block">
-                    <table className="min-w-full border border-gray-300">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Description
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Amount
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                            Remark
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
+                    {/* 桌面端表格布局 */}
+                    <div className="hidden md:block">
+                      <table className="min-w-full border border-gray-300">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Description
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Amount
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Status
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                              Remark
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white">
+                          {groupRecords.map((record) => (
+                            <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
+                                {formatDate(record.date)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
+                                <span
+                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    record.type === 'Income'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  {record.type === 'Income' ? 'Income' : 'Expense'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
+                                {record.who}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
+                                {record.description}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
+                                <span
+                                  className={
+                                    record.type === 'Income' ? 'text-green-600' : 'text-red-600'
+                                  }
+                                >
+                                  {formatCurrency(record.amount)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
+                                <div className="flex items-center">
+                                  {record.status === 'Approved' ? (
+                                    <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                                  ) : (
+                                    <Clock className="h-4 w-4 text-yellow-500 mr-1" />
+                                  )}
+                                  {(isAdmin || isSuperAdmin) ? (
+                                    <select
+                                      value={record.status}
+                                      onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
+                                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
+                                        record.status === 'Approved'
+                                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                      }`}
+                                    >
+                                      <option value="Pending">Pending</option>
+                                      <option value="Approved">Approved</option>
+                                    </select>
+                                  ) : (
+                                    <span
+                                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                        record.status === 'Approved'
+                                          ? 'bg-green-100 text-green-800'
+                                          : 'bg-yellow-100 text-yellow-800'
+                                      }`}
+                                    >
+                                      {record.status === 'Approved' ? 'Approved' : 'Pending'}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
+                                {record.remark || '-'}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex items-center gap-2">
+                                  <AdminOrSuperAdmin>
+                                    <button
+                                      onClick={() => router.push(`/edit-record/${record.key}`)}
+                                      className="text-blue-600 hover:text-blue-900"
+                                      disabled={deletingKey === record.key}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                  </AdminOrSuperAdmin>
+                                  <SuperAdminOnly>
+                                    <button
+                                      onClick={() => handleDelete(record.key)}
+                                      disabled={deletingKey === record.key}
+                                      className={`${
+                                        deletingKey === record.key
+                                          ? 'text-gray-400 cursor-not-allowed'
+                                          : 'text-red-600 hover:text-red-900'
+                                      }`}
+                                    >
+                                      {deletingKey === record.key ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                  </SuperAdminOnly>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* 手机端卡片布局 */}
+                    <div className="md:hidden">
+                      <div className="space-y-4 p-4">
                         {groupRecords.map((record) => (
-                          <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                              {formatDate(record.date)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  record.type === 'Income'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                              >
-                                {record.type === 'Income' ? 'Income' : 'Expense'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                              {record.who}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
-                              {record.description}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
-                              <span
-                                className={
-                                  record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                }
-                              >
-                                {formatCurrency(record.amount)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                              <div className="flex items-center">
+                          <div key={record.key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    record.type === 'Income'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  {record.type === 'Income' ? 'Income' : 'Expense'}
+                                </span>
+                                <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
                                 {record.status === 'Approved' ? (
-                                  <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
                                 ) : (
-                                  <Clock className="h-4 w-4 text-yellow-500 mr-1" />
+                                  <Clock className="h-4 w-4 text-yellow-500" />
                                 )}
                                 {(isAdmin || isSuperAdmin) ? (
                                   <select
@@ -675,161 +1076,72 @@ export default function FinancialListPage() {
                                   </span>
                                 )}
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
-                              {record.remark || '-'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex items-center gap-2">
-                                <AdminOrSuperAdmin>
-                                  <button
-                                    onClick={() => router.push(`/edit-record/${record.key}`)}
-                                    className="text-blue-600 hover:text-blue-900"
-                                    disabled={deletingKey === record.key}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </button>
-                                </AdminOrSuperAdmin>
-                                <SuperAdminOnly>
-                                  <button
-                                    onClick={() => handleDelete(record.key)}
-                                    disabled={deletingKey === record.key}
-                                    className={`${
-                                      deletingKey === record.key
-                                        ? 'text-gray-400 cursor-not-allowed'
-                                        : 'text-red-600 hover:text-red-900'
-                                    }`}
-                                  >
-                                    {deletingKey === record.key ? (
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                    ) : (
-                                      <Trash2 className="h-4 w-4" />
-                                    )}
-                                  </button>
-                                </SuperAdminOnly>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* 手机端卡片布局 */}
-                  <div className="md:hidden">
-                    <div className="space-y-4 p-4">
-                      {groupRecords.map((record) => (
-                        <div key={record.key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  record.type === 'Income'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                              >
-                                {record.type === 'Income' ? 'Income' : 'Expense'}
-                              </span>
-                              <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              {record.status === 'Approved' ? (
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <Clock className="h-4 w-4 text-yellow-500" />
-                              )}
-                              {(isAdmin || isSuperAdmin) ? (
-                                <select
-                                  value={record.status}
-                                  onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
-                                    record.status === 'Approved'
-                                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                      : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                                  }`}
-                                >
-                                  <option value="Pending">Pending</option>
-                                  <option value="Approved">Approved</option>
-                                </select>
-                              ) : (
+                            
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-900">Name:</span>
+                                <span className="text-sm text-gray-700">{record.who}</span>
+                              </div>
+                              
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium text-gray-900">Amount:</span>
                                 <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    record.status === 'Approved'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-yellow-100 text-yellow-800'
+                                  className={`text-sm font-medium ${
+                                    record.type === 'Income' ? 'text-green-600' : 'text-red-600'
                                   }`}
                                 >
-                                  {record.status === 'Approved' ? 'Approved' : 'Pending'}
+                                  {formatCurrency(record.amount)}
                                 </span>
+                              </div>
+                              
+                              <div className="flex justify-between items-start">
+                                <span className="text-sm font-medium text-gray-900">Description:</span>
+                                <span className="text-sm text-gray-700 text-right max-w-[60%]">{record.description}</span>
+                              </div>
+                              
+                              {record.remark && (
+                                <div className="flex justify-between items-start">
+                                  <span className="text-sm font-medium text-gray-900">Remark:</span>
+                                  <span className="text-sm text-gray-500 text-right max-w-[60%]">{record.remark}</span>
+                                </div>
                               )}
                             </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-900">Name:</span>
-                              <span className="text-sm text-gray-700">{record.who}</span>
-                            </div>
                             
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium text-gray-900">Amount:</span>
-                              <span
-                                className={`text-sm font-medium ${
-                                  record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                }`}
-                              >
-                                {formatCurrency(record.amount)}
-                              </span>
+                            <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-200">
+                              <AdminOrSuperAdmin>
+                                <button
+                                  onClick={() => router.push(`/edit-record/${record.key}`)}
+                                  className="text-blue-600 hover:text-blue-900 p-1"
+                                  disabled={deletingKey === record.key}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                              </AdminOrSuperAdmin>
+                              <SuperAdminOnly>
+                                <button
+                                  onClick={() => handleDelete(record.key)}
+                                  disabled={deletingKey === record.key}
+                                  className={`p-1 ${
+                                    deletingKey === record.key
+                                      ? 'text-gray-400 cursor-not-allowed'
+                                      : 'text-red-600 hover:text-red-900'
+                                  }`}
+                                >
+                                  {deletingKey === record.key ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </SuperAdminOnly>
                             </div>
-                            
-                            <div className="flex justify-between items-start">
-                              <span className="text-sm font-medium text-gray-900">Description:</span>
-                              <span className="text-sm text-gray-700 text-right max-w-[60%]">{record.description}</span>
-                            </div>
-                            
-                            {record.remark && (
-                              <div className="flex justify-between items-start">
-                                <span className="text-sm font-medium text-gray-900">Remark:</span>
-                                <span className="text-sm text-gray-500 text-right max-w-[60%]">{record.remark}</span>
-                              </div>
-                            )}
                           </div>
-                          
-                          <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-200">
-                            <AdminOrSuperAdmin>
-                              <button
-                                onClick={() => router.push(`/edit-record/${record.key}`)}
-                                className="text-blue-600 hover:text-blue-900 p-1"
-                                disabled={deletingKey === record.key}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                            </AdminOrSuperAdmin>
-                            <SuperAdminOnly>
-                              <button
-                                onClick={() => handleDelete(record.key)}
-                                disabled={deletingKey === record.key}
-                                className={`p-1 ${
-                                  deletingKey === record.key
-                                    ? 'text-gray-400 cursor-not-allowed'
-                                    : 'text-red-600 hover:text-red-900'
-                                }`}
-                              >
-                                {deletingKey === record.key ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </button>
-                            </SuperAdminOnly>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>

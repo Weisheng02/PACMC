@@ -120,7 +120,7 @@ export default function AddRecordPage() {
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <Link href="/" className="mr-4">
@@ -135,8 +135,8 @@ export default function AddRecordPage() {
           </div>
         </header>
         {/* Main Content */}
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="bg-white shadow-sm border rounded-lg p-4 sm:p-6">
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="max-w-2xl mx-auto bg-white shadow-sm border rounded-lg p-4 sm:p-6">
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Record Type */}
               <div>

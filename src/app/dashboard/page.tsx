@@ -215,7 +215,7 @@ export default function DashboardPage() {
     <LoggedInUser>
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
               <div className="flex items-center mb-4 sm:mb-0">
                 <Link href="/" className="mr-4">
@@ -290,7 +290,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
             <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
               <div className="flex items-center">

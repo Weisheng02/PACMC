@@ -87,7 +87,7 @@ export default function TestAddPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/financial-list" className="mr-4">
@@ -100,9 +100,9 @@ export default function TestAddPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Form */}
-        <div className="bg-white shadow-sm border rounded-lg p-6">
+        <div className="max-w-2xl mx-auto bg-white shadow-sm border rounded-lg p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-6">添加新记录（测试页面）</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 账户 */}

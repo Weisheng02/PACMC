@@ -52,7 +52,7 @@ export default function UserManagementPage() {
   return (
     <SuperAdminOnly fallback={<p className="text-center text-red-500 mt-10">Access Denied. You must be a Super Admin to view this page.</p>}>
       <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md border">
+        <div className="w-full bg-white rounded-lg shadow-md border">
           <header className="px-6 py-4 border-b flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">User Role Management</h1>
