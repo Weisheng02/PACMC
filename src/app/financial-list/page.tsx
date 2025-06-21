@@ -435,7 +435,11 @@ export default function FinancialListPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
             <div className="flex items-center mb-4 sm:mb-0">
               <Link href="/" className="mr-4">
-                <DollarSign className="h-8 w-8 text-blue-600" />
+                <img
+                  src="/pacmc.jpg"
+                  alt="PACMC Logo"
+                  className="h-9 w-9 rounded-full object-cover"
+                />
               </Link>
               <h1 className="text-xl font-semibold text-gray-900">Financial Records</h1>
             </div>

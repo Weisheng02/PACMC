@@ -173,7 +173,11 @@ export default function Home() {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-blue-600 mr-3" />
+              <img
+                src="/PACMC.jpg" // 将你的logo图片放在public文件夹中，命名为logo.jpg
+                alt="PACMC Logo"
+                className="h-9 w-9 rounded-full mr-4 object-cover"
+              />
               <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
                 <span className="hidden sm:inline">PACMC Financial Management System</span>
                 <span className="sm:hidden">PACMC Finance</span>
