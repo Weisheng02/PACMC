@@ -170,4 +170,30 @@ export const exportFinancialData = async (format: 'excel' | 'pdf') => {
     console.error('Error exporting financial data:', error);
     throw error;
   }
-}; 
+};
+
+// 日期格式化工具函数
+export const formatGoogleSheetsDate = (dateString: string, locale: string = 'zh-TW', options?: Intl.DateTimeFormatOptions) => {
+  if (!dateString) return '-';
+  
+  // 直接返回原始日期字符串，不做复杂转换
+  return dateString;
+};
+
+// Excel日期转换函数
+function convertExcelDateToJSDate(excelDate: number): Date {
+  // Excel的日期系统从1900年1月1日开始
+  // 但是Excel错误地将1900年当作闰年，所以1900年3月1日之后的日期需要调整
+  
+  // 如果日期小于等于60，说明是1900年1月1日到1900年2月28日
+  if (excelDate <= 60) {
+    // 直接使用1900年1月1日作为基准
+    const baseDate = new Date(1900, 0, 1);
+    return new Date(baseDate.getTime() + (excelDate - 1) * 24 * 60 * 60 * 1000);
+  } else {
+    // 对于1900年3月1日之后的日期，需要减去1天来修正Excel的闰年错误
+    const adjustedDate = excelDate - 1;
+    const baseDate = new Date(1900, 0, 1);
+    return new Date(baseDate.getTime() + (adjustedDate - 1) * 24 * 60 * 60 * 1000);
+  }
+} 

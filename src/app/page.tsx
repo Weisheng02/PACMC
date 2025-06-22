@@ -3,10 +3,11 @@
 import { LoginButton } from '@/components/LoginButton';
 import { SuperAdminOnly, AdminOrSuperAdmin, LoggedInUser } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
-import { DollarSign, BarChart3, FileText, Plus, Users, Shield, Wallet } from 'lucide-react';
+import { DollarSign, BarChart3, FileText, Plus, Users, Shield, Wallet, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FinancialRecord } from '@/lib/googleSheets';
+import NotificationBell from '@/components/NotificationBell';
 
 // Main Home Component
 export default function Home() {
@@ -280,7 +281,10 @@ export default function Home() {
                 <span className="sm:hidden">PACMC Finance</span>
               </h1>
             </div>
-            <LoginButton />
+            <div className="flex items-center space-x-4">
+              <NotificationBell />
+              <LoginButton />
+            </div>
           </div>
         </div>
       </header>
@@ -357,6 +361,26 @@ export default function Home() {
               </div>
             </Link>
           </AdminOrSuperAdmin>
+
+          {/* Notifications */}
+          <LoggedInUser>
+            <Link href="/notifications" className="block h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+                <div className="flex items-center mb-4">
+                  <Bell className="h-6 w-6 text-indigo-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Manage notifications and settings
+                </p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
+                    All users can view
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </LoggedInUser>
 
           {/* User Management */}
           <SuperAdminOnly>

@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminOrSuperAdmin, SuperAdminOnly } from '@/components/PermissionGate';
-import { readFinancialRecords, deleteFinancialRecord, FinancialRecord } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X } from 'lucide-react';
+import { readFinancialRecords, deleteFinancialRecord, FinancialRecord, formatGoogleSheetsDate } from '@/lib/googleSheets';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -164,8 +164,18 @@ export default function FinancialListPage() {
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('zh-TW');
+    return formatGoogleSheetsDate(dateString);
+  };
+
+  const formatDateTime = (dateString: string) => {
+    return formatGoogleSheetsDate(dateString, 'zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
   };
 
   const totalIncome = records
@@ -315,6 +325,24 @@ export default function FinancialListPage() {
   }, []);
 
   const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
+    // 如果是审批操作，需要确认
+    if (newStatus === 'Approved') {
+      const record = records.find(r => r.key === key);
+      if (record) {
+        const confirmed = confirm(
+          `Are you sure you want to approve this record?\n\n` +
+          `Type: ${record.type}\n` +
+          `Amount: RM${formatCurrency(record.amount)}\n` +
+          `Description: ${record.description}\n` +
+          `Created by: ${record.createdBy || 'Unknown'}`
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+      }
+    }
+
     // 保存原始状态以便回滚
     const originalRecords = [...records];
     const originalStatus = records.find(r => r.key === key)?.status;
@@ -333,20 +361,31 @@ export default function FinancialListPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key, status: newStatus }),
+        body: JSON.stringify({ 
+          key, 
+          status: newStatus,
+          approvedBy: userProfile?.name || userProfile?.email || 'Unknown User'
+        }),
       });
 
       if (!response.ok) {
         // 如果API失败，回滚到原状态
         console.error('Failed to update status:', response.status);
         setRecords(originalRecords);
-        // 可以添加一个小的toast通知
+        alert('Failed to update record status. Please try again.');
         console.warn('Status update failed, reverted to original state');
+      } else {
+        // 成功更新状态
+        const result = await response.json();
+        if (newStatus === 'Approved') {
+          alert(`Record approved successfully! ${result.message || ''}`);
+        }
       }
     } catch (error) {
       // 如果API失败，回滚到原状态
       console.error('Error updating status:', error);
       setRecords(originalRecords);
+      alert('Failed to update record status. Please try again.');
       console.warn('Status update failed, reverted to original state');
     }
   };
@@ -1175,11 +1214,11 @@ export default function FinancialListPage() {
                                 )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                                <div className="flex items-center">
+                                <div className="flex items-center gap-2">
                                   {record.status === 'Approved' ? (
-                                    <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
                                   ) : (
-                                    <Clock className="h-4 w-4 text-yellow-500 mr-1" />
+                                    <Clock className="h-4 w-4 text-yellow-500" />
                                   )}
                                   {(isAdmin || isSuperAdmin) ? (
                                     <select
@@ -1222,18 +1261,27 @@ export default function FinancialListPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex items-center gap-2">
+                                  {/* View Details Button */}
+                                  <Link
+                                    href={`/financial-list/${record.key}`}
+                                    className="text-blue-600 hover:text-blue-900 p-1"
+                                    title="View record details"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
+                                  
                                   <AdminOrSuperAdmin>
                                     {editingKey === record.key ? (
                                       <>
                                         <button
                                           onClick={saveInlineEdit}
-                                          className="text-green-600 hover:text-green-900"
+                                          className="text-green-600 hover:text-green-900 p-1"
                                         >
                                           <Check className="h-4 w-4" />
                                         </button>
                                         <button
                                           onClick={cancelInlineEdit}
-                                          className="text-gray-600 hover:text-gray-900"
+                                          className="text-gray-600 hover:text-gray-900 p-1"
                                         >
                                           <X className="h-4 w-4" />
                                         </button>
@@ -1241,7 +1289,7 @@ export default function FinancialListPage() {
                                     ) : (
                                       <button
                                         onClick={() => startInlineEdit(record)}
-                                        className="text-blue-600 hover:text-blue-900"
+                                        className="text-blue-600 hover:text-blue-900 p-1"
                                         disabled={deletingKey === record.key}
                                       >
                                         <Edit className="h-4 w-4" />
@@ -1252,7 +1300,7 @@ export default function FinancialListPage() {
                                     <button
                                       onClick={() => handleDelete(record.key)}
                                       disabled={deletingKey === record.key || editingKey === record.key}
-                                      className={`${
+                                      className={`p-1 ${
                                         deletingKey === record.key || editingKey === record.key
                                           ? 'text-gray-400 cursor-not-allowed'
                                           : 'text-red-600 hover:text-red-900'
@@ -1414,6 +1462,15 @@ export default function FinancialListPage() {
                             </div>
                             
                             <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-200">
+                              {/* View Details Button */}
+                              <Link
+                                href={`/financial-list/${record.key}`}
+                                className="text-blue-600 hover:text-blue-900 p-1"
+                                title="View record details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                              
                               <AdminOrSuperAdmin>
                                 {editingKey === record.key ? (
                                   <>
