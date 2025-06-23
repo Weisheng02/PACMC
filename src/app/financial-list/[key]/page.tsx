@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoggedInUser } from '@/components/PermissionGate';
-import { ArrowLeft, Edit, Trash2, Receipt, Eye, Download, X, CheckCircle, Clock, Plus, XCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Receipt, Eye, Download, X, CheckCircle, Clock, Plus, XCircle, Loader2, Pencil, Save as SaveIcon } from 'lucide-react';
 import Link from 'next/link';
 import GoogleDriveReceiptUpload from '@/components/GoogleDriveReceiptUpload';
 import { FinancialRecord, formatGoogleSheetsDate } from '@/lib/googleSheets';
@@ -19,6 +19,7 @@ interface Receipt {
   description: string;
   fileId?: string;
   downloadUrl?: string;
+  displayName?: string;
 }
 
 export default function RecordDetailsPage() {
@@ -33,6 +34,8 @@ export default function RecordDetailsPage() {
   const [showReceiptUpload, setShowReceiptUpload] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [editingReceiptKey, setEditingReceiptKey] = useState<string | null>(null);
+  const [editingDisplayName, setEditingDisplayName] = useState<string>('');
 
   const recordKey = params.key as string;
 
@@ -67,18 +70,17 @@ export default function RecordDetailsPage() {
       
       setRecord(foundRecord);
 
-      // 从Google Drive获取收据列表
+      // receipts 直接从 Google Sheet 读取
       try {
-        const receiptsResponse = await fetch(`/api/drive/list?transactionKey=${recordKey}`);
+        const receiptsResponse = await fetch('/api/sheets/receipts/read');
         if (receiptsResponse.ok) {
           const receiptsData = await receiptsResponse.json();
-          setReceipts(receiptsData.receipts || []);
+          setReceipts((receiptsData.receipts || []).filter((r: any) => r.transactionKey === recordKey));
         } else {
-          console.error('Failed to load receipts from Google Drive');
           setReceipts([]);
         }
       } catch (error) {
-        console.error('Error loading receipts from Google Drive:', error);
+        console.error('Error loading receipts from Google Sheet:', error);
         setReceipts([]);
       }
     } catch (error) {
@@ -227,6 +229,41 @@ export default function RecordDetailsPage() {
   const isImageFile = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
     return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension || '');
+  };
+
+  const handleRenameDisplayName = async (receiptKey: string, newDisplayName: string) => {
+    try {
+      const res = await fetch('/api/sheets/receipts/update-display-name', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiptKey, displayName: newDisplayName }),
+      });
+      if (!res.ok) {
+        let msg = '重命名失败：';
+        if (res.status === 404) {
+          msg += '接口未找到或收据不存在，请刷新页面重试。';
+        } else if (res.status === 400) {
+          msg += '缺少必要参数。';
+        } else if (res.status === 500) {
+          msg += '服务器内部错误，请稍后再试。';
+        } else {
+          msg += '发生未知错误。';
+        }
+        // 读取后端返回的详细error
+        try {
+          const data = await res.json();
+          if (data.error) msg += ` [${data.error}]`;
+        } catch {}
+        setToast({ type: 'error', message: msg });
+        return;
+      }
+      setToast({ type: 'success', message: '显示名已更新' });
+      setEditingReceiptKey(null);
+      setEditingDisplayName('');
+      loadRecordDetails();
+    } catch (e) {
+      setToast({ type: 'error', message: '重命名失败：网络异常或服务器无响应。' });
+    }
   };
 
   if (loading) {
@@ -437,25 +474,30 @@ export default function RecordDetailsPage() {
                         }
 
                         const driveResult = await driveResponse.json();
-                        
-                        // 创建收据记录
-                        const newReceipt: Receipt = {
-                          receiptKey: Math.random().toString(36).substr(2, 8),
-                          transactionKey: record.key,
-                          fileName: driveResult.originalName,
-                          fileUrl: driveResult.fileUrl,
-                          fileId: driveResult.fileId,
-                          downloadUrl: driveResult.downloadUrl,
-                          uploadBy: userProfile?.name || userProfile?.email || 'Unknown User',
-                          description: '',
-                          uploadDate: new Date().toISOString(),
-                        };
 
-                        // 添加到receipts列表
-                        const updatedReceipts = [newReceipt, ...receipts];
-                        setReceipts(updatedReceipts);
-                        // 收据数据直接存储在Google Drive中，不需要本地存储
-                        setToast({ type: 'success', message: 'Receipt uploaded successfully to Google Drive!' });
+                        // 写入 Google Sheet
+                        const sheetRes = await fetch('/api/sheets/receipts/create', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            transactionKey: record.key,
+                            fileName: driveResult.originalName,
+                            fileUrl: driveResult.fileUrl,
+                            fileId: driveResult.fileId,
+                            uploadBy: userProfile?.name || userProfile?.email || 'Unknown User',
+                            description: '',
+                            displayName: '',
+                          }),
+                        });
+
+                        if (!sheetRes.ok) {
+                          const err = await sheetRes.text();
+                          setToast({ type: 'error', message: '上传到 Google Drive 成功，但写入 Google Sheet 失败！' });
+                          return;
+                        }
+
+                        setToast({ type: 'success', message: 'Receipt uploaded successfully to Google Drive and Google Sheet!' });
+                        loadRecordDetails(); // 刷新 receipts
                       } catch (error) {
                         console.error('Error uploading receipt:', error);
                         setToast({ type: 'error', message: 'Failed to upload receipt' });
@@ -485,38 +527,63 @@ export default function RecordDetailsPage() {
                 <div className="space-y-3">
                   {receipts.map((receipt) => {
                     const isImage = isImageFile(receipt.fileName);
-                    
                     return (
                       <div
                         key={receipt.receiptKey}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
                       >
                         <div className="flex items-center space-x-3 flex-1">
-                          {/* 图片预览 */}
+                          {/* 图片缩略图或文件图标 */}
                           {isImage ? (
-                            <div className="w-16 h-16 flex-shrink-0">
-                              <img
-                                src={receipt.fileUrl}
-                                alt={receipt.fileName}
-                                className="w-full h-full object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={() => {
-                                  // 可以添加图片预览功能
-                                  window.open(receipt.fileUrl, '_blank');
-                                }}
-                                title="Click to view full size"
-                              />
+                            <div
+                              className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border cursor-pointer hover:bg-blue-50 transition"
+                              onClick={() => window.open(receipt.fileUrl, '_blank')}
+                              title="点击查看大图"
+                            >
+                              <Eye className="h-6 w-6 text-blue-500" />
                             </div>
                           ) : (
-                            <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded border flex items-center justify-center">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded border flex items-center justify-center">
                               <Receipt className="h-5 w-5 text-gray-500" />
                             </div>
                           )}
-                          
                           {/* 文件信息 */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {receipt.fileName}
-                            </p>
+                            {editingReceiptKey === receipt.receiptKey ? (
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={editingDisplayName}
+                                  onChange={e => setEditingDisplayName(e.target.value)}
+                                  className="text-sm font-medium text-gray-900 truncate border-b border-blue-400 focus:border-blue-600 outline-none bg-transparent px-1"
+                                />
+                                <button
+                                  className="text-green-600 hover:text-green-800"
+                                  onClick={() => handleRenameDisplayName(receipt.receiptKey, editingDisplayName)}
+                                  title="保存"
+                                >
+                                  <SaveIcon className="h-4 w-4" />
+                                </button>
+                                <button
+                                  className="text-gray-400 hover:text-gray-600"
+                                  onClick={() => { setEditingReceiptKey(null); setEditingDisplayName(''); }}
+                                  title="取消"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <p className="text-sm font-medium text-gray-900 truncate">{receipt.displayName || receipt.fileName}</p>
+                                <button
+                                  className="text-gray-400 hover:text-blue-600"
+                                  onClick={() => { setEditingReceiptKey(receipt.receiptKey); setEditingDisplayName(receipt.displayName || receipt.fileName); }}
+                                  title="编辑显示名"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
                             <div className="flex items-center space-x-4 text-xs text-gray-500">
                               <span>{formatDateTime(receipt.uploadDate)}</span>
                               <span>by {receipt.uploadBy}</span>
@@ -526,18 +593,8 @@ export default function RecordDetailsPage() {
                             </div>
                           </div>
                         </div>
-
-                        {/* 操作按钮 */}
+                        {/* 操作按钮：只保留下载和删除 */}
                         <div className="flex items-center space-x-2 ml-4">
-                          <a
-                            href={receipt.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-blue-600"
-                            title="View receipt"
-                          >
-                            {getFileIcon(receipt.fileName)}
-                          </a>
                           <a
                             href={receipt.fileUrl}
                             download={receipt.fileName}

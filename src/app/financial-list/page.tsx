@@ -46,6 +46,9 @@ export default function FinancialListPage() {
     filters: typeof searchFilters;
   }>>([]);
   
+  // Toast notification state
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  
   const router = useRouter();
 
   const loadRecords = async () => {
@@ -84,6 +87,14 @@ export default function FinancialListPage() {
     setLoading(true);
     loadRecords();
   }, []);
+
+  // Auto-dismiss toast notifications
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleDelete = async (key: string) => {
     if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) {
@@ -149,10 +160,10 @@ export default function FinancialListPage() {
         description: '',
       });
       
-      alert(result.message || '现金在手更新成功！');
+      setToast({ type: 'success', message: result.message || '现金在手更新成功！' });
     } catch (err) {
       console.error('Error updating cash in hand:', err);
-      alert(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`);
+      setToast({ type: 'error', message: `更新失败: ${err instanceof Error ? err.message : '未知错误'}` });
     }
   };
 
@@ -278,7 +289,7 @@ export default function FinancialListPage() {
     saved.push(newSearch);
     localStorage.setItem('savedSearches', JSON.stringify(saved));
     
-    alert('搜索已保存！');
+    setToast({ type: 'success', message: '搜索已保存！' });
   };
 
   // 加载保存的搜索
@@ -372,20 +383,20 @@ export default function FinancialListPage() {
         // 如果API失败，回滚到原状态
         console.error('Failed to update status:', response.status);
         setRecords(originalRecords);
-        alert('Failed to update record status. Please try again.');
+        setToast({ type: 'error', message: 'Failed to update record status. Please try again.' });
         console.warn('Status update failed, reverted to original state');
       } else {
         // 成功更新状态
         const result = await response.json();
         if (newStatus === 'Approved') {
-          alert(`Record approved successfully! ${result.message || ''}`);
+          setToast({ type: 'success', message: `Record approved successfully! ${result.message || ''}` });
         }
       }
     } catch (error) {
       // 如果API失败，回滚到原状态
       console.error('Error updating status:', error);
       setRecords(originalRecords);
-      alert('Failed to update record status. Please try again.');
+      setToast({ type: 'error', message: 'Failed to update record status. Please try again.' });
       console.warn('Status update failed, reverted to original state');
     }
   };
@@ -494,53 +505,29 @@ export default function FinancialListPage() {
     // 首先应用搜索过滤器
     let processedRecords = applyFilters([...records]);
 
-    // 按日期排序（最新的在上）
+    // 按创建时间排序（最新的在上）
     processedRecords.sort((a, b) => {
-      // 按date字段排序，最新的日期在上
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      let createdTimeA = 0;
+      let createdTimeB = 0;
       
-      // 如果日期相同，按创建时间排序（最新的创建时间在上）
-      if (dateA === dateB) {
-        // 优先使用key作为排序依据（key通常是时间戳，数字大的表示最新的）
-        const keyA = parseInt(a.key) || 0;
-        const keyB = parseInt(b.key) || 0;
-        
-        // 如果key都有效且不同，使用key排序
-        if (keyA > 0 && keyB > 0 && keyA !== keyB) {
-          return keyB - keyA; // 数字大的在上（最新的）
+      if (a.createdDate) {
+        try {
+          createdTimeA = new Date(a.createdDate).getTime();
+        } catch (e) {
+          createdTimeA = 0;
         }
-        
-        // 如果key相同或无效，尝试使用createdDate
-        let createdTimeA = 0;
-        let createdTimeB = 0;
-        
-        if (a.createdDate) {
-          try {
-            createdTimeA = new Date(a.createdDate).getTime();
-          } catch (e) {
-            createdTimeA = 0;
-          }
-        }
-        
-        if (b.createdDate) {
-          try {
-            createdTimeB = new Date(b.createdDate).getTime();
-          } catch (e) {
-            createdTimeB = 0;
-          }
-        }
-        
-        // 如果createdDate都有效，使用它
-        if (createdTimeA > 0 && createdTimeB > 0) {
-          return createdTimeB - createdTimeA; // 最新的创建时间在上
-        }
-        
-        // 如果createdDate无效，回退到key排序
-        return keyB - keyA;
       }
       
-      return dateB - dateA; // 最新的日期在上
+      if (b.createdDate) {
+        try {
+          createdTimeB = new Date(b.createdDate).getTime();
+        } catch (e) {
+          createdTimeB = 0;
+        }
+      }
+      
+      // 最新的创建时间在上，新记录排在最上面
+      return createdTimeB - createdTimeA;
     });
 
     // 按月份分组（基于date字段）
@@ -1590,6 +1577,30 @@ export default function FinancialListPage() {
                 >
                   Confirm Set
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`px-4 py-3 rounded-md shadow-lg max-w-sm ${
+            toast.type === 'success' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                {toast.type === 'success' ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  <X className="h-5 w-5" />
+                )}
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{toast.message}</p>
               </div>
             </div>
           </div>

@@ -138,34 +138,40 @@ export default function GoogleDriveReceiptUpload({
       const driveResult = await driveResponse.json();
       console.log('Google Drive upload result:', driveResult);
       
-      // 创建收据记录 - 直接存储在本地
-      const newReceipt: Receipt = {
-        receiptKey: Math.random().toString(36).substr(2, 8),
-        transactionKey,
-        fileName: driveResult.originalName,
-        fileUrl: driveResult.fileUrl, // Google Drive view link
-        fileId: driveResult.fileId,   // Google Drive file ID
-        downloadUrl: driveResult.downloadUrl, // Google Drive download link
-        uploadBy: userProfile?.name || userProfile?.email || 'Unknown User',
-        description: uploadForm.description || '',
-        uploadDate: new Date().toISOString(),
-      };
-
-      // 添加到本地存储
-      const updatedReceipts = [newReceipt, ...receipts];
-      setReceipts(updatedReceipts);
-      saveReceipts(updatedReceipts);
-
+      // 上传到 Google Drive 成功后，直接写入 Google Sheet
+      try {
+        const sheetRes = await fetch('/api/sheets/receipts/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactionKey,
+            fileName: driveResult.originalName,
+            fileUrl: driveResult.fileUrl,
+            fileId: driveResult.fileId,
+            uploadBy: userProfile?.name || userProfile?.email || 'Unknown User',
+            description: uploadForm.description || '',
+            displayName: '',
+          }),
+        });
+        if (sheetRes.ok) {
+          alert('Receipt uploaded successfully to Google Drive and Google Sheet!');
+        } else {
+          const err = await sheetRes.text();
+          console.error('Failed to write receipt to Google Sheet:', err);
+          alert('上传到 Google Drive 成功，但写入 Google Sheet 失败！');
+        }
+      } catch (err) {
+        console.error('Error writing receipt to Google Sheet:', err);
+        alert('上传到 Google Drive 成功，但写入 Google Sheet 失败！');
+      }
       setShowUploadForm(false);
       setUploadForm({ description: '' });
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
 
-      onReceiptUploaded?.(newReceipt);
+      onReceiptUploaded?.(driveResult);
       console.log('Upload completed successfully');
-      
-      alert('Receipt uploaded successfully to Google Drive!');
     } catch (error) {
       console.error('Error uploading receipt:', error);
       alert(`Failed to upload receipt: ${error instanceof Error ? error.message : 'Unknown error'}`);
