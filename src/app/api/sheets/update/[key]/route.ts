@@ -132,7 +132,7 @@ export async function PUT(
     // 写入详细操作日志
     try {
       const oldRow = rows[rowIndex-1];
-      const oldValues = {
+      const oldValues: Record<string, any> = {
         Account: oldRow[1],
         Date: oldRow[2],
         Type: oldRow[3],
@@ -142,7 +142,7 @@ export async function PUT(
         Status: oldRow[7],
         Remark: oldRow[9],
       };
-      const newValues = {
+      const newValues: Record<string, any> = {
         Account: body.account,
         Date: formattedDate,
         Type: body.type,
