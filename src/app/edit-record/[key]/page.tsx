@@ -95,37 +95,19 @@ export default function EditRecordPage() {
             date: formattedDate
           });
 
-          // 从localStorage加载关联的收据
-          const storedReceipts = localStorage.getItem(`receipts_${recordKey}`);
-          if (storedReceipts) {
-            const receipts = JSON.parse(storedReceipts);
-            
-            // 检查Google Drive文件是否存在
-            const validReceipts = [];
-            for (const receipt of receipts) {
-              if (receipt.fileId) {
-                try {
-                  const response = await fetch(`/api/drive/check/${receipt.fileId}`);
-                  if (response.ok) {
-                    validReceipts.push(receipt);
-                  } else {
-                    console.log(`File ${receipt.fileId} not found in Google Drive, removing from local storage`);
-                  }
-                } catch (error) {
-                  console.error('Error checking file existence:', error);
-                  // 如果检查失败，保留记录
-                  validReceipts.push(receipt);
-                }
-              } else {
-                validReceipts.push(receipt);
-              }
+          // 从Google Drive获取收据列表
+          try {
+            const receiptsResponse = await fetch(`/api/drive/list?transactionKey=${recordKey}`);
+            if (receiptsResponse.ok) {
+              const receiptsData = await receiptsResponse.json();
+              setReceipts(receiptsData.receipts || []);
+            } else {
+              console.error('Failed to load receipts from Google Drive');
+              setReceipts([]);
             }
-            
-            // 更新localStorage和状态
-            if (validReceipts.length !== receipts.length) {
-              localStorage.setItem(`receipts_${recordKey}`, JSON.stringify(validReceipts));
-            }
-            setReceipts(validReceipts);
+          } catch (error) {
+            console.error('Error loading receipts from Google Drive:', error);
+            setReceipts([]);
           }
         }
       } catch (e) {
@@ -191,7 +173,6 @@ export default function EditRecordPage() {
       // 从本地存储删除
       const updatedReceipts = receipts.filter(r => r.receiptKey !== receiptKey);
       setReceipts(updatedReceipts);
-      localStorage.setItem(`receipts_${recordKey}`, JSON.stringify(updatedReceipts));
       
       setToast({ type: 'success', message: '删除成功' });
     } catch (error) {
@@ -446,7 +427,7 @@ export default function EditRecordPage() {
                         // 添加到receipts列表
                         const updatedReceipts = [newReceipt, ...receipts];
                         setReceipts(updatedReceipts);
-                        localStorage.setItem(`receipts_${formData.key}`, JSON.stringify(updatedReceipts));
+                        // 收据数据直接存储在Google Drive中，不需要本地存储
                         setToast({ type: 'success', message: '上传成功' });
                       } catch (error) {
                         setToast({ type: 'error', message: '上传失败' });

@@ -53,26 +53,29 @@ export default function GoogleDriveReceiptUpload({
   // 检查是否可以使用上传功能
   const canUpload = transactionKey !== null;
 
-  // 加载收据 - 从localStorage或sessionStorage获取
+  // 加载收据 - 从Google Drive获取
   const loadReceipts = async () => {
     if (!transactionKey) return;
     
     try {
-      // 从localStorage获取该transaction的receipts
-      const storedReceipts = localStorage.getItem(`receipts_${transactionKey}`);
-      if (storedReceipts) {
-        const receipts = JSON.parse(storedReceipts);
-        setReceipts(receipts);
+      const receiptsResponse = await fetch(`/api/drive/list?transactionKey=${transactionKey}`);
+      if (receiptsResponse.ok) {
+        const receiptsData = await receiptsResponse.json();
+        setReceipts(receiptsData.receipts || []);
+      } else {
+        console.error('Failed to load receipts from Google Drive');
+        setReceipts([]);
       }
     } catch (error) {
       console.error('Error loading receipts:', error);
+      setReceipts([]);
     }
   };
 
-  // 保存receipts到localStorage
+  // 保存receipts - 不再使用localStorage
   const saveReceipts = (receipts: Receipt[]) => {
-    if (!transactionKey) return;
-    localStorage.setItem(`receipts_${transactionKey}`, JSON.stringify(receipts));
+    // 收据数据直接存储在Google Drive中，不需要本地存储
+    console.log('Receipts saved to Google Drive:', receipts.length);
   };
 
   // 组件挂载时加载收据

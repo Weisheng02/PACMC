@@ -5,12 +5,22 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Google Drive upload API called');
     
+    // 检查环境变量
+    console.log('Environment variables check:', {
+      hasDriveEmail: !!process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL,
+      hasDriveKey: !!process.env.GOOGLE_DRIVE_PRIVATE_KEY,
+      hasFolderId: !!process.env.GOOGLE_DRIVE_FOLDER_ID,
+      hasSheetsEmail: !!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      hasSheetsKey: !!process.env.GOOGLE_PRIVATE_KEY,
+    });
+    
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const description = formData.get('description') as string;
     const transactionKey = formData.get('transactionKey') as string;
 
     if (!file) {
+      console.error('No file provided in request');
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
@@ -18,6 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!transactionKey) {
+      console.error('No transaction key provided in request');
       return NextResponse.json(
         { error: 'No transaction key provided' },
         { status: 400 }
@@ -33,6 +44,7 @@ export async function POST(request: NextRequest) {
     // 检查文件大小（10MB限制）
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.size > MAX_FILE_SIZE) {
+      console.error('File size exceeds limit:', file.size);
       return NextResponse.json(
         { error: `File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the maximum limit of 10MB` },
         { status: 400 }
@@ -42,6 +54,7 @@ export async function POST(request: NextRequest) {
     // 检查文件类型
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
+      console.error('File type not allowed:', file.type);
       return NextResponse.json(
         { error: `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}` },
         { status: 400 }
@@ -93,6 +106,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in Google Drive upload API:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : 'Unknown'
+    });
     return NextResponse.json(
       { 
         error: 'Failed to upload file to Google Drive',
