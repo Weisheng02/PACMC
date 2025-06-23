@@ -146,6 +146,36 @@ async function handleStatusUpdate(request: NextRequest) {
       });
     }
 
+    // 写入详细操作日志
+    try {
+      const oldStatus = rows[rowIndex-1][7];
+      const newStatus = status;
+      if (oldStatus !== newStatus) {
+        const detail = `Account: ${rows[rowIndex-1][1]}, Date: ${rows[rowIndex-1][2]}, Type: ${rows[rowIndex-1][3]}, Who: ${rows[rowIndex-1][4]}, Amount: ${rows[rowIndex-1][5]}, Description: ${rows[rowIndex-1][6]}, Status: ${newStatus}, Remark: ${rows[rowIndex-1][9]}`;
+        await sheets.spreadsheets.values.append({
+          spreadsheetId,
+          range: `audit_log!A:I`,
+          valueInputOption: 'RAW',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: {
+            values: [[
+              new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              approvedBy || 'System',
+              'Update Status',
+              key,
+              'Status',
+              oldStatus,
+              newStatus,
+              detail,
+              '1' // status字段设为1（活跃状态）
+            ]],
+          },
+        });
+      }
+    } catch (logErr) {
+      console.error('Failed to write audit log', logErr);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: `记录状态已更新为: ${status === 'Approved' ? '已审核' : '待审核'}`,

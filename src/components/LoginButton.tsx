@@ -32,8 +32,8 @@ export function LoginButton() {
 
   if (loading) {
     return (
-      <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+      <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-slate-400"></div>
         Loading...
       </button>
     );
@@ -43,12 +43,12 @@ export function LoginButton() {
     return (
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">{userProfile?.name || user.email}</p>
-          <p className="text-xs text-gray-500">{userProfile?.role || 'Basic User'}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{userProfile?.name || user.email}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">{userProfile?.role || 'Basic User'}</p>
         </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
         >
           <LogOut className="h-4 w-4" />
           Logout
@@ -61,7 +61,7 @@ export function LoginButton() {
     <button
       onClick={handleSignIn}
       disabled={isSigningIn}
-      className="group relative w-full flex items-center justify-center gap-3 px-6 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+      className="group relative w-full flex items-center justify-center gap-3 px-6 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl dark:from-blue-500 dark:to-purple-500 dark:hover:from-blue-600 dark:hover:to-purple-600"
     >
       {isSigningIn ? (
         <>

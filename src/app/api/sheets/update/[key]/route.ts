@@ -128,6 +128,61 @@ export async function PUT(
         values: [updatedRow],
       },
     });
+
+    // 写入详细操作日志
+    try {
+      const oldRow = rows[rowIndex-1];
+      const oldValues = {
+        Account: oldRow[1],
+        Date: oldRow[2],
+        Type: oldRow[3],
+        Who: oldRow[4],
+        Amount: oldRow[5],
+        Description: oldRow[6],
+        Status: oldRow[7],
+        Remark: oldRow[9],
+      };
+      const newValues = {
+        Account: body.account,
+        Date: formattedDate,
+        Type: body.type,
+        Who: body.who,
+        Amount: body.amount,
+        Description: body.description,
+        Status: body.status || oldRow[7] || 'Pending',
+        Remark: body.remark || '',
+      };
+      const detail = `Account: ${newValues.Account}, Date: ${newValues.Date}, Type: ${newValues.Type}, Who: ${newValues.Who}, Amount: ${newValues.Amount}, Description: ${newValues.Description}, Status: ${newValues.Status}, Remark: ${newValues.Remark}`;
+      const changedFields = Object.keys(newValues).filter(f => String(newValues[f]) !== String(oldValues[f]));
+      
+      if (changedFields.length > 0) {
+        const oldSummary = changedFields.map(f => `${f}: ${oldValues[f]}`).join(', ');
+        const newSummary = changedFields.map(f => `${f}: ${newValues[f]}`).join(', ');
+        
+        await sheets.spreadsheets.values.append({
+          spreadsheetId,
+          range: `audit_log!A:I`,
+          valueInputOption: 'RAW',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: {
+            values: [[
+              new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              body.lastUserUpdate || '',
+              'Edit Record',
+              key,
+              changedFields.join(', '),
+              oldSummary,
+              newSummary,
+              detail,
+              '1' // status字段设为1（活跃状态）
+            ]],
+          },
+        });
+      }
+    } catch (logErr) {
+      console.error('Failed to write audit log', logErr);
+    }
+
     return NextResponse.json({ success: true, message: 'Record updated successfully', record: updatedRow });
   } catch (error) {
     console.error('Error updating record:', error);

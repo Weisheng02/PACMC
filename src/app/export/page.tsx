@@ -373,7 +373,7 @@ export default function ExportPage() {
         'Key': record.key,
         'Account': record.account,
         'Date': record.date,
-        'Type': record.type === 'Income' ? '收入' : '支出',
+        'Type': record.type === 'Income' ? 'Income' : 'Expense',
         'Who': record.who,
         'Amount': record.amount,
         'Description': record.description,

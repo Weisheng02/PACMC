@@ -152,12 +152,12 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 relative overflow-hidden dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob dark:bg-blue-900 dark:opacity-30"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 dark:bg-purple-900 dark:opacity-30"></div>
+          <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 dark:bg-indigo-900 dark:opacity-30"></div>
         </div>
 
         {/* Main content */}
@@ -170,39 +170,39 @@ export default function Home() {
                   <img
                     src="/logo.jpg"
                     alt="PACMC Logo"
-                    className="h-20 w-20 rounded-full object-cover shadow-lg border-4 border-white"
+                    className="h-20 w-20 rounded-full object-cover shadow-lg border-4 border-white dark:border-slate-700"
                   />
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white dark:border-slate-700 flex items-center justify-center">
                     <div className="w-3 h-3 bg-white rounded-full"></div>
                   </div>
                 </div>
               </div>
               
-              <h1 className="text-4xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
                 PACMC Youth Fellowship
               </h1>
-              <h2 className="text-xl text-gray-600 mb-2 font-medium">
+              <h2 className="text-xl text-gray-600 mb-2 font-medium dark:text-slate-300">
                 Financial Management System
               </h2>
               <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full mb-6"></div>
               
-              <p className="text-gray-500 mb-8 leading-relaxed">
+              <p className="text-gray-500 mb-8 leading-relaxed dark:text-slate-400">
                 Secure, efficient, and transparent financial management for our community
               </p>
             </div>
 
             {/* Login Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 dark:bg-slate-800/80 dark:border-slate-600/20">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Welcome Back</h3>
-                <p className="text-gray-600 text-sm">Please login to access financial management features</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 dark:text-slate-100">Welcome Back</h3>
+                <p className="text-gray-600 text-sm dark:text-slate-400">Please login to access financial management features</p>
               </div>
               
               <div className="space-y-4">
                 <LoginButton />
                 
                 <div className="text-center">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
                     By logging in, you agree to our terms of service and privacy policy
                   </p>
                 </div>
@@ -211,40 +211,40 @@ export default function Home() {
 
             {/* Features Preview */}
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <DollarSign className="h-6 w-6 text-blue-600" />
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 dark:bg-slate-800/60 dark:border-slate-600/20">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 dark:bg-blue-900">
+                  <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">Financial Tracking</h4>
-                <p className="text-xs text-gray-600">Monitor income and expenses</p>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1 dark:text-slate-100">Financial Tracking</h4>
+                <p className="text-xs text-gray-600 dark:text-slate-400">Monitor income and expenses</p>
               </div>
               
-              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <BarChart3 className="h-6 w-6 text-green-600" />
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 dark:bg-slate-800/60 dark:border-slate-600/20">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 dark:bg-green-900">
+                  <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">Reports & Analytics</h4>
-                <p className="text-xs text-gray-600">Generate detailed reports</p>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1 dark:text-slate-100">Reports & Analytics</h4>
+                <p className="text-xs text-gray-600 dark:text-slate-400">Generate detailed reports</p>
               </div>
               
-              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Shield className="h-6 w-6 text-purple-600" />
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 dark:bg-slate-800/60 dark:border-slate-600/20">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 dark:bg-purple-900">
+                  <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">Secure Access</h4>
-                <p className="text-xs text-gray-600">Role-based permissions</p>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1 dark:text-slate-100">Secure Access</h4>
+                <p className="text-xs text-gray-600 dark:text-slate-400">Role-based permissions</p>
               </div>
             </div>
 
             {/* Footer */}
             <div className="mt-8 text-center">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-slate-400">
                 © 2024 PACMC Youth Fellowship. All rights reserved.
               </p>
               <div className="flex justify-center space-x-4 mt-2">
-                <span className="text-xs text-gray-400">Privacy Policy</span>
-                <span className="text-xs text-gray-400">Terms of Service</span>
-                <span className="text-xs text-gray-400">Contact Support</span>
+                <span className="text-xs text-gray-400 dark:text-slate-500">Privacy Policy</span>
+                <span className="text-xs text-gray-400 dark:text-slate-500">Terms of Service</span>
+                <span className="text-xs text-gray-400 dark:text-slate-500">Contact Support</span>
               </div>
             </div>
           </div>
@@ -252,22 +252,22 @@ export default function Home() {
 
         {/* Floating elements */}
         <div className="absolute top-20 left-10 animate-bounce">
-          <div className="w-4 h-4 bg-blue-400 rounded-full opacity-60"></div>
+          <div className="w-4 h-4 bg-blue-400 rounded-full opacity-60 dark:bg-blue-600"></div>
         </div>
-        <div className="absolute bottom-20 right-10 animate-bounce animation-delay-1000">
-          <div className="w-3 h-3 bg-purple-400 rounded-full opacity-60"></div>
+        <div className="absolute bottom-20 right-10 animate-bounce animation-delay-2000">
+          <div className="w-3 h-3 bg-purple-400 rounded-full opacity-60 dark:bg-purple-600"></div>
         </div>
         <div className="absolute top-1/2 left-5 animate-pulse">
-          <div className="w-2 h-2 bg-indigo-400 rounded-full opacity-40"></div>
+          <div className="w-2 h-2 bg-indigo-400 rounded-full opacity-40 dark:bg-indigo-600"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -276,7 +276,7 @@ export default function Home() {
                 alt="PACMC Logo"
                 className="h-9 w-9 rounded-full mr-4 object-cover"
               />
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100">
                 <span className="hidden sm:inline">PACMC Financial Management System</span>
                 <span className="sm:hidden">PACMC Finance</span>
               </h1>
@@ -293,9 +293,9 @@ export default function Home() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {userProfile?.name}!</h2>
-          <p className="text-gray-600 mb-1">Email: {userProfile?.email}</p>
-          <p className="text-gray-600">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 dark:text-slate-100">Welcome back, {userProfile?.name}!</h2>
+          <p className="text-gray-600 mb-1 dark:text-slate-300">Email: {userProfile?.email}</p>
+          <p className="text-gray-600 dark:text-slate-300">
             Your role: <span className="font-semibold">{userProfile?.role}</span>
           </p>
         </div>
@@ -305,16 +305,16 @@ export default function Home() {
           {/* Financial Records */}
           <LoggedInUser>
             <Link href="/financial-list" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-4">
-                  <FileText className="h-6 w-6 text-blue-600 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-900">Financial Records</h3>
+                  <FileText className="h-6 w-6 text-blue-600 mr-3 dark:text-blue-400" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Financial Records</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
                   View all income and expense records, and manage them based on permissions
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-200">
                     All users can view
                   </span>
                 </div>
@@ -325,16 +325,16 @@ export default function Home() {
           {/* Chart Analysis */}
           <LoggedInUser>
             <Link href="/dashboard" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-4">
-                  <BarChart3 className="h-6 w-6 text-green-600 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-900">Chart Analysis</h3>
+                  <BarChart3 className="h-6 w-6 text-green-600 mr-3 dark:text-green-400" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Chart Analysis</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
                   View financial trends and category statistics
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded dark:bg-green-900 dark:text-green-200">
                     All users can view
                   </span>
                 </div>
@@ -345,16 +345,16 @@ export default function Home() {
           {/* Add Record */}
           <AdminOrSuperAdmin>
             <Link href="/add-record" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-4">
-                  <Plus className="h-6 w-6 text-purple-600 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-900">Add Record</h3>
+                  <Plus className="h-6 w-6 text-purple-600 mr-3 dark:text-purple-400" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Add Record</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
                   Add new income or expense records
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded dark:bg-purple-900 dark:text-purple-200">
                     Admin and above
                   </span>
                 </div>
@@ -365,16 +365,16 @@ export default function Home() {
           {/* Notifications */}
           <LoggedInUser>
             <Link href="/notifications" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-4">
-                  <Bell className="h-6 w-6 text-indigo-600 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+                  <Bell className="h-6 w-6 text-indigo-600 mr-3 dark:text-indigo-400" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Audit Logs</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">
-                  Manage notifications and settings
+                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
+                  View and manage system audit logs
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
+                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                  <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded dark:bg-indigo-900 dark:text-indigo-200">
                     All users can view
                   </span>
                 </div>
@@ -385,16 +385,16 @@ export default function Home() {
           {/* User Management */}
           <SuperAdminOnly>
             <Link href="/admin/users" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-4">
-                  <Users className="h-6 w-6 text-orange-600 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-900">User Management</h3>
+                  <Users className="h-6 w-6 text-orange-600 mr-3 dark:text-orange-400" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">User Management</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
                   Manage user permissions and roles
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                  <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded dark:bg-orange-900 dark:text-orange-200">
                     Super Admin only
                   </span>
                 </div>
@@ -468,7 +468,7 @@ export default function Home() {
             
             {/* Total Statistics */}
             <div className="mt-6 pt-6 border-t border-gray-300">
-              <h4 className="text-md font-medium text-gray-700 mb-3">Overall Statistics</h4>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="text-xs sm:text-base lg:text-lg font-bold text-green-600 truncate">RM{stats.totalIncome.toFixed(2)}</div>

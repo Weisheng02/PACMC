@@ -915,7 +915,7 @@ export default function FinancialListPage() {
                 </div>
 
                 {/* 搜索操作按钮 */}
-                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-300">
                   <button
                     onClick={saveCurrentSearch}
                     className="px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
@@ -1042,10 +1042,10 @@ export default function FinancialListPage() {
                   const monthBalance = monthIncome - monthExpense;
                   
                   return (
-                    <div key={groupName} className="border-b border-gray-200 last:border-b-0">
+                    <div key={groupName} className="border-b border-gray-300 last:border-b-0">
                       {/* 分组标题和统计 - 可点击展开/收起 */}
                       <div 
-                        className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                        className="px-6 py-4 bg-gray-50 border-b border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors"
                         onClick={() => toggleMonth(groupName)}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">

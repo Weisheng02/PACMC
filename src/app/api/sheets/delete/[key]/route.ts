@@ -129,6 +129,37 @@ export async function DELETE(
       },
     });
 
+    // 写入详细操作日志
+    try {
+      // 尝试从请求头获取用户信息（如有）
+      const user = request.headers.get('x-user') || '';
+      const oldRow = rows[rowIndex-1];
+      const detail = `Account: ${oldRow[1]}, Date: ${oldRow[2]}, Type: ${oldRow[3]}, Who: ${oldRow[4]}, Amount: ${oldRow[5]}, Description: ${oldRow[6]}, Status: ${oldRow[7]}, Remark: ${oldRow[9]}`;
+      const deletedValues = `Account: ${oldRow[1]}, Date: ${oldRow[2]}, Type: ${oldRow[3]}, Who: ${oldRow[4]}, Amount: ${oldRow[5]}, Description: ${oldRow[6]}, Status: ${oldRow[7]}, Remark: ${oldRow[9]}`;
+      
+      await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `audit_log!A:I`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody: {
+          values: [[
+            new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            user,
+            'Delete Record',
+            key,
+            'All Fields',
+            deletedValues,
+            '',
+            detail,
+            '1' // status字段设为1（活跃状态）
+          ]],
+        },
+      });
+    } catch (logErr) {
+      console.error('Failed to write audit log', logErr);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Record deleted successfully',

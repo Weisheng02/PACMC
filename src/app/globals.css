@@ -9,6 +9,7 @@
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --border: #e5e7eb;
+  --border-dark: #d1d5db;
 }
 
 @theme inline {
@@ -20,8 +21,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --card-bg: #1e293b;
+    --border: #334155;
+    --border-dark: #475569;
   }
 }
 
@@ -58,7 +62,8 @@ body {
 input, select, textarea {
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: #f9fafb;
+  background: var(--card-bg);
+  color: var(--foreground);
   padding: 0.5rem 0.75rem;
   font-size: 1rem;
   transition: border 0.2s;
@@ -66,6 +71,413 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   outline: none;
+}
+
+/* 深色模式下的完整适配 */
+@media (prefers-color-scheme: dark) {
+  /* 基础背景和文字 */
+  body {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+  }
+  
+  /* 白色背景改为深色 */
+  .bg-white {
+    background-color: #1e293b !important;
+  }
+  
+  /* 灰色背景适配 */
+  .bg-gray-50 {
+    background-color: #1e293b !important;
+  }
+  
+  .bg-gray-100 {
+    background-color: #334155 !important;
+  }
+  
+  .bg-gray-200 {
+    background-color: #475569 !important;
+  }
+  
+  /* 文字颜色适配 */
+  .text-gray-500 {
+    color: #94a3b8 !important;
+  }
+  
+  .text-gray-600 {
+    color: #cbd5e1 !important;
+  }
+  
+  .text-gray-700 {
+    color: #e2e8f0 !important;
+  }
+  
+  .text-gray-800 {
+    color: #f1f5f9 !important;
+  }
+  
+  .text-gray-900 {
+    color: #f8fafc !important;
+  }
+  
+  /* 边框颜色适配 */
+  .border-gray-200,
+  .border-gray-300,
+  .border-gray-400 {
+    border-color: #475569 !important;
+  }
+  
+  .border-gray-500 {
+    border-color: #64748b !important;
+  }
+  
+  /* 分割线适配 */
+  .divide-gray-200 > * + *,
+  .divide-gray-300 > * + * {
+    border-top-color: #475569 !important;
+  }
+  
+  /* 悬停效果适配 */
+  .hover\:bg-gray-50:hover {
+    background-color: #334155 !important;
+  }
+  
+  .hover\:bg-gray-100:hover {
+    background-color: #475569 !important;
+  }
+  
+  .hover\:text-gray-900:hover {
+    color: #f8fafc !important;
+  }
+  
+  .hover\:text-gray-600:hover {
+    color: #cbd5e1 !important;
+  }
+  
+  /* 输入框适配 */
+  input, select, textarea {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+  }
+  
+  input::placeholder, select::placeholder, textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+  
+  /* 表格适配 */
+  table {
+    background-color: #1e293b !important;
+  }
+  
+  th {
+    background-color: #334155 !important;
+    color: #cbd5e1 !important;
+  }
+  
+  td {
+    color: #f8fafc !important;
+  }
+  
+  /* 卡片和阴影适配 */
+  .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* 按钮适配 */
+  .bg-white.border {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+  }
+  
+  /* 下拉菜单适配 */
+  select option {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+  }
+  
+  /* 模态框适配 */
+  .modal, .modal-content {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+  }
+  
+  /* 工具提示适配 */
+  [title] {
+    color: #f8fafc !important;
+  }
+  
+  /* 滚动条适配 */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+  
+  /* 链接颜色适配 */
+  a {
+    color: #60a5fa !important;
+  }
+  
+  a:hover {
+    color: #93c5fd !important;
+  }
+  
+  /* 禁用状态适配 */
+  .disabled, [disabled] {
+    opacity: 0.5 !important;
+  }
+  
+  /* 加载动画适配 */
+  .animate-spin {
+    border-color: #475569 !important;
+    border-top-color: #60a5fa !important;
+  }
+  
+  /* 状态颜色保持 */
+  .text-green-600, .text-green-700, .text-green-800 {
+    color: inherit !important;
+  }
+  
+  .text-red-600, .text-red-700, .text-red-800 {
+    color: inherit !important;
+  }
+  
+  .text-blue-600, .text-blue-700, .text-blue-800 {
+    color: inherit !important;
+  }
+  
+  .text-yellow-600, .text-yellow-700, .text-yellow-800 {
+    color: inherit !important;
+  }
+  
+  .text-purple-600, .text-purple-700, .text-purple-800 {
+    color: inherit !important;
+  }
+  
+  .text-orange-600, .text-orange-700, .text-orange-800 {
+    color: inherit !important;
+  }
+  
+  /* 背景色保持 */
+  .bg-green-50, .bg-green-100, .bg-green-200 {
+    background-color: inherit !important;
+  }
+  
+  .bg-red-50, .bg-red-100, .bg-red-200 {
+    background-color: inherit !important;
+  }
+  
+  .bg-blue-50, .bg-blue-100, .bg-blue-200 {
+    background-color: inherit !important;
+  }
+  
+  .bg-yellow-50, .bg-yellow-100, .bg-yellow-200 {
+    background-color: inherit !important;
+  }
+  
+  .bg-purple-50, .bg-purple-100, .bg-purple-200 {
+    background-color: inherit !important;
+  }
+  
+  .bg-orange-50, .bg-orange-100, .bg-orange-200 {
+    background-color: inherit !important;
+  }
+  
+  /* 特定组件适配 */
+  
+  /* 头部组件 */
+  header.bg-white {
+    background-color: #1e293b !important;
+  }
+  
+  /* 卡片组件 */
+  .bg-white.rounded-lg {
+    background-color: #1e293b !important;
+  }
+  
+  /* 按钮组件 */
+  .text-gray-700.bg-white.border {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+    border-color: #475569 !important;
+  }
+  
+  .text-gray-700.bg-white.border:hover {
+    background-color: #334155 !important;
+  }
+  
+  /* 下拉菜单 */
+  .border-gray-300.rounded-md {
+    border-color: #475569 !important;
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+  }
+  
+  /* 通知组件 */
+  .bg-white.rounded-lg.shadow-lg {
+    background-color: #1e293b !important;
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* 分割线 */
+  .divide-gray-300 > * + * {
+    border-top-color: #475569 !important;
+  }
+  
+  /* 悬停状态 */
+  .hover\:bg-gray-50:hover {
+    background-color: #334155 !important;
+  }
+  
+  /* 渐变背景适配 */
+  .bg-gradient-to-br.from-blue-50.via-indigo-50.to-purple-100 {
+    background: linear-gradient(to bottom right, #0f172a, #1e293b, #334155) !important;
+  }
+  
+  .bg-gradient-to-br.from-red-50.to-pink-100 {
+    background: linear-gradient(to bottom right, #1e293b, #334155) !important;
+  }
+  
+  /* 登录页面特定适配 */
+  .bg-white\/80.backdrop-blur-sm {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    backdrop-filter: blur(8px);
+  }
+  
+  /* 图标颜色适配 */
+  .text-gray-600 {
+    color: #94a3b8 !important;
+  }
+  
+  .text-gray-400 {
+    color: #64748b !important;
+  }
+  
+  /* 徽章适配 */
+  .bg-blue-100.text-blue-800 {
+    background-color: #1e3a8a !important;
+    color: #93c5fd !important;
+  }
+  
+  .bg-green-100.text-green-800 {
+    background-color: #14532d !important;
+    color: #86efac !important;
+  }
+  
+  .bg-red-100.text-red-800 {
+    background-color: #7f1d1d !important;
+    color: #fca5a5 !important;
+  }
+  
+  .bg-yellow-100.text-yellow-800 {
+    background-color: #713f12 !important;
+    color: #fde047 !important;
+  }
+  
+  /* 图表适配 */
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    stroke: #475569 !important;
+  }
+  
+  .recharts-text {
+    fill: #cbd5e1 !important;
+  }
+  
+  /* 表单元素适配 */
+  .px-3.py-2.border.border-gray-300.rounded-md {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+    color: #f8fafc !important;
+  }
+  
+  /* 加载状态适配 */
+  .animate-spin.rounded-full.h-12.w-12.border-b-2.border-blue-600 {
+    border-color: #475569 !important;
+    border-top-color: #60a5fa !important;
+  }
+  
+  /* 错误状态适配 */
+  .text-red-900 {
+    color: #fca5a5 !important;
+  }
+  
+  .text-red-600 {
+    color: #f87171 !important;
+  }
+  
+  .bg-red-100.border.border-red-300 {
+    background-color: #7f1d1d !important;
+    border-color: #dc2626 !important;
+  }
+  
+  .text-red-800 {
+    color: #fca5a5 !important;
+  }
+  
+  /* 成功状态适配 */
+  .text-green-600 {
+    color: #86efac !important;
+  }
+  
+  /* 链接适配 */
+  .text-gray-600.hover\:text-gray-900 {
+    color: #94a3b8 !important;
+  }
+  
+  .text-gray-600.hover\:text-gray-900:hover {
+    color: #f8fafc !important;
+  }
+  
+  /* 特殊文本适配 */
+  .bg-gradient-to-r.from-blue-600.to-purple-600.bg-clip-text.text-transparent {
+    background: linear-gradient(to right, #60a5fa, #a855f7) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+  
+  /* 装饰元素适配 */
+  .bg-blue-200,
+  .bg-purple-200,
+  .bg-indigo-200 {
+    opacity: 0.3 !important;
+  }
+  
+  /* 边框适配 */
+  .border-white\/20 {
+    border-color: rgba(148, 163, 184, 0.2) !important;
+  }
+  
+  .border-4.border-white {
+    border-color: #1e293b !important;
+  }
+  
+  /* 阴影适配 */
+  .shadow-xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  /* 透明度适配 */
+  .opacity-70 {
+    opacity: 0.4 !important;
+  }
+  
+  /* 混合模式适配 */
+  .mix-blend-multiply {
+    mix-blend-mode: screen !important;
+  }
 }
 
 /* Custom animations for login page */
@@ -94,10 +506,6 @@ input:focus, select:focus, textarea:focus {
 
 .animation-delay-4000 {
   animation-delay: 4s;
-}
-
-.animation-delay-1000 {
-  animation-delay: 1s;
 }
 
 /* Smooth transitions */

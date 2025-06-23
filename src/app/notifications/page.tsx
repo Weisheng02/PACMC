@@ -2,123 +2,104 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { LoggedInUser } from '@/components/PermissionGate';
-import { 
-  Bell, 
-  Settings, 
-  Check, 
-  Trash2, 
-  AlertCircle,
-  AlertTriangle,
-  Info,
-  CheckCircle,
-  Mail,
-  Smartphone
-} from 'lucide-react';
-import { 
-  Notification, 
-  NotificationSettings,
-  getUserNotifications, 
-  markNotificationAsRead, 
-  markAllNotificationsAsRead, 
-  deleteNotification,
-  getNotificationSettings,
-  updateNotificationSettings,
-  subscribeToNotifications
-} from '@/lib/firebase';
+import { SuperAdminOnly } from '@/components/PermissionGate';
+import { Bell, Trash2, Filter, Calendar, User, FileText, Eye, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default function NotificationsPage() {
-  const { userProfile } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [settings, setSettings] = useState<NotificationSettings | null>(null);
+// 假设有 getAuditLogs, clearAuditLogs 两个API
+async function getAuditLogs() {
+  const res = await fetch('/api/sheets/audit-log');
+  if (!res.ok) throw new Error('Failed to fetch audit logs');
+  return res.json();
+}
+async function clearAuditLogs() {
+  const res = await fetch('/api/sheets/audit-log', { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to clear audit logs');
+}
+
+interface AuditLog {
+  time: string;
+  user: string;
+  action: string;
+  object: string;
+  field: string;
+  old: string;
+  new: string;
+  detail: string;
+  status: string;
+}
+
+type GroupBy = 'action' | 'user' | 'date' | 'none';
+
+export default function AuditLogPage() {
+  const { userProfile, isSuperAdmin } = useAuth();
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'notifications' | 'settings'>('notifications');
-  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [clearing, setClearing] = useState(false);
+  const [groupBy, setGroupBy] = useState<GroupBy>('action');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [filterAction, setFilterAction] = useState<string>('all');
+  const [filterUser, setFilterUser] = useState<string>('all');
 
   useEffect(() => {
-    if (!userProfile?.uid) return;
-
-    // 加载通知和设置
-    const loadData = async () => {
-      try {
-        const [userNotifications, userSettings] = await Promise.all([
-          getUserNotifications(userProfile.uid),
-          getNotificationSettings(userProfile.uid)
-        ]);
-        
-        setNotifications(userNotifications);
-        setSettings(userSettings);
-      } catch (error) {
-        console.error('Error loading notifications data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-
-    // 订阅实时通知更新
-    const unsubscribe = subscribeToNotifications(userProfile.uid, (newNotifications) => {
-      setNotifications(newNotifications);
+    getAuditLogs().then(data => {
+      setLogs(data.logs || []);
+      setLoading(false);
     });
+  }, []);
 
-    return () => unsubscribe();
-  }, [userProfile?.uid]);
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await markNotificationAsRead(notificationId);
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
+  const handleClear = async () => {
+    if (!confirm('Are you sure you want clear all notifications?')) return;
+    setClearing(true);
+    await clearAuditLogs();
+    setLogs([]);
+    setClearing(false);
   };
 
-  const handleMarkAllAsRead = async () => {
-    if (!userProfile?.uid) return;
-    
-    try {
-      await markAllNotificationsAsRead(userProfile.uid);
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+  const toggleGroup = (groupKey: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey);
+    } else {
+      newExpanded.add(groupKey);
     }
+    setExpandedGroups(newExpanded);
   };
 
-  const handleDeleteNotification = async (notificationId: string) => {
-    try {
-      await deleteNotification(notificationId);
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-    }
-  };
-
-  const handleUpdateSettings = async (newSettings: Partial<NotificationSettings>) => {
-    if (!userProfile?.uid) return;
-
-    try {
-      await updateNotificationSettings(userProfile.uid, newSettings);
-      setSettings(prev => prev ? { ...prev, ...newSettings } : null);
-    } catch (error) {
-      console.error('Error updating notification settings:', error);
-    }
-  };
-
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case 'Add Record':
+        return <FileText className="h-4 w-4 text-green-500" />;
+      case 'Edit Record':
+        return <Eye className="h-4 w-4 text-blue-500" />;
+      case 'Delete Record':
+        return <Trash2 className="h-4 w-4 text-red-500" />;
+      case 'Update Status':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       default:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <FileText className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const formatTimeAgo = (date: Date) => {
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'Add Record':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Edit Record':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Delete Record':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'Update Status':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const formatTimeAgo = (timeStr: string) => {
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    const logTime = new Date(timeStr);
+    const diffInMinutes = Math.floor((now.getTime() - logTime.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
@@ -129,346 +110,302 @@ export default function NotificationsPage() {
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
     
-    return date.toLocaleDateString();
+    return logTime.toLocaleDateString('en-US');
   };
 
-  const filteredNotifications = notifications.filter(notification => {
-    if (filter === 'unread') return !notification.isRead;
-    if (filter === 'read') return notification.isRead;
+  const formatDate = (timeStr: string) => {
+    const date = new Date(timeStr);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // 过滤日志
+  const filteredLogs = logs.filter(log => {
+    if (filterAction !== 'all' && log.action !== filterAction) return false;
+    if (filterUser !== 'all' && log.user !== filterUser) return false;
     return true;
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // 分组日志
+  const groupedLogs = filteredLogs.reduce((groups, log) => {
+    let groupKey = '';
+    let groupName = '';
+    
+    switch (groupBy) {
+      case 'action':
+        groupKey = log.action;
+        groupName = log.action;
+        break;
+      case 'user':
+        groupKey = log.user;
+        groupName = log.user;
+        break;
+      case 'date':
+        groupKey = formatDate(log.time);
+        groupName = formatDate(log.time);
+        break;
+      default:
+        groupKey = 'all';
+        groupName = 'All Logs';
+    }
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        name: groupName,
+        logs: [],
+        count: 0
+      };
+    }
+    
+    groups[groupKey].logs.push(log);
+    groups[groupKey].count++;
+    
+    return groups;
+  }, {} as Record<string, { name: string; logs: AuditLog[]; count: number }>);
+
+  // 获取唯一值用于过滤器
+  const uniqueActions = Array.from(new Set(logs.map(log => log.action)));
+  const uniqueUsers = Array.from(new Set(logs.map(log => log.user)));
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Notifications</h3>
-          <p className="text-gray-600">Please wait...</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading audit logs...</h3>
         </div>
       </div>
     );
   }
 
   return (
-    <LoggedInUser
-      fallback={
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <Bell className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Please Log In</h3>
-            <p className="text-gray-600">You need to be logged in to view notifications</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="mr-4">
+                <span className="text-gray-600 hover:text-gray-900">← Back</span>
+              </Link>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+                Audit Logs
+              </h1>
+            </div>
+            <SuperAdminOnly>
+              <button
+                onClick={handleClear}
+                disabled={clearing}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                <Trash2 className="h-5 w-5" />
+                Clear Logs
+              </button>
+            </SuperAdminOnly>
           </div>
         </div>
-      }
-    >
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <Link href="/" className="mr-4">
-                  <span className="text-gray-600 hover:text-gray-900">← Back</span>
-                </Link>
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Notifications
-                </h1>
-              </div>
-            </div>
+      </header>
+
+      {/* Filters */}
+      <div className="bg-white border-b border-gray-300 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Group by:</span>
+            <select
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as GroupBy)}
+              className="px-3 py-1 text-sm border border-gray-400 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="action">By Action Type</option>
+              <option value="user">By User</option>
+              <option value="date">By Date</option>
+              <option value="none">No Grouping</option>
+            </select>
           </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Tabs */}
-            <div className="mb-6">
-              <nav className="flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('notifications')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'notifications'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Notifications ({notifications.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'settings'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Settings
-                </button>
-              </nav>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">Action Type:</span>
+            <select
+              value={filterAction}
+              onChange={(e) => setFilterAction(e.target.value)}
+              className="px-3 py-1 text-sm border border-gray-400 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All</option>
+              {uniqueActions.map(action => (
+                <option key={action} value={action}>{action}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">User:</span>
+            <select
+              value={filterUser}
+              onChange={(e) => setFilterUser(e.target.value)}
+              className="px-3 py-1 text-sm border border-gray-400 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All</option>
+              {uniqueUsers.map(user => (
+                <option key={user} value={user}>{user}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="text-sm text-gray-600">
+            Total: {filteredLogs.length} logs
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="max-w-6xl mx-auto">
+          {filteredLogs.length === 0 ? (
+            <div className="text-center text-gray-500 py-12">
+              <Bell className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              No audit logs
             </div>
-
-            {/* Notifications Tab */}
-            {activeTab === 'notifications' && (
-              <div className="bg-white shadow-sm border rounded-lg">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <h2 className="text-lg font-medium text-gray-900">All Notifications</h2>
-                      {unreadCount > 0 && (
-                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                          {unreadCount} unread
-                        </span>
-                      )}
+          ) : groupBy === 'none' ? (
+            // 不分组显示
+            <div className="space-y-4">
+              {filteredLogs.map((log, idx) => (
+                <div key={idx} className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      {getActionIcon(log.action)}
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
-                        className="text-sm border border-gray-300 rounded-md px-3 py-1"
-                      >
-                        <option value="all">All</option>
-                        <option value="unread">Unread</option>
-                        <option value="read">Read</option>
-                      </select>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={handleMarkAllAsRead}
-                          className="text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          Mark all read
-                        </button>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getActionColor(log.action)}`}>
+                            {log.action}
+                          </span>
+                          <span className="text-sm text-gray-600">{log.user}</span>
+                        </div>
+                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formatTimeAgo(log.time)}
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm text-gray-700 mb-1">
+                        <span className="font-medium">Object:</span> {log.object}
+                        {log.field && log.field !== 'All Fields' && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span className="font-medium">Field:</span> {log.field}
+                          </>
+                        )}
+                      </div>
+                      
+                      {log.old && log.new && (
+                        <div className="text-xs text-gray-600 mb-1">
+                          <span className="line-through">{log.old}</span>
+                          <span className="mx-1">→</span>
+                          <span className="text-blue-600">{log.new}</span>
+                        </div>
+                      )}
+                      
+                      {log.detail && (
+                        <p className="text-xs text-gray-500 truncate" title={log.detail}>
+                          {log.detail}
+                        </p>
                       )}
                     </div>
                   </div>
                 </div>
-
-                {/* Notifications List */}
-                <div className="divide-y divide-gray-200">
-                  {filteredNotifications.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
-                      <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-lg font-medium">No notifications</p>
-                      <p className="text-sm">You're all caught up!</p>
+              ))}
+            </div>
+          ) : (
+            // 分组显示
+            <div className="space-y-6">
+              {Object.entries(groupedLogs).map(([groupKey, group]) => (
+                <div key={groupKey} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup(groupKey)}
+                    className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {groupBy === 'action' && getActionIcon(group.name)}
+                      {groupBy === 'user' && <User className="h-4 w-4 text-blue-500" />}
+                      {groupBy === 'date' && <Calendar className="h-4 w-4 text-green-500" />}
+                      <span className="font-medium text-gray-900">{group.name}</span>
+                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        {group.count}
+                      </span>
                     </div>
-                  ) : (
-                    filteredNotifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-6 hover:bg-gray-50 transition-colors ${
-                          !notification.isRead ? 'bg-blue-50' : ''
-                        }`}
-                      >
-                        <div className="flex items-start space-x-4">
-                          <div className="flex-shrink-0 mt-1">
-                            {getNotificationIcon(notification.type)}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className={`text-sm font-medium ${
-                                  !notification.isRead ? 'text-gray-900' : 'text-gray-700'
-                                }`}>
-                                  {notification.title}
-                                </p>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {notification.message}
-                                </p>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2 ml-4">
-                                {!notification.isRead && (
-                                  <button
-                                    onClick={() => handleMarkAsRead(notification.id)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                    title="Mark as read"
-                                  >
-                                    <Check className="h-4 w-4" />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleDeleteNotification(notification.id)}
-                                  className="text-gray-400 hover:text-red-600"
-                                  title="Delete notification"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
+                    {expandedGroups.has(groupKey) ? (
+                      <ChevronDown className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-gray-500" />
+                    )}
+                  </button>
+                  
+                  {expandedGroups.has(groupKey) && (
+                    <div className="divide-y divide-gray-300">
+                      {group.logs.map((log, idx) => (
+                        <div key={idx} className="p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                              {getActionIcon(log.action)}
                             </div>
                             
-                            <div className="flex items-center justify-between mt-3">
-                              <span className="text-xs text-gray-400">
-                                {formatTimeAgo(notification.createdAt)}
-                              </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center space-x-2">
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getActionColor(log.action)}`}>
+                                    {log.action}
+                                  </span>
+                                  {groupBy !== 'user' && (
+                                    <span className="text-sm text-gray-600">{log.user}</span>
+                                  )}
+                                </div>
+                                <span className="text-xs text-gray-400 flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {formatTimeAgo(log.time)}
+                                </span>
+                              </div>
                               
-                              {notification.actionUrl && (
-                                <a
-                                  href={notification.actionUrl}
-                                  className="text-xs text-blue-600 hover:text-blue-800"
-                                >
-                                  View Details →
-                                </a>
+                              <div className="text-sm text-gray-700 mb-1">
+                                <span className="font-medium">Object:</span> {log.object}
+                                {log.field && log.field !== 'All Fields' && (
+                                  <>
+                                    <span className="mx-1">•</span>
+                                    <span className="font-medium">Field:</span> {log.field}
+                                  </>
+                                )}
+                              </div>
+                              
+                              {log.old && log.new && (
+                                <div className="text-xs text-gray-600 mb-1">
+                                  <span className="line-through">{log.old}</span>
+                                  <span className="mx-1">→</span>
+                                  <span className="text-blue-600">{log.new}</span>
+                                </div>
+                              )}
+                              
+                              {log.detail && (
+                                <p className="text-xs text-gray-500 truncate" title={log.detail}>
+                                  {log.detail}
+                                </p>
                               )}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Settings Tab */}
-            {activeTab === 'settings' && (
-              <div className="bg-white shadow-sm border rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-900">Notification Settings</h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Choose how you want to receive notifications
-                  </p>
-                </div>
-
-                <div className="p-6 space-y-6">
-                  {/* General Settings */}
-                  <div>
-                    <h3 className="text-md font-medium text-gray-900 mb-4">General Settings</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Mail className="h-5 w-5 text-gray-400" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Email Notifications</p>
-                            <p className="text-xs text-gray-500">Receive notifications via email</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.emailNotifications || false}
-                            onChange={(e) => handleUpdateSettings({ emailNotifications: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Smartphone className="h-5 w-5 text-gray-400" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Push Notifications</p>
-                            <p className="text-xs text-gray-500">Receive notifications in browser</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.pushNotifications || false}
-                            onChange={(e) => handleUpdateSettings({ pushNotifications: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notification Types */}
-                  <div>
-                    <h3 className="text-md font-medium text-gray-900 mb-4">Notification Types</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Budget Alerts</p>
-                          <p className="text-xs text-gray-500">Get notified when approaching budget limits</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.budgetAlerts || false}
-                            onChange={(e) => handleUpdateSettings({ budgetAlerts: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Bill Reminders</p>
-                          <p className="text-xs text-gray-500">Get reminded about upcoming bills</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.billReminders || false}
-                            onChange={(e) => handleUpdateSettings({ billReminders: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Receipt Uploads</p>
-                          <p className="text-xs text-gray-500">Get notified when receipts are uploaded</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.receiptUploads || false}
-                            onChange={(e) => handleUpdateSettings({ receiptUploads: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Approval Requests</p>
-                          <p className="text-xs text-gray-500">Get notified about pending approvals</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.approvalRequests || false}
-                            onChange={(e) => handleUpdateSettings({ approvalRequests: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">System Updates</p>
-                          <p className="text-xs text-gray-500">Get notified about system updates and maintenance</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings?.systemUpdates || false}
-                            onChange={(e) => handleUpdateSettings({ systemUpdates: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-    </LoggedInUser>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 } 

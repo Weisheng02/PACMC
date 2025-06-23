@@ -145,7 +145,7 @@ export default function TestAddPage() {
                 required
               >
                 {TYPES.map((type) => (
-                  <option key={type} value={type}>{type === 'Income' ? '收入' : '支出'}</option>
+                  <option key={type} value={type}>{type === 'Income' ? 'Income' : 'Expense'}</option>
                 ))}
               </select>
             </div>

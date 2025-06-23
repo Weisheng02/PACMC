@@ -3,19 +3,19 @@ import Link from "next/link";
 
 export default function StickyHeader() {
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 w-full">
+    <header className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 w-full dark:bg-slate-800 dark:border-slate-600">
       <div className="flex items-center justify-between px-4 sm:px-8 py-2 gap-2">
         {/* Logo + 标题 */}
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/" className="flex items-center gap-2">
             <img src="/pacmc.jpg" alt="PACMC Logo" className="h-9 w-9 rounded-full object-cover" />
-            <span className="text-lg sm:text-xl font-bold text-gray-900 whitespace-nowrap truncate">PACMC</span>
+            <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-slate-100 whitespace-nowrap truncate">PACMC</span>
           </Link>
-          <span className="hidden sm:inline-block text-base sm:text-lg font-semibold text-gray-700 ml-2 truncate">Financial Records</span>
+          <span className="hidden sm:inline-block text-base sm:text-lg font-semibold text-gray-700 dark:text-slate-300 ml-2 truncate">Financial Records</span>
         </div>
         {/* 操作按钮区 */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link href="/" className="hidden sm:flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+          <Link href="/" className="hidden sm:flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -23,7 +23,7 @@ export default function StickyHeader() {
           </Link>
           <button
             onClick={() => window.location.reload()}
-            className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
             title="Refresh"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

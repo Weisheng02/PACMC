@@ -257,7 +257,7 @@ export default function RecordDetailsPage() {
         setToast({ type: 'error', message: msg });
         return;
       }
-      setToast({ type: 'success', message: '显示名已更新' });
+      setToast({ type: 'success', message: 'Display name updated' });
       setEditingReceiptKey(null);
       setEditingDisplayName('');
       loadRecordDetails();
@@ -419,7 +419,7 @@ export default function RecordDetailsPage() {
 
               {/* Status Management */}
               {(isAdmin || isSuperAdmin) && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="mt-6 pt-6 border-t border-gray-300">
                   <h3 className="text-sm font-medium text-gray-900 mb-3">Status Management</h3>
                   <div className="flex items-center space-x-3">
                     <select
@@ -505,7 +505,7 @@ export default function RecordDetailsPage() {
                         setUploading(false);
                       }
                     }
-                    // 清空input值，允许重复选择同一文件
+                    // Clear input value to allow selecting the same file again
                     event.target.value = '';
                   }}
                 />
@@ -578,7 +578,7 @@ export default function RecordDetailsPage() {
                                 <button
                                   className="text-gray-400 hover:text-blue-600"
                                   onClick={() => { setEditingReceiptKey(receipt.receiptKey); setEditingDisplayName(receipt.displayName || receipt.fileName); }}
-                                  title="编辑显示名"
+                                  title="Edit display name"
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </button>

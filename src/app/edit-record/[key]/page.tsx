@@ -296,7 +296,7 @@ export default function EditRecordPage() {
                           onChange={() => handleChange('type', type)}
                           className="mr-2"
                         />
-                        <span className="text-sm text-gray-700">{type === 'Income' ? '收入' : '支出'}</span>
+                        <span className="text-sm text-gray-700">{type === 'Income' ? 'income' : 'expense'}</span>
                       </label>
                     ))}
                   </div>
@@ -435,7 +435,7 @@ export default function EditRecordPage() {
                         setUploading(false);
                       }
                     }
-                    // 清空input值，允许重复选择同一文件
+                    // Clear input value to allow selecting the same file again
                     event.target.value = '';
                   }}
                 />

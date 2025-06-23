@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PACMC 青少年团契财务管理系统",
-  description: "教会青少年团契财务管理平台 - 收入支出记录、图表分析、报表导出",
+  title: "PACMC Financial Management System",
+  description: "Church Youth Fellowship Financial Management Platform - Income and Expense Records, Chart Analysis, Report Export",
 };
 
 export default function RootLayout({

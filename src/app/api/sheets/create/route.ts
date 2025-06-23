@@ -125,6 +125,32 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // 写入详细操作日志
+    try {
+      const detail = `Account: ${account}, Date: ${date}, Type: ${type}, Who: ${who}, Amount: ${amount}, Description: ${description}, Status: Pending, Remark: ${remark || ''}`;
+      await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `audit_log!A:I`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody: {
+          values: [[
+            now,
+            createdBy,
+            'Add Record',
+            key,
+            'All Fields',
+            '',
+            `${account}, ${date}, ${type}, ${who}, ${amount}, ${description}, Pending, ${remark || ''}`,
+            detail,
+            '1' // status字段设为1（活跃状态）
+          ]],
+        },
+      });
+    } catch (logErr) {
+      console.error('Failed to write audit log', logErr);
+    }
+
     const newRecord: FinancialRecord = {
       key,
       account,
