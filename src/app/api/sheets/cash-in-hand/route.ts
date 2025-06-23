@@ -50,7 +50,8 @@ const findTransactionSheet = (sheetNames: string[]) => {
 export async function GET() {
   try {
     const auth = getAuthClient();
-    const sheets = google.sheets({ version: 'v4', auth });
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: authClient as any });
     
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     const cashSheetName = 'CashInHand';
@@ -152,7 +153,8 @@ export async function POST(request: NextRequest) {
     }
 
     const auth = getAuthClient();
-    const sheets = google.sheets({ version: 'v4', auth });
+    const authClient = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: authClient as any });
     
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     const cashSheetName = 'CashInHand';

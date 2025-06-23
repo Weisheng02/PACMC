@@ -11,7 +11,7 @@ export async function GET() {
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const auth = await sheets.getClient();
-    const sheetsApi = google.sheets({ version: 'v4', auth });
+    const sheetsApi = google.sheets({ version: 'v4', auth: auth as any });
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
     const sheetName = 'Receipt';
 

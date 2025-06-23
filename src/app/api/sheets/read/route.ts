@@ -12,7 +12,7 @@ const getSheetsClient = () => {
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 
-  return google.sheets({ version: 'v4', auth });
+  return google.sheets({ version: 'v4', auth: auth as any });
 };
 
 export async function GET() {
