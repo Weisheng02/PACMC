@@ -664,7 +664,7 @@ export default function FinancialListPage() {
                 <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
               </Link>
               <img
-                src="/PACMC.jpg"
+                src="/pacmc.jpg"
                 alt="PACMC Logo"
                 className="h-9 w-9 rounded-full mr-4 object-cover"
               />

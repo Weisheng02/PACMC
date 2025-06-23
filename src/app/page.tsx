@@ -272,7 +272,7 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <img
-                src="/PACMC.jpg" // 将你的logo图片放在public文件夹中，命名为logo.jpg
+                src="/pacmc.jpg" // 将你的logo图片放在public文件夹中，命名为logo.jpg
                 alt="PACMC Logo"
                 className="h-9 w-9 rounded-full mr-4 object-cover"
               />

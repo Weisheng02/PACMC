@@ -134,3 +134,40 @@ input:focus, select:focus, textarea:focus {
     overflow-wrap: break-word;
   }
 }
+
+/* 确保 sticky 在移动端正常工作 */
+@supports (position: sticky) {
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
+
+/* 移动端防横向滚动 */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    word-wrap: break-word;
+  }
+  
+  /* 确保 sticky header 在移动端正常工作 */
+  header.sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+}
+
+/* 确保所有设备都支持 sticky */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 修复 iOS Safari 的 sticky 问题 */
+@supports (-webkit-touch-callout: none) {
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
