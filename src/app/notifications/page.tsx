@@ -166,7 +166,7 @@ export default function NotificationsPage() {
     >
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">

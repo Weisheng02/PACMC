@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminOrSuperAdmin, SuperAdminOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord, formatGoogleSheetsDate } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X, Eye } from 'lucide-react';
+import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X, Eye, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -656,130 +656,58 @@ export default function FinancialListPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
-            <div className="flex items-center mb-4 sm:mb-0">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
               <Link href="/" className="mr-4">
-                <img
-                  src="/pacmc.jpg"
-                  alt="PACMC Logo"
-                  className="h-9 w-9 rounded-full object-cover"
-                />
+                <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
               </Link>
-              <h1 className="text-xl font-semibold text-gray-900">Financial Records</h1>
+              <img
+                src="/PACMC.jpg"
+                alt="PACMC Logo"
+                className="h-9 w-9 rounded-full mr-4 object-cover"
+              />
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+                <span className="hidden sm:inline">Financial Records</span>
+                <span className="sm:hidden">Records</span>
+              </h1>
             </div>
-            
-            {/* Desktop buttons */}
-            <div className="hidden sm:flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Home
-              </Link>
-              <button
-                onClick={loadRecords}
-                disabled={refreshing}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {refreshing ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-              {lastRefreshTime && (
-                <span className="text-xs text-gray-500">
-                  Last updated: {lastRefreshTime.toLocaleTimeString()}
-                </span>
-              )}
-              <SuperAdminOnly>
-                <Link
-                  href="/admin/users"
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
-                >
-                  <Users className="h-4 w-4" />
-                  Manage Users
-                </Link>
-              </SuperAdminOnly>
+            <div className="flex items-center space-x-4">
+              {/* 你可以根据需要添加 NotificationBell、LoginButton 等组件 */}
               <AdminOrSuperAdmin>
                 <button
                   onClick={() => setShowCashModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
-                  <Settings className="h-4 w-4" />
-                  Set Cash
+                  <Wallet className="h-4 w-4" />
+                  <span className="hidden sm:inline">Set Cash</span>
                 </button>
+              </AdminOrSuperAdmin>
+              
+              <AdminOrSuperAdmin>
                 <Link
                   href="/add-record"
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Record
+                  <span className="hidden sm:inline">Add Record</span>
                 </Link>
               </AdminOrSuperAdmin>
-            </div>
-
-            {/* Mobile buttons - simplified */}
-            <div className="flex items-center gap-2 w-full sm:hidden">
-              <Link
-                href="/"
-                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                title="Back to Home"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </Link>
-              <button
-                onClick={loadRecords}
-                disabled={refreshing}
-                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={refreshing ? 'Refreshing...' : 'Refresh'}
-              >
-                {refreshing ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
-                ) : (
-                  <RefreshCw className="h-5 w-5" />
-                )}
-              </button>
-              <AdminOrSuperAdmin>
-                <Link
-                  href="/add-record"
-                  className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                  title="Add Record"
-                >
-                  <Plus className="h-5 w-5" />
-                </Link>
-              </AdminOrSuperAdmin>
+              
               <SuperAdminOnly>
                 <Link
                   href="/admin/users"
-                  className="flex items-center justify-center w-10 h-10 text-white bg-purple-600 rounded-md hover:bg-purple-700"
-                  title="Manage Users"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
-                  <Users className="h-5 w-5" />
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Manage Users</span>
                 </Link>
               </SuperAdminOnly>
-              <AdminOrSuperAdmin>
-                <button
-                  onClick={() => setShowCashModal(true)}
-                  className="flex items-center justify-center w-10 h-10 text-white bg-yellow-600 rounded-md hover:bg-yellow-700"
-                  title="Set Cash"
-                >
-                  <Settings className="h-5 w-5" />
-                </button>
-              </AdminOrSuperAdmin>
             </div>
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}

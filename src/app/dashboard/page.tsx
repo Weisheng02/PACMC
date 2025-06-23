@@ -214,7 +214,7 @@ export default function DashboardPage() {
   return (
     <LoggedInUser>
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
               <div className="flex items-center mb-4 sm:mb-0">

@@ -29,7 +29,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
+          {/* 页面内容 */}
+          <div className="pt-2 sm:pt-4">
+            {children}
+          </div>
         </AuthProvider>
       </body>
     </html>
