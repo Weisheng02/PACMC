@@ -1070,8 +1070,8 @@ export default function FinancialListPage() {
                               <span className="text-red-700 font-bold">{formatCurrency(monthExpense)}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <div className={`w-2 h-2 rounded-full ${monthBalance >= 0 ? 'bg-blue-500' : 'bg-red-500'}`}></div>
-                              <span className={`font-bold ${monthBalance >= 0 ? 'text-blue-700' : 'text-red-700'}`}>{formatCurrency(monthBalance)}</span>
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="font-bold text-blue-600">{formatCurrency(monthBalance)}</span>
                             </div>
                           </div>
                         </div>
@@ -1079,7 +1079,7 @@ export default function FinancialListPage() {
 
                       {/* 可折叠的记录内容 */}
                       <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                        isExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+                        isExpanded ? 'block opacity-100 max-h-[2000px]' : 'hidden opacity-0 max-h-0'
                       }`}>
                         {/* 桌面端表格布局 */}
                         <div className="hidden md:block">
