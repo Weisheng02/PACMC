@@ -711,7 +711,7 @@ export default function FinancialListPage() {
       {/* Main Content */}
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-6 mb-8">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg">
@@ -1017,25 +1017,20 @@ export default function FinancialListPage() {
           ) : (
             <div className="overflow-x-auto">
               {/* 展开/收起所有按钮 */}
-              <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">Quick Actions:</span>
-                  <button
-                    onClick={expandAllMonths}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Expand All
-                  </button>
-                  <button
-                    onClick={collapseAllMonths}
-                    className="px-3 py-1 text-xs bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-                  >
-                    Collapse All
-                  </button>
-                </div>
-                <div className="text-xs text-gray-500">
-                  {Object.keys(groupedRecords).filter(key => expandedMonths.has(key)).length} of {Object.keys(groupedRecords).length} months expanded
-                </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
+                <span className="text-sm font-medium text-gray-700">Quick Actions:</span>
+                <button
+                  onClick={expandAllMonths}
+                  className="w-full sm:w-auto px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Expand All
+                </button>
+                <button
+                  onClick={collapseAllMonths}
+                  className="w-full sm:w-auto px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                >
+                  Collapse All
+                </button>
               </div>
 
               {Object.entries(groupedRecords)
@@ -1053,48 +1048,30 @@ export default function FinancialListPage() {
                         className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
                         onClick={() => toggleMonth(groupName)}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {/* 展开/收起图标 */}
-                            <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : 'rotate-0'}`}>
-                              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </div>
-                            
-                            {/* 月份标题 */}
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {(() => {
-                                  const [year, month] = groupName.replace('年', '-').replace('月', '').split('-');
-                                  return `${year}-${month.padStart(2, '0')}`;
-                                })()}
-                              </h3>
-                              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                                {groupRecords.length} records
-                              </span>
-                            </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {(() => {
+                                const [year, month] = groupName.replace('年', '-').replace('月', '').split('-');
+                                return `${year}-${month.padStart(2, '0')}`;
+                              })()}
+                            </h3>
+                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-semibold">
+                              {groupRecords.length} records
+                            </span>
                           </div>
-                          
-                          {/* 月份统计 */}
-                          <div className="flex items-center gap-4 text-sm">
+                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
                             <div className="flex items-center gap-1">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-green-700 font-medium">
-                                {formatCurrency(monthIncome)}
-                              </span>
+                              <span className="text-green-700 font-bold">{formatCurrency(monthIncome)}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                              <span className="text-red-700 font-medium">
-                                {formatCurrency(monthExpense)}
-                              </span>
+                              <span className="text-red-700 font-bold">{formatCurrency(monthExpense)}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <div className={`w-2 h-2 rounded-full ${monthBalance >= 0 ? 'bg-blue-500' : 'bg-red-500'}`}></div>
-                              <span className={`font-medium ${monthBalance >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
-                                {formatCurrency(monthBalance)}
-                              </span>
+                              <span className={`font-bold ${monthBalance >= 0 ? 'text-blue-700' : 'text-red-700'}`}>{formatCurrency(monthBalance)}</span>
                             </div>
                           </div>
                         </div>
@@ -1328,154 +1305,21 @@ export default function FinancialListPage() {
 
                         {/* 手机端卡片布局 */}
                         <div className="md:hidden">
-                          <div className="space-y-4 p-4">
+                          <div className="space-y-4 p-2">
                             {groupRecords.map((record) => (
-                              <div key={record.key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <div className="flex justify-between items-start mb-3">
+                              <div key={record.key} className="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col gap-2">
+                                <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2">
-                                    {editingKey === record.key ? (
-                                      <select
-                                        value={editingRecord?.type || 'Income'}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
-                                        className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                      >
-                                        <option value="Income">Income</option>
-                                        <option value="Expense">Expense</option>
-                                      </select>
-                                    ) : (
-                                      <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                          record.type === 'Income'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-red-100 text-red-800'
-                                        }`}
-                                      >
-                                        {record.type === 'Income' ? 'Income' : 'Expense'}
-                                      </span>
-                                    )}
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="date"
-                                        value={editingRecord?.date || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, date: e.target.value }))}
-                                        className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      />
-                                    ) : (
-                                      <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
-                                    )}
+                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${record.type === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{record.type === 'Income' ? 'Income' : 'Expense'}</span>
+                                    <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+                                    <span className={`font-bold ${record.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(record.amount)}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    {record.status === 'Approved' ? (
-                                      <CheckCircle className="h-4 w-4 text-green-500" />
-                                    ) : (
-                                      <Clock className="h-4 w-4 text-yellow-500" />
-                                    )}
-                                    {(isAdmin || isSuperAdmin) ? (
-                                      <select
-                                        value={record.status}
-                                        onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
-                                          record.status === 'Approved'
-                                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                                        }`}
-                                      >
-                                        <option value="Pending">Pending</option>
-                                        <option value="Approved">Approved</option>
-                                      </select>
-                                    ) : (
-                                      <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                          record.status === 'Approved'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-yellow-100 text-yellow-800'
-                                        }`}
-                                      >
-                                        {record.status === 'Approved' ? 'Approved' : 'Pending'}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <div className="text-xs text-gray-700">{record.who}</div>
+                                  <div className="text-xs text-gray-500">{record.description}</div>
+                                  <div className="text-xs text-gray-400">{record.remark || '-'}</div>
                                 </div>
-                                
-                                <div className="space-y-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-900">Name:</span>
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="text"
-                                        value={editingRecord?.who || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                        placeholder="Name"
-                                      />
-                                    ) : (
-                                      <span className="text-sm text-gray-700">{record.who}</span>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-900">Amount:</span>
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="number"
-                                        step="0.01"
-                                        value={editingRecord?.amount || 0}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-gray-900"
-                                        placeholder="0.00"
-                                      />
-                                    ) : (
-                                      <span
-                                        className={`text-sm font-medium ${
-                                          record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                        }`}
-                                      >
-                                        {formatCurrency(record.amount)}
-                                      </span>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-sm font-medium text-gray-900">Description:</span>
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="text"
-                                        value={editingRecord?.description || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                        placeholder="Description"
-                                      />
-                                    ) : (
-                                      <span className="text-sm text-gray-700 text-right max-w-[60%]">{record.description}</span>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-sm font-medium text-gray-900">Remark:</span>
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="text"
-                                        value={editingRecord?.remark || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                        placeholder="Remark"
-                                      />
-                                    ) : (
-                                      <span className="text-sm text-gray-500 text-right max-w-[60%]">{record.remark || '-'}</span>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-200">
-                                  {/* View Details Button */}
-                                  <Link
-                                    href={`/financial-list/${record.key}`}
-                                    className="text-blue-600 hover:text-blue-900 p-1"
-                                    title="View record details"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Link>
-                                  
+                                <div className="flex gap-2 mt-2">
+                                  <Link href={`/financial-list/${record.key}`} className="text-blue-600 hover:text-blue-900 p-1"><Eye className="h-4 w-4" /></Link>
                                   <AdminOrSuperAdmin>
                                     {editingKey === record.key ? (
                                       <>
