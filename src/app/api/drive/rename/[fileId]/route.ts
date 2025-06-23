@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
-export async function PATCH(request: NextRequest, { params }: { params: { fileId: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ fileId: string }> }
+) {
   try {
-    const { fileId } = params;
+    const { fileId } = await params;
     const { newName } = await request.json();
 
     if (!fileId || !newName) {
