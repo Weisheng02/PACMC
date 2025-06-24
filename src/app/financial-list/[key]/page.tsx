@@ -378,7 +378,7 @@ export default function RecordDetailsPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Date</label>
-                    <p className="text-sm text-gray-900">{formatDate(record.date)}</p>
+                    <p className="text-sm text-gray-900">{record.date?.split(' ')[0]}</p>
                   </div>
                   
                   <div>
@@ -412,7 +412,7 @@ export default function RecordDetailsPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Created Date</label>
-                    <p className="text-sm text-gray-900">{formatDateTime(record.createdDate)}</p>
+                    <p className="text-sm text-gray-900">{record.createdDate?.split(' ')[0]}</p>
                   </div>
                 </div>
               </div>

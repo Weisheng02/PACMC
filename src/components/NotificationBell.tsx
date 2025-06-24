@@ -64,7 +64,7 @@ export default function NotificationBell() {
   }, [userProfile]);
 
   const handleClearLogs = async () => {
-    if (!confirm('Are you sure you want to hide all audit logs? Logs will not be displayed on the web page, but data will remain in the spreadsheet.')) return;
+    if (!confirm('Are you sure you want to clear all notifications?')) return;
     
     setClearing(true);
     try {
@@ -109,6 +109,32 @@ export default function NotificationBell() {
     return logTime.toLocaleDateString('en-US');
   };
 
+  const getLogSummary = (log: AuditLog) => {
+    let amount = '', type = '', description = '';
+    if (log.detail) {
+      const match = (field: string) => {
+        const m = log.detail.match(new RegExp(field + ': ([^,]+)'));
+        return m ? m[1].trim() : '';
+      };
+      amount = match('Amount');
+      type = match('Type');
+      description = match('Description');
+    }
+    if (log.action === 'Add Record') {
+      return `Added an ${type === 'Income' ? 'income' : 'expense'} of RM${amount}${description ? ` (${description})` : ''}`;
+    }
+    if (log.action === 'Edit Record') {
+      return `Edited a record${description ? ` (${description})` : ''}`;
+    }
+    if (log.action === 'Delete Record') {
+      return `Deleted an ${type === 'Income' ? 'income' : 'expense'} of RM${amount}${description ? ` (${description})` : ''}`;
+    }
+    if (log.action === 'Update Status') {
+      return `Approved a record${description ? ` (${description})` : ''}`;
+    }
+    return `Performed an action`;
+  };
+
   if (!userProfile) return null;
 
   // 只显示最近50条日志
@@ -132,7 +158,9 @@ export default function NotificationBell() {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden dark:bg-slate-800 dark:border-slate-600">
+        <div
+          className="absolute z-50 mt-2 w-full max-w-xs left-1/2 -translate-x-1/2 sm:w-96 sm:max-w-md sm:right-0 sm:left-auto sm:translate-x-0 bg-white rounded-lg shadow-lg border border-gray-200 dark:bg-slate-800 dark:border-slate-600 max-h-96 overflow-hidden"
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-600">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Audit Logs</h3>
@@ -187,33 +215,13 @@ export default function NotificationBell() {
                           </div>
                           <span className="text-xs text-gray-400 flex items-center gap-1 dark:text-slate-400">
                             <Clock className="h-3 w-3" />
-                            {formatTimeAgo(log.time)}
+                            {log.time?.split(' ')[0]}
                           </span>
                         </div>
                         
                         <div className="text-sm text-gray-600 mb-1 dark:text-slate-300">
-                          <span className="font-medium">Object:</span> {log.object}
-                          {log.field && (
-                            <>
-                              <span className="mx-1">•</span>
-                              <span className="font-medium">Field:</span> {log.field}
-                            </>
-                          )}
+                          {getLogSummary(log)}
                         </div>
-                        
-                        {log.old && log.new && (
-                          <div className="text-xs text-gray-500 dark:text-slate-400">
-                            <span className="line-through">{log.old}</span>
-                            <span className="mx-1">→</span>
-                            <span className="text-blue-600">{log.new}</span>
-                          </div>
-                        )}
-                        
-                        {log.detail && (
-                          <div className="text-xs text-gray-500 dark:text-slate-400">
-                            {log.detail}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>

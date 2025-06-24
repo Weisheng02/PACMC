@@ -170,6 +170,32 @@ export default function AuditLogPage() {
   const uniqueActions = Array.from(new Set(logs.map(log => log.action)));
   const uniqueUsers = Array.from(new Set(logs.map(log => log.user)));
 
+  const getLogSummary = (log: AuditLog) => {
+    let amount = '', type = '', description = '';
+    if (log.detail) {
+      const match = (field: string): string => {
+        const m = log.detail.match(new RegExp(field + ': ([^,]+)'));
+        return m ? m[1].trim() : '';
+      };
+      amount = match('Amount');
+      type = match('Type');
+      description = match('Description');
+    }
+    if (log.action === 'Add Record') {
+      return `Added an ${type === 'Income' ? 'income' : 'expense'} of RM${amount}${description ? ` (${description})` : ''}`;
+    }
+    if (log.action === 'Edit Record') {
+      return `Edited a record${description ? ` (${description})` : ''}`;
+    }
+    if (log.action === 'Delete Record') {
+      return `Deleted an ${type === 'Income' ? 'income' : 'expense'} of RM${amount}${description ? ` (${description})` : ''}`;
+    }
+    if (log.action === 'Update Status') {
+      return `Approved a record${description ? ` (${description})` : ''}`;
+    }
+    return `Performed an action`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -289,33 +315,13 @@ export default function AuditLogPage() {
                         </div>
                         <span className="text-xs text-gray-400 flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {formatTimeAgo(log.time)}
+                          {log.time?.split(' ')[0]}
                         </span>
                       </div>
                       
                       <div className="text-sm text-gray-700 mb-1">
-                        <span className="font-medium">Object:</span> {log.object}
-                        {log.field && log.field !== 'All Fields' && (
-                          <>
-                            <span className="mx-1">•</span>
-                            <span className="font-medium">Field:</span> {log.field}
-                          </>
-                        )}
+                        {getLogSummary(log)}
                       </div>
-                      
-                      {log.old && log.new && (
-                        <div className="text-xs text-gray-600 mb-1">
-                          <span className="line-through">{log.old}</span>
-                          <span className="mx-1">→</span>
-                          <span className="text-blue-600">{log.new}</span>
-                        </div>
-                      )}
-                      
-                      {log.detail && (
-                        <p className="text-xs text-gray-500 truncate" title={log.detail}>
-                          {log.detail}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -367,33 +373,13 @@ export default function AuditLogPage() {
                                 </div>
                                 <span className="text-xs text-gray-400 flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {formatTimeAgo(log.time)}
+                                  {log.time?.split(' ')[0]}
                                 </span>
                               </div>
                               
                               <div className="text-sm text-gray-700 mb-1">
-                                <span className="font-medium">Object:</span> {log.object}
-                                {log.field && log.field !== 'All Fields' && (
-                                  <>
-                                    <span className="mx-1">•</span>
-                                    <span className="font-medium">Field:</span> {log.field}
-                                  </>
-                                )}
+                                {getLogSummary(log)}
                               </div>
-                              
-                              {log.old && log.new && (
-                                <div className="text-xs text-gray-600 mb-1">
-                                  <span className="line-through">{log.old}</span>
-                                  <span className="mx-1">→</span>
-                                  <span className="text-blue-600">{log.new}</span>
-                                </div>
-                              )}
-                              
-                              {log.detail && (
-                                <p className="text-xs text-gray-500 truncate" title={log.detail}>
-                                  {log.detail}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </div>
