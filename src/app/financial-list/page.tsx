@@ -52,6 +52,46 @@ export default function FinancialListPage() {
   // Toast notification state
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
+  // 1. 新增年份和月份筛选状态
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+
+  // 2. 计算所有有数据的年份和每年有数据的月份
+  const yearMonthMap = records.reduce((acc, record) => {
+    const dateStr = record.date?.split(' ')[0] || '';
+    const [year, month] = dateStr.split('-');
+    if (year && month) {
+      if (!acc[year]) acc[year] = new Set();
+      acc[year].add(month);
+    }
+    return acc;
+  }, {} as Record<string, Set<string>>);
+  const allYears = Object.keys(yearMonthMap).sort((a, b) => b.localeCompare(a));
+  const monthsOfYear = selectedYear && yearMonthMap[selectedYear] ? Array.from(yearMonthMap[selectedYear]).sort((a, b) => a.localeCompare(b)) : [];
+
+  // 3. 默认选中当前年月
+  useEffect(() => {
+    if (!selectedYear && allYears.length > 0) {
+      setSelectedYear(allYears[0]);
+    }
+  }, [allYears, selectedYear]);
+  useEffect(() => {
+    if (selectedYear && monthsOfYear.length > 0 && !monthsOfYear.includes(selectedMonth)) {
+      setSelectedMonth(monthsOfYear[0]);
+    }
+  }, [selectedYear, monthsOfYear, selectedMonth]);
+
+  // 4. 只显示当前选中年月的记录
+  type YM = { year: string, month: string };
+  const getYM = (dateStr: string): YM => {
+    const [year, month] = (dateStr?.split(' ')[0] || '').split('-');
+    return { year, month };
+  };
+  const filteredRecordsByYM = records.filter(r => {
+    const { year, month } = getYM(r.date);
+    return year === selectedYear && month === selectedMonth;
+  });
+
   const router = useRouter();
 
   const loadRecords = async () => {
@@ -792,23 +832,30 @@ export default function FinancialListPage() {
 
         {/* Records Table */}
         <div className="bg-white shadow-sm border rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                Financial Records ({filteredRecordsCount} records)
-              </h2>
-              
-              {/* 高级搜索控件 */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-                {/* 高级搜索按钮 */}
-                <button
-                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <Search className="h-4 w-4" />
-                  Advanced Search
-                </button>
+            <div className="px-6 py-4 border-b border-gray-200">
+              <span className="hidden sm:inline">Select Year and Month</span>
+              <span className="sm:hidden">Select Year and Month</span>
+            <div className="mb-4 flex flex-wrap justify-center items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 rounded-lg p-2 shadow-sm">
+              <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="px-3 py-1 border rounded-md text-sm focus:ring-2 focus:ring-blue-500">
+                {allYears.map(y => <option key={y} value={y}>{y}</option>)} 
+              </select>
+              <div className="flex flex-wrap gap-1">
+                {monthsOfYear.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setSelectedMonth(m)}
+                    className={`px-2 py-1 rounded-md text-sm border transition-colors duration-150 ${selectedMonth === m ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'}`}
+                  >
+                    {m}月
+                  </button>
+                ))}
               </div>
+              <button
+                onClick={() => setShowAdvancedSearch(v => !v)}
+                className="text-xs px-3 py-1 border rounded-md text-gray-600 bg-gray-100 hover:bg-blue-600 hover:text-white transition-colors duration-150 ml-2"
+              >
+                Advanced
+              </button>
             </div>
 
             {/* 高级搜索面板 */}
@@ -1016,362 +1063,280 @@ export default function FinancialListPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              {/* 展开/收起所有按钮 */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
-                <span className="text-sm font-medium text-gray-700">Quick Actions:</span>
-                <button
-                  onClick={expandAllMonths}
-                  className="w-full sm:w-auto px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Expand All
-                </button>
-                <button
-                  onClick={collapseAllMonths}
-                  className="w-full sm:w-auto px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                >
-                  Collapse All
-                </button>
-              </div>
-
-              {Object.entries(groupedRecords)
-                .filter(([groupName, groupRecords]) => groupRecords.length > 0)
-                .map(([groupName, groupRecords]) => {
-                  const isExpanded = expandedMonths.has(groupName);
-                  const monthIncome = groupRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0);
-                  const monthExpense = groupRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0);
-                  const monthBalance = monthIncome - monthExpense;
-                  
-                  return (
-                    <div key={groupName} className="border-b border-gray-300 last:border-b-0">
-                      {/* 分组标题和统计 - 可点击展开/收起 */}
-                      <div 
-                        className="px-6 py-4 bg-gray-50 border-b border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors"
-                        onClick={() => toggleMonth(groupName)}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {(() => {
-                                const [year, month] = groupName.replace('年', '-').replace('月', '').split('-');
-                                return `${year}-${month.padStart(2, '0')}`;
-                              })()}
-                            </h3>
-                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-semibold">
-                              {groupRecords.length} records
-                            </span>
-                          </div>
-                          <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-green-700 font-bold">{formatCurrency(monthIncome)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                              <span className="text-red-700 font-bold">{formatCurrency(monthExpense)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <span className="font-bold text-blue-600">{formatCurrency(monthBalance)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 可折叠的记录内容 */}
-                      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                        isExpanded ? 'block opacity-100 max-h-[2000px]' : 'hidden opacity-0 max-h-0'
-                      }`}>
-                        {/* 桌面端表格布局 */}
-                        <div className="hidden md:block">
-                          <table className="min-w-full border border-gray-300">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Date
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Type
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Name
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Description
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Amount
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Status
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
-                                  Remark
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                  Action
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white">
-                              {groupRecords.map((record) => (
-                                <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="date"
-                                        value={editingRecord?.date || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, date: e.target.value }))}
-                                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      />
-                                    ) : (
-                                      record.date?.split(' ')[0]
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                                    {editingKey === record.key ? (
-                                      <select
-                                        value={editingRecord?.type || 'Income'}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
-                                        className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                      >
-                                        <option value="Income">Income</option>
-                                        <option value="Expense">Expense</option>
-                                      </select>
-                                    ) : (
-                                      <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                          record.type === 'Income'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-red-100 text-red-800'
-                                        }`}
-                                      >
-                                        {record.type === 'Income' ? 'Income' : 'Expense'}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="text"
-                                        value={editingRecord?.who || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                        placeholder="Name"
-                                      />
-                                    ) : (
-                                      <span className="text-sm text-gray-700">{record.who}</span>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="text"
-                                        value={editingRecord?.description || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                        placeholder="Description"
-                                      />
-                                    ) : (
-                                      record.description
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="number"
-                                        step="0.01"
-                                        value={editingRecord?.amount || 0}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-gray-900"
-                                        placeholder="0.00"
-                                      />
-                                    ) : (
-                                      <span
-                                        className={`text-sm font-medium ${
-                                          record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                        }`}
-                                      >
-                                        {formatCurrency(record.amount)}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                                    <div className="flex items-center gap-2">
-                                      {record.status === 'Approved' ? (
-                                        <CheckCircle className="h-4 w-4 text-green-500" />
-                                      ) : (
-                                        <Clock className="h-4 w-4 text-yellow-500" />
-                                      )}
-                                      {(isAdmin || isSuperAdmin) ? (
-                                        <select
-                                          value={record.status}
-                                          onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
-                                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
-                                            record.status === 'Approved'
-                                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                              : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                                          }`}
-                                        >
-                                          <option value="Pending">Pending</option>
-                                          <option value="Approved">Approved</option>
-                                        </select>
-                                      ) : (
-                                        <span
-                                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                            record.status === 'Approved'
-                                              ? 'bg-green-100 text-green-800'
-                                              : 'bg-yellow-100 text-yellow-800'
-                                          }`}
-                                        >
-                                          {record.status === 'Approved' ? 'Approved' : 'Pending'}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
-                                    {editingKey === record.key ? (
-                                      <input
-                                        type="text"
-                                        value={editingRecord?.remark || ''}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
-                                        className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                        placeholder="Remark"
-                                      />
-                                    ) : (
-                                      record.remark || '-'
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
-                                      {/* View Details Button */}
-                                      <Link
-                                        href={`/financial-list/${record.key}`}
-                                        className="text-blue-600 hover:text-blue-900 p-1"
-                                        title="View record details"
-                                      >
-                                        <Eye className="h-4 w-4" />
-                                      </Link>
-                                      
-                                      <AdminOrSuperAdmin>
-                                        {editingKey === record.key ? (
-                                          <>
-                                            <button
-                                              onClick={saveInlineEdit}
-                                              className="text-green-600 hover:text-green-900 p-1"
-                                            >
-                                              <Check className="h-4 w-4" />
-                                            </button>
-                                            <button
-                                              onClick={cancelInlineEdit}
-                                              className="text-gray-600 hover:text-gray-900 p-1"
-                                            >
-                                              <X className="h-4 w-4" />
-                                            </button>
-                                          </>
-                                        ) : (
-                                          <button
-                                            onClick={() => startInlineEdit(record)}
-                                            className="text-blue-600 hover:text-blue-900 p-1"
-                                            disabled={deletingKey === record.key}
-                                          >
-                                            <Edit className="h-4 w-4" />
-                                          </button>
-                                        )}
-                                      </AdminOrSuperAdmin>
-                                      <SuperAdminOnly>
-                                        <button
-                                          onClick={() => handleDelete(record.key)}
-                                          disabled={deletingKey === record.key || editingKey === record.key}
-                                          className={`p-1 ${
-                                            deletingKey === record.key || editingKey === record.key
-                                              ? 'text-gray-400 cursor-not-allowed'
-                                              : 'text-red-600 hover:text-red-900'
-                                          }`}
-                                        >
-                                          {deletingKey === record.key ? (
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                          ) : (
-                                            <Trash2 className="h-4 w-4" />
-                                          )}
-                                        </button>
-                                      </SuperAdminOnly>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* 手机端卡片布局 */}
-                        <div className="md:hidden">
-                          <div className="space-y-4 p-2">
-                            {groupRecords.map((record) => (
-                              <div key={record.key} className="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col gap-2">
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${record.type === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{record.type === 'Income' ? 'Income' : 'Expense'}</span>
-                                    <span className="text-sm text-gray-500">{record.date?.split(' ')[0]}</span>
-                                    <span className={`font-bold ${record.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(record.amount)}</span>
-                                  </div>
-                                  <div className="text-xs text-gray-700">{record.who}</div>
-                                  <div className="text-xs text-gray-500">{record.description}</div>
-                                  <div className="text-xs text-gray-400">{record.remark || '-'}</div>
-                                </div>
-                                <div className="flex gap-2 mt-2">
-                                  <Link href={`/financial-list/${record.key}`} className="text-blue-600 hover:text-blue-900 p-1"><Eye className="h-4 w-4" /></Link>
-                                  <AdminOrSuperAdmin>
-                                    {editingKey === record.key ? (
-                                      <>
-                                        <button
-                                          onClick={saveInlineEdit}
-                                          className="text-green-600 hover:text-green-900 p-1"
-                                        >
-                                          <Check className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                          onClick={cancelInlineEdit}
-                                          className="text-gray-600 hover:text-gray-900 p-1"
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </button>
-                                      </>
-                                    ) : (
-                                      <button
-                                        onClick={() => startInlineEdit(record)}
-                                        className="text-blue-600 hover:text-blue-900 p-1"
-                                        disabled={deletingKey === record.key}
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                    )}
-                                  </AdminOrSuperAdmin>
-                                  <SuperAdminOnly>
-                                    <button
-                                      onClick={() => handleDelete(record.key)}
-                                      disabled={deletingKey === record.key || editingKey === record.key}
-                                      className={`p-1 ${
-                                        deletingKey === record.key || editingKey === record.key
-                                          ? 'text-gray-400 cursor-not-allowed'
-                                          : 'text-red-600 hover:text-red-900'
-                                      }`}
-                                    >
-                                      {deletingKey === record.key ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                      ) : (
-                                        <Trash2 className="h-4 w-4" />
-                                      )}
-                                    </button>
-                                  </SuperAdminOnly>
-                                </div>
+              {/* 4. 只显示当前选中年月的记录 */}
+              {filteredRecordsByYM.length > 0 ? (
+                <div className="overflow-x-auto">
+                  {/* 桌面端表格布局 */}
+                  <div className="hidden md:block">
+                    <table className="min-w-full border border-gray-300">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Type
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Description
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Amount
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 border-r border-gray-300">
+                            Remark
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {filteredRecordsByYM.map((record) => (
+                          <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
+                              {editingKey === record.key ? (
+                                <input
+                                  type="date"
+                                  value={editingRecord?.date || ''}
+                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, date: e.target.value }))}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              ) : (
+                                record.date?.split(' ')[0]
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
+                              {editingKey === record.key ? (
+                                <select
+                                  value={editingRecord?.type || 'Income'}
+                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
+                                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                                >
+                                  <option value="Income">Income</option>
+                                  <option value="Expense">Expense</option>
+                                </select>
+                              ) : (
+                                <span
+                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    record.type === 'Income'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                >
+                                  {record.type === 'Income' ? 'Income' : 'Expense'}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
+                              {editingKey === record.key ? (
+                                <input
+                                  type="text"
+                                  value={editingRecord?.who || ''}
+                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
+                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
+                                  placeholder="Name"
+                                />
+                              ) : (
+                                <span className="text-sm text-gray-700">{record.who}</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
+                              {editingKey === record.key ? (
+                                <input
+                                  type="text"
+                                  value={editingRecord?.description || ''}
+                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
+                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
+                                  placeholder="Description"
+                                />
+                              ) : (
+                                record.description
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
+                              {editingKey === record.key ? (
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editingRecord?.amount || 0}
+                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-gray-900"
+                                  placeholder="0.00"
+                                />
+                              ) : (
+                                <span
+                                  className={`text-sm font-medium ${
+                                    record.type === 'Income' ? 'text-green-600' : 'text-red-600'
+                                  }`}
+                                >
+                                  {formatCurrency(record.amount)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
+                              <div className="flex items-center gap-2">
+                                {record.status === 'Approved' ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <Clock className="h-4 w-4 text-yellow-500" />
+                                )}
+                                {(isAdmin || isSuperAdmin) ? (
+                                  <select
+                                    value={record.status}
+                                    onChange={(e) => handleStatusToggle(record.key, e.target.value as 'Pending' | 'Approved')}
+                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded border-0 cursor-pointer ${
+                                      record.status === 'Approved'
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                    }`}
+                                  >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                      record.status === 'Approved'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
+                                  >
+                                    {record.status === 'Approved' ? 'Approved' : 'Pending'}
+                                  </span>
+                                )}
                               </div>
-                            ))}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
+                              {editingKey === record.key ? (
+                                <input
+                                  type="text"
+                                  value={editingRecord?.remark || ''}
+                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
+                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
+                                  placeholder="Remark"
+                                />
+                              ) : (
+                                record.remark || '-'
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                {/* View Details Button */}
+                                <Link
+                                  href={`/financial-list/${record.key}`}
+                                  className="text-blue-600 hover:text-blue-900 p-1"
+                                  title="View record details"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Link>
+                                
+                                <AdminOrSuperAdmin>
+                                  {editingKey === record.key ? (
+                                    <>
+                                      <button
+                                        onClick={saveInlineEdit}
+                                        className="text-green-600 hover:text-green-900 p-1"
+                                      >
+                                        <Check className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        onClick={cancelInlineEdit}
+                                        className="text-gray-600 hover:text-gray-900 p-1"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => startInlineEdit(record)}
+                                      className="text-blue-600 hover:text-blue-900 p-1"
+                                      disabled={deletingKey === record.key}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </AdminOrSuperAdmin>
+                                <SuperAdminOnly>
+                                  <button
+                                    onClick={() => handleDelete(record.key)}
+                                    disabled={deletingKey === record.key || editingKey === record.key}
+                                    className={`p-1 ${
+                                      deletingKey === record.key || editingKey === record.key
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-red-600 hover:text-red-900'
+                                    }`}
+                                  >
+                                    {deletingKey === record.key ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </SuperAdminOnly>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 手机端卡片布局 */}
+                  <div className="md:hidden">
+                    <div className="space-y-4 p-2">
+                      {filteredRecordsByYM.map((record) => (
+                        <div key={record.key} className="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col gap-2">
+                          {/* 第一行：类型+金额 */}
+                          <div className="flex justify-between items-center">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${record.type === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{record.type === 'Income' ? 'Income' : 'Expense'}</span>
+                            <span className={`font-bold text-right whitespace-nowrap ${record.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(record.amount)}</span>
+                          </div>
+                          {/* 第二行：Date */}
+                          <div className="text-xs text-gray-500 mt-1"><span className="font-medium">Date:</span> {record.date?.split(' ')[0]}</div>
+                          {/* 第三行：Name */}
+                          <div className="text-xs text-gray-500 mt-1"><span className="font-medium">Name:</span> {record.who}</div>
+                          {/* 第四行：Description */}
+                          <div className="text-xs text-gray-500 mt-1"><span className="font-medium">Description:</span> {record.description}</div>
+                          {/* 第五行：Remark（如有） */}
+                          {record.remark && <div className="text-xs text-gray-400 mt-1"><span className="font-medium">Remark:</span> {record.remark}</div>}
+                          {/* 操作按钮区 */}
+                          <div className="flex gap-2 mt-2">
+                            <Link href={`/financial-list/${record.key}`} className="text-blue-600 hover:text-blue-900 p-1"><Eye className="h-4 w-4" /></Link>
+                            <AdminOrSuperAdmin>
+                              {editingKey === record.key ? (
+                                <>
+                                  <button onClick={saveInlineEdit} className="text-green-600 hover:text-green-900 p-1"><Check className="h-4 w-4" /></button>
+                                  <button onClick={cancelInlineEdit} className="text-gray-600 hover:text-gray-900 p-1"><X className="h-4 w-4" /></button>
+                                </>
+                              ) : (
+                                <button onClick={() => startInlineEdit(record)} className="text-blue-600 hover:text-blue-900 p-1" disabled={deletingKey === record.key}><Edit className="h-4 w-4" /></button>
+                              )}
+                            </AdminOrSuperAdmin>
+                            <SuperAdminOnly>
+                              <button onClick={() => handleDelete(record.key)} disabled={deletingKey === record.key || editingKey === record.key} className={`p-1 ${deletingKey === record.key || editingKey === record.key ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}>{deletingKey === record.key ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>) : (<Trash2 className="h-4 w-4" />)}</button>
+                            </SuperAdminOnly>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
+              ) : (
+                <div className="px-6 py-12 text-center">
+                  <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No Records</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {isAdmin || isSuperAdmin ? 'Click "Add Record" to start adding' : 'Waiting for admin to add records'}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
