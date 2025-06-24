@@ -719,7 +719,7 @@ export default function FinancialListPage() {
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Income</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 break-words">
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 whitespace-nowrap">
                   {formatCurrency(filteredTotalIncome)}
                 </p>
               </div>
@@ -733,7 +733,7 @@ export default function FinancialListPage() {
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expense</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 break-words">
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 whitespace-nowrap">
                   {formatCurrency(filteredTotalExpense)}
                 </p>
               </div>
@@ -747,7 +747,7 @@ export default function FinancialListPage() {
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Balance</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold break-words ${filteredBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold whitespace-nowrap ${filteredBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                   {formatCurrency(filteredBalance)}
                 </p>
               </div>
@@ -761,7 +761,7 @@ export default function FinancialListPage() {
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Cash in Hand</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold break-words ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold whitespace-nowrap ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
                   {formatCurrency(cashInHand)}
                 </p>
               </div>
@@ -1124,7 +1124,7 @@ export default function FinancialListPage() {
                                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                       />
                                     ) : (
-                                      formatDate(record.date)
+                                      record.date?.split(' ')[0]
                                     )}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
@@ -1311,7 +1311,7 @@ export default function FinancialListPage() {
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2">
                                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${record.type === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{record.type === 'Income' ? 'Income' : 'Expense'}</span>
-                                    <span className="text-sm text-gray-500">{formatDate(record.date)}</span>
+                                    <span className="text-sm text-gray-500">{record.date?.split(' ')[0]}</span>
                                     <span className={`font-bold ${record.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(record.amount)}</span>
                                   </div>
                                   <div className="text-xs text-gray-700">{record.who}</div>

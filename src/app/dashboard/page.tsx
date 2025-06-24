@@ -299,7 +299,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Income</p>
-                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate">
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate">
                     {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Expense</p>
-                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate">
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate">
                     {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Balance</p>
-                  <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold whitespace-nowrap truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                     {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
