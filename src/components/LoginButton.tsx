@@ -42,7 +42,7 @@ export function LoginButton() {
   if (user) {
     return (
       <div className="flex items-center gap-4">
-        <div className="text-right">
+        <div className="flex flex-col sm:text-right">
           <p className="text-sm font-medium text-gray-900 dark:text-slate-100">{userProfile?.name || user.email}</p>
           <p className="text-xs text-gray-500 dark:text-slate-400">{userProfile?.role || 'Basic User'}</p>
         </div>
@@ -51,7 +51,7 @@ export function LoginButton() {
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
     );

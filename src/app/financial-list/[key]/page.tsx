@@ -336,9 +336,9 @@ export default function RecordDetailsPage() {
             <div className="bg-white shadow-sm border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Financial Record</h2>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-nowrap">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                       record.type === 'Income'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
@@ -353,7 +353,7 @@ export default function RecordDetailsPage() {
                       <Clock className="h-4 w-4 text-yellow-500 mr-1" />
                     )}
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                         record.status === 'Approved'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'

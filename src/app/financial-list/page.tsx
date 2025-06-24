@@ -846,7 +846,7 @@ export default function FinancialListPage() {
                     onClick={() => setSelectedMonth(m)}
                     className={`px-2 py-1 rounded-md text-sm border transition-colors duration-150 ${selectedMonth === m ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'}`}
                   >
-                    {m}月
+                    {m}
                   </button>
                 ))}
               </div>
@@ -854,7 +854,7 @@ export default function FinancialListPage() {
                 onClick={() => setShowAdvancedSearch(v => !v)}
                 className="text-xs px-3 py-1 border rounded-md text-gray-600 bg-gray-100 hover:bg-blue-600 hover:text-white transition-colors duration-150 ml-2"
               >
-                Advanced
+                Advanced Search
               </button>
             </div>
 
