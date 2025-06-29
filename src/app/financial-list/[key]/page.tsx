@@ -318,7 +318,7 @@ export default function RecordDetailsPage() {
                 </Link>
                 <button
                   onClick={handleDelete}
-                  disabled={deleting}
+                  disabled={!!deleting}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {deleting ? (
@@ -350,7 +350,7 @@ export default function RecordDetailsPage() {
                 </Link>
                 <button
                   onClick={handleDelete}
-                  disabled={deleting}
+                  disabled={!!deleting}
                   className="flex items-center justify-center w-10 h-10 text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={deleting ? 'Deleting...' : 'Delete'}
                 >
@@ -433,7 +433,7 @@ export default function RecordDetailsPage() {
                     )}
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Created</label>
-                      <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{formatDateTime(record.createdAt)}</p>
+                      <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{formatDateTime(record.createdDate)}</p>
                     </div>
                   </div>
                 </div>
@@ -592,7 +592,7 @@ export default function RecordDetailsPage() {
                               </a>
                               <button
                                 onClick={() => handleDeleteReceipt(receipt.receiptKey)}
-                                disabled={deleting === receipt.receiptKey}
+                                disabled={!!deleting}
                                 className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
                                 title="Delete receipt"
                               >

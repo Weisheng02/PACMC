@@ -3,12 +3,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoggedInUser } from '@/components/PermissionGate';
-import { ArrowLeft, Download, FileText, BarChart3, Calendar, Filter } from 'lucide-react';
+import { ArrowLeft, RefreshCw, FileText, BarChart3, Calendar, TrendingUp, Download, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
 import { readFinancialRecords, FinancialRecord } from '@/lib/googleSheets';
+
+function formatCurrency(amount: number) {
+  return 'RM' + amount.toFixed(2);
+}
 
 export default function ExportPage() {
   const router = useRouter();

@@ -199,7 +199,7 @@ export default function UserManagementPage() {
                 </div>
                 <div className="ml-2 sm:ml-4 min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Admins</p>
-                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{users.filter(u => u.role === 'admin').length}</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{users.filter(u => u.role === 'Admin').length}</p>
                 </div>
               </div>
             </div>
@@ -257,9 +257,9 @@ export default function UserManagementPage() {
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            user.role === 'superadmin' 
+                            user.role === 'Super Admin' 
                               ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                              : user.role === 'admin'
+                              : user.role === 'Admin'
                               ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                           }`}>
