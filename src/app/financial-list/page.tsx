@@ -796,7 +796,7 @@ export default function FinancialListPage() {
                 title={monthSortOrder === 'asc' ? 'Sort: Oldest to Newest' : 'Sort: Newest to Oldest'}
               >
                 {monthSortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                <span className="hidden sm:inline">{monthSortOrder === 'asc' ? 'Sort' : 'Sort'}</span>
+                <span>{monthSortOrder === 'asc' ? 'Sort' : 'Sort'}</span>
               </button>
               
               <button
