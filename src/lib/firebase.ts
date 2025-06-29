@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, Timestamp, writeBatch } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
@@ -606,5 +606,168 @@ const sendEmailNotificationToAdmins = async (
   } catch (error) {
     console.error('Error sending email notifications:', error);
     // 不抛出错误，因为email通知失败不应该影响主要功能
+  }
+};
+
+// Sign in with email and password
+export const signInWithEmail = async (email: string, password: string) => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+    
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      // New user - create profile
+      const newProfile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        name: user.displayName || user.email?.split('@')[0] || '',
+        role: 'Basic User',
+        createdAt: new Date(),
+        status: 'active',
+      };
+      
+      await setDoc(userRef, newProfile);
+      return newProfile;
+    } else {
+      return userDoc.data() as UserProfile;
+    }
+  } catch (error) {
+    console.error('Error signing in with email:', error);
+    throw error;
+  }
+};
+
+// Sign up with email and password
+export const signUpWithEmail = async (email: string, password: string, name: string) => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+    
+    // Update display name
+    await updateProfile(user, { displayName: name });
+    
+    // Create user profile in Firestore
+    const newProfile: UserProfile = {
+      uid: user.uid,
+      email: user.email || '',
+      name: name,
+      role: 'Basic User',
+      createdAt: new Date(),
+      status: 'active',
+    };
+    
+    await setDoc(doc(db, 'users', user.uid), newProfile);
+    return newProfile;
+  } catch (error) {
+    console.error('Error signing up with email:', error);
+    throw error;
+  }
+};
+
+// Reset password
+export const resetPassword = async (email: string) => {
+  try {
+    console.log('Attempting to send password reset email to:', email);
+    
+    // 验证邮箱格式
+    if (!email || !email.includes('@')) {
+      throw new Error('Please enter a valid email address');
+    }
+    
+    // 发送密码重置邮件
+    await sendPasswordResetEmail(auth, email);
+    
+    console.log('Password reset email sent successfully to:', email);
+    
+    // 可选：自定义重置邮件模板
+    // await sendPasswordResetEmail(auth, email, {
+    //   url: `${window.location.origin}/reset-password`,
+    //   handleCodeInApp: false,
+    // });
+    
+  } catch (error: any) {
+    console.error('Error sending password reset email:', error);
+    
+    // 详细的错误处理
+    switch (error.code) {
+      case 'auth/user-not-found':
+        throw new Error('No account found with this email address. Please check your email or create a new account.');
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address.');
+      case 'auth/too-many-requests':
+        throw new Error('Too many password reset attempts. Please try again later.');
+      case 'auth/network-request-failed':
+        throw new Error('Network error. Please check your internet connection and try again.');
+      default:
+        throw new Error(`Failed to send reset email: ${error.message || 'Unknown error'}`);
+    }
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (uid: string, updates: Partial<UserProfile>) => {
+  try {
+    await setDoc(doc(db, 'users', uid), updates, { merge: true });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+// Update user display name in Firebase Auth
+export const updateUserDisplayName = async (displayName: string) => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      await updateProfile(user, { displayName });
+    }
+  } catch (error) {
+    console.error('Error updating display name:', error);
+    throw error;
+  }
+};
+
+// Send email verification
+export const sendEmailVerification = async () => {
+  try {
+    const user = auth.currentUser;
+    if (user && !user.emailVerified) {
+      await import('firebase/auth').then(({ sendEmailVerification }) => 
+        sendEmailVerification(user)
+      );
+    }
+  } catch (error) {
+    console.error('Error sending email verification:', error);
+    throw error;
+  }
+};
+
+// Update user password
+export const updateUserPassword = async (newPassword: string) => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      await updatePassword(user, newPassword);
+    }
+  } catch (error) {
+    console.error('Error updating password:', error);
+    throw error;
+  }
+};
+
+// Re-authenticate user (required for sensitive operations)
+export const reauthenticateUser = async (email: string, password: string) => {
+  try {
+    const user = auth.currentUser;
+    if (user && user.email) {
+      const credential = EmailAuthProvider.credential(email, password);
+      await reauthenticateWithCredential(user, credential);
+    }
+  } catch (error) {
+    console.error('Error re-authenticating user:', error);
+    throw error;
   }
 }; 

@@ -1,6 +1,6 @@
 'use client';
 
-import { LoginButton } from '@/components/LoginButton';
+import { LoginForm } from '@/components/LoginForm';
 import { SuperAdminOnly, AdminOrSuperAdmin, LoggedInUser } from '@/components/PermissionGate';
 import { useAuth } from '@/contexts/AuthContext';
 import { DollarSign, BarChart3, FileText, Plus, Users, Shield, Wallet, Bell } from 'lucide-react';
@@ -199,7 +199,7 @@ export default function Home() {
               </div>
               
               <div className="space-y-4">
-                <LoginButton />
+                <LoginForm />
                 
                 <div className="text-center">
                   <p className="text-xs text-gray-500 dark:text-slate-400">
@@ -283,7 +283,7 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <NotificationBell />
-              <LoginButton />
+              <LoginForm />
             </div>
           </div>
         </div>

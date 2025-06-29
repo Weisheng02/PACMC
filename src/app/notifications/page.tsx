@@ -2,396 +2,342 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SuperAdminOnly } from '@/components/PermissionGate';
-import { Bell, Trash2, Filter, Calendar, User, FileText, Eye, AlertCircle, ChevronDown, ChevronRight, ArrowLeft, RefreshCw, Check, Clock, CheckCircle, ArrowRight } from 'lucide-react';
+import { LoggedInUser } from '@/components/PermissionGate';
+import { ArrowLeft, Bell, CheckCircle, AlertCircle, Info, X, Trash2, Filter } from 'lucide-react';
 import Link from 'next/link';
 
-// 假设有 getAuditLogs, clearAuditLogs 两个API
-async function getAuditLogs() {
-  const res = await fetch('/api/sheets/audit-log');
-  if (!res.ok) throw new Error('Failed to fetch audit logs');
-  return res.json();
-}
-async function clearAuditLogs() {
-  const res = await fetch('/api/sheets/audit-log', { method: 'DELETE' });
-  if (!res.ok) throw new Error('Failed to clear audit logs');
-}
-
-interface AuditLog {
-  time: string;
-  user: string;
-  action: string;
-  object: string;
-  field: string;
-  old: string;
-  new: string;
-  detail: string;
-  status: string;
+interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
 }
 
-type GroupBy = 'action' | 'user' | 'date' | 'none';
-
-export default function AuditLogPage() {
-  const { userProfile, isSuperAdmin } = useAuth();
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+export default function NotificationsPage() {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [clearing, setClearing] = useState(false);
-  const [groupBy, setGroupBy] = useState<GroupBy>('action');
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [filterAction, setFilterAction] = useState<string>('all');
-  const [filterUser, setFilterUser] = useState<string>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
+  // Mock notifications data
   useEffect(() => {
-    getAuditLogs().then(data => {
-      setLogs(data.logs || []);
+    const mockNotifications: Notification[] = [
+      {
+        id: '1',
+        type: 'success',
+        title: 'Receipt Uploaded Successfully',
+        message: 'Your receipt "Grocery Store - $45.67" has been uploaded and processed.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+        read: false,
+        actionUrl: '/financial-list'
+      },
+      {
+        id: '2',
+        type: 'info',
+        title: 'System Maintenance',
+        message: 'Scheduled maintenance will occur on Sunday at 2:00 AM. Service may be temporarily unavailable.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+        read: true
+      },
+      {
+        id: '3',
+        type: 'warning',
+        title: 'Low Cash Balance',
+        message: 'Your cash-in-hand balance is below the recommended threshold. Consider updating your records.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
+        read: false,
+        actionUrl: '/set-cash'
+      },
+      {
+        id: '4',
+        type: 'error',
+        title: 'Upload Failed',
+        message: 'Failed to upload receipt "Restaurant Receipt.jpg". Please try again or contact support.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+        read: true
+      },
+      {
+        id: '5',
+        type: 'success',
+        title: 'Profile Updated',
+        message: 'Your profile information has been successfully updated.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+        read: true
+      },
+      {
+        id: '6',
+        type: 'info',
+        title: 'New Feature Available',
+        message: 'Dark mode is now available! You can enable it in your settings.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+        read: false,
+        actionUrl: '/settings'
+      }
+    ];
+
+    // Simulate loading
+    setTimeout(() => {
+      setNotifications(mockNotifications);
       setLoading(false);
-    });
+    }, 1000);
   }, []);
 
-  const handleClear = async () => {
-    if (!confirm('Are you sure you want clear all notifications?')) return;
-    setClearing(true);
-    await clearAuditLogs();
-    setLogs([]);
-    setClearing(false);
-  };
-
-  const toggleGroup = (groupKey: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupKey)) {
-      newExpanded.delete(groupKey);
-    } else {
-      newExpanded.add(groupKey);
-    }
-    setExpandedGroups(newExpanded);
-  };
-
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'Add Record':
-        return <FileText className="h-4 w-4 text-green-500" />;
-      case 'Edit Record':
-        return <Eye className="h-4 w-4 text-blue-500" />;
-      case 'Delete Record':
-        return <Trash2 className="h-4 w-4 text-red-500" />;
-      case 'Update Status':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case 'Add Record':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'Edit Record':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Delete Record':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'Update Status':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const formatTimeAgo = (timeStr: string) => {
-    const now = new Date();
-    const logTime = new Date(timeStr);
-    const diffInMinutes = Math.floor((now.getTime() - logTime.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    
-    return logTime.toLocaleDateString('en-US');
-  };
-
-  const formatDate = (timeStr: string) => {
-    const date = new Date(timeStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // 过滤日志
-  const filteredLogs = logs.filter(log => {
-    if (filterAction !== 'all' && log.action !== filterAction) return false;
-    if (filterUser !== 'all' && log.user !== filterUser) return false;
-    return true;
-  });
-
-  // 分组日志
-  const groupedLogs = filteredLogs.reduce((groups, log) => {
-    let groupKey = '';
-    let groupName = '';
-    
-    switch (groupBy) {
-      case 'action':
-        groupKey = log.action;
-        groupName = log.action;
-        break;
-      case 'user':
-        groupKey = log.user;
-        groupName = log.user;
-        break;
-      case 'date':
-        groupKey = formatDate(log.time);
-        groupName = formatDate(log.time);
-        break;
-      default:
-        groupKey = 'all';
-        groupName = 'All Logs';
-    }
-    
-    if (!groups[groupKey]) {
-      groups[groupKey] = {
-        name: groupName,
-        logs: [],
-        count: 0
-      };
-    }
-    
-    groups[groupKey].logs.push(log);
-    groups[groupKey].count++;
-    
-    return groups;
-  }, {} as Record<string, { name: string; logs: AuditLog[]; count: number }>);
-
-  // 获取唯一值用于过滤器
-  const uniqueActions = Array.from(new Set(logs.map(log => log.action)));
-  const uniqueUsers = Array.from(new Set(logs.map(log => log.user)));
-
-  const getLogSummary = (log: AuditLog) => {
-    let amount = '', type = '', description = '';
-    if (log.detail) {
-      const match = (field: string): string => {
-        const m = log.detail.match(new RegExp(field + ': ([^,]+)'));
-        return m ? m[1].trim() : '';
-      };
-      amount = match('Amount');
-      type = match('Type');
-      description = match('Description');
-    }
-    if (log.action === 'Add Record') {
-      return `Added an ${type === 'Income' ? 'income' : 'expense'} of RM${amount}${description ? ` (${description})` : ''}`;
-    }
-    if (log.action === 'Edit Record') {
-      return `Edited a record${description ? ` (${description})` : ''}`;
-    }
-    if (log.action === 'Delete Record') {
-      return `Deleted an ${type === 'Income' ? 'income' : 'expense'} of RM${amount}${description ? ` (${description})` : ''}`;
-    }
-    if (log.action === 'Update Status') {
-      return `Approved a record${description ? ` (${description})` : ''}`;
-    }
-    return `Performed an action`;
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading audit logs...</h3>
-        </div>
-      </div>
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      )
     );
-  }
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, read: true }))
+    );
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
+  };
+
+  const getFilteredNotifications = () => {
+    switch (filter) {
+      case 'unread':
+        return notifications.filter(n => !n.read);
+      case 'read':
+        return notifications.filter(n => n.read);
+      default:
+        return notifications;
+    }
+  };
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="h-5 w-5 text-red-500" />;
+      case 'warning':
+        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+      case 'info':
+        return <Info className="h-5 w-5 text-blue-500" />;
+    }
+  };
+
+  const getNotificationColor = (type: Notification['type']) => {
+    switch (type) {
+      case 'success':
+        return 'border-l-green-500 bg-green-50 dark:bg-green-900/10';
+      case 'error':
+        return 'border-l-red-500 bg-red-50 dark:bg-red-900/10';
+      case 'warning':
+        return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
+      case 'info':
+        return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/10';
+    }
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const filteredNotifications = getFilteredNotifications();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
-        <div className="w-full px-3 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-3 sm:py-0">
-            <div className="flex items-center mb-3 sm:mb-0">
-              <Link href="/" className="mr-3 sm:mr-4">
-                <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
+    <LoggedInUser
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center dark:bg-slate-900">
+          <div className="text-center">
+            <Bell className="mx-auto h-12 w-12 text-red-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-slate-100">Please Log In</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">You need to be logged in to view notifications</p>
+            <div className="mt-6">
+              <Link href="/" className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                Return to Homepage
               </Link>
-              <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
-                <span className="hidden sm:inline">Notifications</span>
-                <span className="sm:hidden">Notifications</span>
-              </h1>
-            </div>
-            
-            {/* Desktop buttons */}
-            <div className="hidden sm:flex items-center gap-3 sm:gap-4">
-              <button
-                onClick={handleClear}
-                disabled={clearing}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
-              >
-                <Trash2 className="h-4 w-4" />
-                Clear Logs
-              </button>
-              <button
-                onClick={handleClear}
-                disabled={clearing}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Check className="h-4 w-4" />
-                Mark All Read
-              </button>
-            </div>
-
-            {/* Mobile buttons - simplified */}
-            <div className="flex items-center gap-2 w-full sm:hidden">
-              <Link
-                href="/"
-                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
-                title="Back to Home"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </Link>
-              <button
-                onClick={handleClear}
-                disabled={clearing}
-                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
-                title="Clear Logs"
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
-              <button
-                onClick={handleClear}
-                disabled={clearing}
-                className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Mark All Read"
-              >
-                <Check className="h-5 w-5" />
-              </button>
             </div>
           </div>
         </div>
-      </header>
-
-      <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
-                <Bell className="h-4 w-4 sm:h-5 sm:w-6 text-blue-600 dark:text-blue-400" />
+      }
+    >
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
+          <div className="w-full px-3 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-12 sm:h-16">
+              <div className="flex items-center">
+                <Link href="/" className="mr-3 sm:mr-4">
+                  <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
+                </Link>
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
+                  Notifications
+                </h1>
+                {unreadCount > 0 && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
+                    {unreadCount}
+                  </span>
+                )}
               </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{logs.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Unread</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{logs.filter(log => !log.status.includes('read')).length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg dark:bg-green-900">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Read</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{logs.filter(log => log.status.includes('read')).length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-purple-100 rounded-lg dark:bg-purple-900">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Today</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{logs.filter(log => new Date(log.time).toDateString() === new Date().toDateString()).length}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications List */}
-        <div className="bg-white rounded-lg shadow-sm border dark:bg-slate-800 dark:border-slate-700">
-          <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-slate-600">
-            <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">All Notifications</h2>
-          </div>
-          
-          {loading ? (
-            <div className="p-6 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">Loading notifications...</p>
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="p-6 text-center">
-              <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-slate-400">No notifications yet</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200 dark:divide-slate-600">
-              {logs.map((log) => (
-                <div
-                  key={log.time}
-                  className={`p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${
-                    !log.status.includes('read') ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                  }`}
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {log.status.includes('read') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <div className="h-4 w-4 rounded-full bg-blue-500"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={`text-sm sm:text-base font-medium ${
-                          log.status.includes('read') 
-                            ? 'text-gray-900 dark:text-slate-100' 
-                            : 'text-blue-900 dark:text-blue-100'
-                        }`}>
-                          {log.action}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500 dark:text-slate-400">
-                            {formatTimeAgo(log.time)}
-                          </span>
-                          {!log.status.includes('read') && (
-                            <button
-                              onClick={() => {
-                                // Implement markAsRead function
-                              }}
-                              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                              Mark as read
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-slate-400 line-clamp-2">
-                        {getLogSummary(log)}
-                      </p>
-                    </div>
+                  <Filter className="h-5 w-5" />
+                </button>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="max-w-2xl mx-auto">
+            {/* Filters */}
+            {showFilters && (
+              <div className="mb-6 bg-white rounded-lg shadow-sm border dark:bg-slate-800 dark:border-slate-700 p-4">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Filter Notifications</h3>
+                <div className="flex gap-2">
+                  {(['all', 'unread', 'read'] as const).map((filterType) => (
+                    <button
+                      key={filterType}
+                      onClick={() => setFilter(filterType)}
+                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                        filter === filterType
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Notifications List */}
+            <div className="space-y-3">
+              {loading ? (
+                <div className="bg-white rounded-lg shadow-sm border dark:bg-slate-800 dark:border-slate-700 p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600 dark:text-slate-400">Loading notifications...</span>
                   </div>
                 </div>
-              ))}
+              ) : filteredNotifications.length === 0 ? (
+                <div className="bg-white rounded-lg shadow-sm border dark:bg-slate-800 dark:border-slate-700 p-8 text-center">
+                  <Bell className="mx-auto h-12 w-12 text-gray-400 dark:text-slate-500" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No notifications</h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
+                    {filter === 'all' ? 'You\'re all caught up!' : `No ${filter} notifications`}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {filteredNotifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`bg-white rounded-lg shadow-sm border-l-4 border dark:border-slate-700 ${getNotificationColor(notification.type)} ${
+                        !notification.read ? 'ring-2 ring-blue-200 dark:ring-blue-800' : ''
+                      }`}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3 flex-1">
+                            {getNotificationIcon(notification.type)}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {notification.title}
+                                </h3>
+                                {!notification.read && (
+                                  <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-slate-400 mb-2">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs text-gray-500 dark:text-slate-500">
+                                  {formatTimeAgo(notification.timestamp)}
+                                </span>
+                                {notification.actionUrl && (
+                                  <Link
+                                    href={notification.actionUrl}
+                                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                    onClick={() => markAsRead(notification.id)}
+                                  >
+                                    View Details
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-1 ml-2">
+                            {!notification.read && (
+                              <button
+                                onClick={() => markAsRead(notification.id)}
+                                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                title="Mark as read"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteNotification(notification.id)}
+                              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                              title="Delete notification"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Clear All Button */}
+                  {filteredNotifications.length > 0 && (
+                    <div className="flex justify-center pt-4">
+                      <button
+                        onClick={clearAll}
+                        className="text-sm text-gray-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
+                      >
+                        Clear all notifications
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </LoggedInUser>
   );
 } 
