@@ -6,29 +6,35 @@ import { SuperAdminOnly } from '@/components/PermissionGate';
 import { getAllUsers, updateUserRole, UserProfile, UserRole } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, RefreshCw, Plus, Users, CheckCircle, Clock, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Plus, Users, CheckCircle, Clock, Edit, Trash2, Shield } from 'lucide-react';
 
 export default function UserManagementPage() {
   const { userProfile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const allUsers = await getAllUsers();
-        setUsers(allUsers);
-      } catch (err) {
-        setError('Failed to load users.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    setRefreshing(true);
+    try {
+      const allUsers = await getAllUsers();
+      setUsers(allUsers);
+      setLastRefreshTime(new Date());
+    } catch (err) {
+      setError('Failed to load users.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -49,6 +55,27 @@ export default function UserManagementPage() {
       setSaving(null);
     }
   };
+
+  const handleEditUser = (user: UserProfile) => {
+    // Implement edit user functionality
+    console.log('Edit user:', user);
+  };
+
+  const handleDeleteUser = async (uid: string) => {
+    if (userProfile?.uid === uid) {
+      alert("You cannot delete your own account.");
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+
+    // Implement delete user functionality
+    console.log('Delete user:', uid);
+  };
+
+  const currentUser = userProfile;
 
   return (
     <SuperAdminOnly>

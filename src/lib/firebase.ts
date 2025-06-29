@@ -30,6 +30,7 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   createdAt: Date;
+  status: 'active' | 'pending';
 }
 
 // 超级管理员邮箱列表
@@ -51,7 +52,8 @@ export const signInWithGoogle = async () => {
         email: user.email || '',
         name: user.displayName || '',
         role: SUPER_ADMIN_EMAILS.includes(user.email || '') ? 'Super Admin' : 'Basic User',
-        createdAt: new Date()
+        createdAt: new Date(),
+        status: 'active',
       };
       
       await setDoc(userRef, newProfile);
@@ -104,7 +106,13 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
   try {
     const usersCollection = collection(db, 'users');
     const userSnapshot = await getDocs(usersCollection);
-    const userList = userSnapshot.docs.map(doc => doc.data() as UserProfile);
+    const userList = userSnapshot.docs.map(doc => {
+      const data = doc.data() as any;
+      return {
+        ...data,
+        status: data.status || 'active',
+      } as UserProfile;
+    });
     return userList;
   } catch (error) {
     console.error('Error getting all users:', error);
