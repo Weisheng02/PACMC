@@ -63,7 +63,7 @@ export default function SettingsPage() {
       const newSettings = {
         ...prev,
         [category]: {
-          ...prev[category as keyof typeof prev],
+          ...(prev as any)[category],
           [key]: value
         }
       };
