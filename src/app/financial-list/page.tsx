@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminOrSuperAdmin, SuperAdminOnly } from '@/components/PermissionGate';
 import { readFinancialRecords, deleteFinancialRecord, FinancialRecord, formatGoogleSheetsDate } from '@/lib/googleSheets';
-import { DollarSign, Plus, Edit, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X, Eye, ArrowLeft } from 'lucide-react';
+import { DollarSign, Plus, Trash2, RefreshCw, CheckCircle, Clock, Wallet, Settings, Users, Search, Check, X, Eye, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -14,8 +14,6 @@ export default function FinancialListPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [editingRecord, setEditingRecord] = useState<Partial<FinancialRecord> | null>(null);
   const [cashInHand, setCashInHand] = useState(0);
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashForm, setCashForm] = useState({
@@ -55,6 +53,9 @@ export default function FinancialListPage() {
   // 1. 新增年份和月份筛选状态
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+  
+  // 新增月份内排序状态
+  const [monthSortOrder, setMonthSortOrder] = useState<'asc' | 'desc'>('desc'); // 默认从新到旧
 
   // 2. 计算所有有数据的年份和每年有数据的月份
   const yearMonthMap = records.reduce((acc, record) => {
@@ -81,7 +82,7 @@ export default function FinancialListPage() {
     }
   }, [selectedYear, monthsOfYear, selectedMonth]);
 
-  // 4. 只显示当前选中年月的记录
+  // 4. 只显示当前选中年月的记录，并按日期排序
   type YM = { year: string, month: string };
   const getYM = (dateStr: string): YM => {
     const [year, month] = (dateStr?.split(' ')[0] || '').split('-');
@@ -90,6 +91,10 @@ export default function FinancialListPage() {
   const filteredRecordsByYM = records.filter(r => {
     const { year, month } = getYM(r.date);
     return year === selectedYear && month === selectedMonth;
+  }).sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return monthSortOrder === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
   });
 
   const router = useRouter();
@@ -444,105 +449,6 @@ export default function FinancialListPage() {
     }
   };
 
-  // 开始内联编辑
-  const startInlineEdit = (record: FinancialRecord) => {
-    setEditingKey(record.key);
-    setEditingRecord({
-      date: record.date,
-      type: record.type,
-      who: record.who,
-      description: record.description,
-      amount: record.amount,
-      remark: record.remark,
-      account: record.account,
-      takePut: record.takePut,
-    });
-  };
-
-  // 取消内联编辑
-  const cancelInlineEdit = () => {
-    setEditingKey(null);
-    setEditingRecord(null);
-  };
-
-  // 保存内联编辑
-  const saveInlineEdit = async () => {
-    if (!editingKey || !editingRecord) return;
-
-    // 保存原始状态以便回滚
-    const originalRecords = [...records];
-    const originalRecord = records.find(r => r.key === editingKey);
-
-    // 立即更新本地状态，实现即时反馈
-    setRecords(prevRecords =>
-      prevRecords.map(record =>
-        record.key === editingKey ? { 
-          ...record, 
-          ...editingRecord,
-          // 确保日期格式正确
-          date: editingRecord.date || record.date,
-          // 确保金额是数字
-          amount: typeof editingRecord.amount === 'number' ? editingRecord.amount : record.amount,
-        } : record
-      )
-    );
-    
-    // 立即重置编辑状态，让用户看到更新结果
-    setEditingKey(null);
-    setEditingRecord(null);
-
-    // 后台发送API请求，不阻塞UI
-    try {
-      const response = await fetch(`/api/sheets/update/${editingKey}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editingRecord),
-      });
-
-      if (!response.ok) {
-        // 如果API失败，回滚到原状态
-        console.error('Failed to update record:', response.status);
-        setRecords(originalRecords);
-        // 恢复编辑状态
-        if (originalRecord) {
-          setEditingKey(editingKey);
-          setEditingRecord({
-            date: originalRecord.date,
-            type: originalRecord.type,
-            who: originalRecord.who,
-            description: originalRecord.description,
-            amount: originalRecord.amount,
-            remark: originalRecord.remark,
-            account: originalRecord.account,
-            takePut: originalRecord.takePut,
-          });
-        }
-        console.warn('Record update failed, reverted to original state');
-      }
-    } catch (error) {
-      // 如果API失败，回滚到原状态
-      console.error('Error updating record:', error);
-      setRecords(originalRecords);
-      // 恢复编辑状态
-      if (originalRecord) {
-        setEditingKey(editingKey);
-        setEditingRecord({
-          date: originalRecord.date,
-          type: originalRecord.type,
-          who: originalRecord.who,
-          description: originalRecord.description,
-          amount: originalRecord.amount,
-          remark: originalRecord.remark,
-          account: originalRecord.account,
-          takePut: originalRecord.takePut,
-        });
-      }
-      console.warn('Record update failed, reverted to original state');
-    }
-  };
-
   // 分组和排序逻辑
   const getGroupedAndSortedRecords = () => {
     // 首先应用搜索过滤器
@@ -882,6 +788,17 @@ export default function FinancialListPage() {
                   </button>
                 ))}
               </div>
+              
+              {/* 月份内排序按钮 */}
+              <button
+                onClick={() => setMonthSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-xs sm:text-sm border transition-colors duration-150 bg-white text-gray-700 border-gray-300 hover:bg-blue-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                title={monthSortOrder === 'asc' ? 'Sort: Oldest to Newest' : 'Sort: Newest to Oldest'}
+              >
+                {monthSortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                <span className="hidden sm:inline">{monthSortOrder === 'asc' ? 'Sort' : 'Sort'}</span>
+              </button>
+              
               <button
                 onClick={() => setShowAdvancedSearch(v => !v)}
                 className="text-xs px-2 sm:px-3 py-1 border rounded-md text-gray-600 bg-gray-100 hover:bg-blue-600 hover:text-white transition-colors duration-150 ml-1 sm:ml-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
@@ -1085,84 +1002,27 @@ export default function FinancialListPage() {
                         {filteredRecordsByYM.map((record) => (
                           <tr key={record.key} className="hover:bg-gray-50 border-b border-gray-300">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                              {editingKey === record.key ? (
-                                <input
-                                  type="date"
-                                  value={editingRecord?.date || ''}
-                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, date: e.target.value }))}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                              ) : (
-                                record.date?.split(' ')[0]
-                              )}
+                              {record.date?.split(' ')[0]}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
-                              {editingKey === record.key ? (
-                                <select
-                                  value={editingRecord?.type || 'Income'}
-                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, type: e.target.value as 'Income' | 'Expense' }))}
-                                  className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                >
-                                  <option value="Income">Income</option>
-                                  <option value="Expense">Expense</option>
-                                </select>
-                              ) : (
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    record.type === 'Income'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {record.type === 'Income' ? 'Income' : 'Expense'}
-                                </span>
-                              )}
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  record.type === 'Income'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {record.type === 'Income' ? 'Income' : 'Expense'}
+                              </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-300">
-                              {editingKey === record.key ? (
-                                <input
-                                  type="text"
-                                  value={editingRecord?.who || ''}
-                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, who: e.target.value }))}
-                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                  placeholder="Name"
-                                />
-                              ) : (
-                                <span className="text-sm text-gray-700">{record.who}</span>
-                              )}
+                              {record.who}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate border-r border-gray-300">
-                              {editingKey === record.key ? (
-                                <input
-                                  type="text"
-                                  value={editingRecord?.description || ''}
-                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, description: e.target.value }))}
-                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                  placeholder="Description"
-                                />
-                              ) : (
-                                record.description
-                              )}
+                              {record.description}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-300">
-                              {editingKey === record.key ? (
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editingRecord?.amount || 0}
-                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-gray-900"
-                                  placeholder="0.00"
-                                />
-                              ) : (
-                                <span
-                                  className={`text-sm font-medium ${
-                                    record.type === 'Income' ? 'text-green-600' : 'text-red-600'
-                                  }`}
-                                >
-                                  {formatCurrency(record.amount)}
-                                </span>
-                              )}
+                              {formatCurrency(record.amount)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap border-r border-gray-300">
                               <div className="flex items-center gap-2">
@@ -1198,17 +1058,7 @@ export default function FinancialListPage() {
                               </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
-                              {editingKey === record.key ? (
-                                <input
-                                  type="text"
-                                  value={editingRecord?.remark || ''}
-                                  onChange={(e) => setEditingRecord(prev => ({ ...prev, remark: e.target.value }))}
-                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-32 text-gray-900"
-                                  placeholder="Remark"
-                                />
-                              ) : (
-                                record.remark || '-'
-                              )}
+                              {record.remark || '-'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex items-center gap-2">
@@ -1221,38 +1071,12 @@ export default function FinancialListPage() {
                                   <Eye className="h-4 w-4" />
                                 </Link>
                                 
-                                <AdminOrSuperAdmin>
-                                  {editingKey === record.key ? (
-                                    <>
-                                      <button
-                                        onClick={saveInlineEdit}
-                                        className="text-green-600 hover:text-green-900 p-1"
-                                      >
-                                        <Check className="h-4 w-4" />
-                                      </button>
-                                      <button
-                                        onClick={cancelInlineEdit}
-                                        className="text-gray-600 hover:text-gray-900 p-1"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <button
-                                      onClick={() => startInlineEdit(record)}
-                                      className="text-blue-600 hover:text-blue-900 p-1"
-                                      disabled={deletingKey === record.key}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </button>
-                                  )}
-                                </AdminOrSuperAdmin>
                                 <SuperAdminOnly>
                                   <button
                                     onClick={() => handleDelete(record.key)}
-                                    disabled={deletingKey === record.key || editingKey === record.key}
+                                    disabled={deletingKey === record.key}
                                     className={`p-1 ${
-                                      deletingKey === record.key || editingKey === record.key
+                                      deletingKey === record.key
                                         ? 'text-gray-400 cursor-not-allowed'
                                         : 'text-red-600 hover:text-red-900'
                                     }`}
@@ -1293,18 +1117,8 @@ export default function FinancialListPage() {
                           {/* 操作按钮区 */}
                           <div className="flex gap-2 mt-2">
                             <Link href={`/financial-list/${record.key}`} className="text-blue-600 hover:text-blue-900 p-1"><Eye className="h-4 w-4" /></Link>
-                            <AdminOrSuperAdmin>
-                              {editingKey === record.key ? (
-                                <>
-                                  <button onClick={saveInlineEdit} className="text-green-600 hover:text-green-900 p-1"><Check className="h-4 w-4" /></button>
-                                  <button onClick={cancelInlineEdit} className="text-gray-600 hover:text-gray-900 p-1"><X className="h-4 w-4" /></button>
-                                </>
-                              ) : (
-                                <button onClick={() => startInlineEdit(record)} className="text-blue-600 hover:text-blue-900 p-1" disabled={deletingKey === record.key}><Edit className="h-4 w-4" /></button>
-                              )}
-                            </AdminOrSuperAdmin>
                             <SuperAdminOnly>
-                              <button onClick={() => handleDelete(record.key)} disabled={deletingKey === record.key || editingKey === record.key} className={`p-1 ${deletingKey === record.key || editingKey === record.key ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}>{deletingKey === record.key ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>) : (<Trash2 className="h-4 w-4" />)}</button>
+                              <button onClick={() => handleDelete(record.key)} disabled={deletingKey === record.key} className={`p-1 ${deletingKey === record.key ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}>{deletingKey === record.key ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>) : (<Trash2 className="h-4 w-4" />)}</button>
                             </SuperAdminOnly>
                           </div>
                         </div>

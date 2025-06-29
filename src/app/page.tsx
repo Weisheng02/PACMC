@@ -302,7 +302,7 @@ export default function Home() {
 
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {/* Financial Records */}
+          {/* Financial Records - All logged in users can view */}
           <LoggedInUser>
             <Link href="/financial-list" className="block h-full">
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
@@ -313,16 +313,11 @@ export default function Home() {
                 <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   View all income and expense records, and manage them based on permissions
                 </p>
-                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-200">
-                    All users can view
-                  </span>
-                </div>
               </div>
             </Link>
           </LoggedInUser>
 
-          {/* Chart Analysis */}
+          {/* Chart Analysis - All logged in users can view */}
           <LoggedInUser>
             <Link href="/dashboard" className="block h-full">
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
@@ -333,16 +328,11 @@ export default function Home() {
                 <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   View financial trends and category statistics
                 </p>
-                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded dark:bg-green-900 dark:text-green-200">
-                    All users can view
-                  </span>
-                </div>
               </div>
             </Link>
           </LoggedInUser>
 
-          {/* Add Record */}
+          {/* Add Record - All logged in users can add */}
           <LoggedInUser>
             <Link href="/add-record" className="block h-full">
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
@@ -353,17 +343,12 @@ export default function Home() {
                 <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   Add new income or expense records
                 </p>
-                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
-                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded dark:bg-purple-900 dark:text-purple-200">
-                    All users can add
-                  </span>
-                </div>
               </div>
             </Link>
           </LoggedInUser>
 
-          {/* User Management */}
-          <AdminOrSuperAdmin>
+          {/* User Management - Only Admin and Super Admin */}
+          {(userProfile?.role === 'Admin' || userProfile?.role === 'Super Admin') && (
             <Link href="/admin/users" className="block h-full">
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-3 sm:mb-4">
@@ -373,18 +358,13 @@ export default function Home() {
                 <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   Manage user accounts and permissions
                 </p>
-                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
-                  <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded dark:bg-orange-900 dark:text-orange-200">
-                    Admin only
-                  </span>
-                </div>
               </div>
             </Link>
-          </AdminOrSuperAdmin>
+          )}
 
-          {/* Cash in Hand */}
+          {/* Cash in Hand - All logged in users can set */}
           <LoggedInUser>
-            <Link href="/" className="block h-full">
+            <Link href="/set-cash" className="block h-full">
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-3 sm:mb-4">
                   <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 mr-2 sm:mr-3 dark:text-yellow-400" />
@@ -393,31 +373,21 @@ export default function Home() {
                 <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   Set cash in hand amount
                 </p>
-                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
-                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded dark:bg-yellow-900 dark:text-yellow-200">
-                    All users can set
-                  </span>
-                </div>
               </div>
             </Link>
           </LoggedInUser>
 
-          {/* Export */}
+          {/* Export - All logged in users can view */}
           <LoggedInUser>
             <Link href="/export" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-3 sm:mb-4">
-                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mr-2 sm:mr-3" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900">Report Export</h3>
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mr-2 sm:mr-3 dark:text-red-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Report Export</h3>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   Export PDF and Excel reports
                 </p>
-                <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                    All users can view
-                  </span>
-                </div>
               </div>
             </Link>
           </LoggedInUser>
