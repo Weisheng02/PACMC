@@ -694,129 +694,162 @@ export default function FinancialListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link href="/" className="mr-4">
-                <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
+        <div className="w-full px-3 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-3 sm:py-0">
+            <div className="flex items-center mb-3 sm:mb-0">
+              <Link href="/" className="mr-3 sm:mr-4">
+                <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
               </Link>
-              <img
-                src="/pacmc.jpg"
-                alt="PACMC Logo"
-                className="h-9 w-9 rounded-full mr-4 object-cover"
-              />
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
                 <span className="hidden sm:inline">Financial Records</span>
                 <span className="sm:hidden">Records</span>
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              {/* 你可以根据需要添加 NotificationBell、LoginButton 等组件 */}
-              <AdminOrSuperAdmin>
-                <button
-                  onClick={() => setShowCashModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  <Wallet className="h-4 w-4" />
-                  <span className="hidden sm:inline">Set Cash</span>
-                </button>
-              </AdminOrSuperAdmin>
-              
-              <AdminOrSuperAdmin>
-                <Link
-                  href="/add-record"
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Add Record</span>
-                </Link>
-              </AdminOrSuperAdmin>
-              
-              <SuperAdminOnly>
-                <Link
-                  href="/admin/users"
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="hidden sm:inline">Manage Users</span>
-                </Link>
-              </SuperAdminOnly>
+            
+            {/* Desktop buttons */}
+            <div className="hidden sm:flex items-center gap-3 sm:gap-4">
+              <button
+                onClick={loadRecords}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+              >
+                {refreshing ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-slate-400"></div>
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+              {lastRefreshTime && (
+                <span className="text-xs text-gray-500 dark:text-slate-400">
+                  Last: {lastRefreshTime.toLocaleTimeString()}
+                </span>
+              )}
+              <Link
+                href="/add-record"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4" />
+                Add Record
+              </Link>
+              <button
+                onClick={() => setShowCashModal(true)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700"
+              >
+                <Wallet className="h-4 w-4" />
+                Set Cash
+              </button>
+            </div>
+
+            {/* Mobile buttons - simplified */}
+            <div className="flex items-center gap-2 w-full sm:hidden">
+              <Link
+                href="/"
+                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                title="Back to Home"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </Link>
+              <button
+                onClick={loadRecords}
+                disabled={refreshing}
+                className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                title={refreshing ? 'Refreshing...' : 'Refresh Data'}
+              >
+                {refreshing ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 dark:border-slate-400"></div>
+                ) : (
+                  <RefreshCw className="h-5 w-5" />
+                )}
+              </button>
+              <Link
+                href="/add-record"
+                className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                title="Add Record"
+              >
+                <Plus className="h-5 w-5" />
+              </Link>
+              <button
+                onClick={() => setShowCashModal(true)}
+                className="flex items-center justify-center w-10 h-10 text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700"
+                title="Set Cash"
+              >
+                <Wallet className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
       </header>
-      {/* Main Content */}
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+
+      <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        {/* Toast Notification */}
+        {toast && (
+          <div className="fixed top-4 right-4 z-50">
+            <div className={`px-3 py-2 rounded-md shadow-lg text-sm ${
+              toast.type === 'success' 
+                ? 'bg-green-500 text-white' 
+                : 'bg-red-500 text-white'
+            }`}>
+              {toast.message}
+            </div>
+          </div>
+        )}
+
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-6 mb-8">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
             <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg dark:bg-green-900">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-green-600 dark:text-green-400" />
               </div>
-              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Income</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 whitespace-nowrap">
-                  {formatCurrency(filteredTotalIncome)}
+              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Income</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
+                  {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                 </p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
             <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg dark:bg-red-900">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-red-600 dark:text-red-400" />
               </div>
-              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Expense</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 whitespace-nowrap">
-                  {formatCurrency(filteredTotalExpense)}
+              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Expense</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
+                  {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                 </p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
             <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Balance</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold whitespace-nowrap ${filteredBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                  {formatCurrency(filteredBalance)}
+              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Balance</p>
+                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold whitespace-nowrap truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                 </p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
             <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-yellow-100 rounded-lg">
-                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+              <div className="flex-shrink-0 p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
+                <Wallet className="h-4 w-4 sm:h-5 sm:w-6 text-yellow-600 dark:text-yellow-400" />
               </div>
-              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Cash in Hand</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold whitespace-nowrap ${cashInHand >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Cash in Hand</p>
+                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
                   {formatCurrency(cashInHand)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-orange-100 rounded-lg">
-                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
-              </div>
-              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-orange-600">
-                  {filteredPendingRecords.length}
                 </p>
               </div>
             </div>
@@ -831,12 +864,11 @@ export default function FinancialListPage() {
         )}
 
         {/* Records Table */}
-        <div className="bg-white shadow-sm border rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <span className="hidden sm:inline">Select Year and Month</span>
-              <span className="sm:hidden">Select Year and Month</span>
-            <div className="mb-4 flex flex-wrap justify-center items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 rounded-lg p-2 shadow-sm">
-              <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="px-3 py-1 border rounded-md text-sm focus:ring-2 focus:ring-blue-500">
+        <div className="bg-white shadow-sm border rounded-lg overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+            <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-slate-600">
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-slate-100">Select Year and Month</span>
+            <div className="mt-3 sm:mt-4 flex flex-wrap justify-center items-center gap-2 bg-white/80 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 rounded-lg p-2 sm:p-3 shadow-sm">
+              <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="px-2 sm:px-3 py-1 sm:py-2 border rounded-md text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
                 {allYears.map(y => <option key={y} value={y}>{y}</option>)} 
               </select>
               <div className="flex flex-wrap gap-1">
@@ -844,7 +876,7 @@ export default function FinancialListPage() {
                   <button
                     key={m}
                     onClick={() => setSelectedMonth(m)}
-                    className={`px-2 py-1 rounded-md text-sm border transition-colors duration-150 ${selectedMonth === m ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'}`}
+                    className={`px-2 py-1 rounded-md text-xs sm:text-sm border transition-colors duration-150 ${selectedMonth === m ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100'}`}
                   >
                     {m}
                   </button>
@@ -852,7 +884,7 @@ export default function FinancialListPage() {
               </div>
               <button
                 onClick={() => setShowAdvancedSearch(v => !v)}
-                className="text-xs px-3 py-1 border rounded-md text-gray-600 bg-gray-100 hover:bg-blue-600 hover:text-white transition-colors duration-150 ml-2"
+                className="text-xs px-2 sm:px-3 py-1 border rounded-md text-gray-600 bg-gray-100 hover:bg-blue-600 hover:text-white transition-colors duration-150 ml-1 sm:ml-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
               >
                 Advanced Search
               </button>
@@ -860,27 +892,27 @@ export default function FinancialListPage() {
 
             {/* 高级搜索面板 */}
             {showAdvancedSearch && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 dark:bg-slate-700 rounded-lg border dark:border-slate-600">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {/* 关键词搜索 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Keyword Search</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Keyword Search</label>
                     <input
                       type="text"
-                      placeholder="Search description, name, remark..."
                       value={searchFilters.keyword}
                       onChange={(e) => setSearchFilters(prev => ({ ...prev, keyword: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      placeholder="Search in description, who, remark..."
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
                     />
                   </div>
 
-                  {/* 类型过滤 */}
+                  {/* 类型筛选 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Type</label>
                     <select
                       value={searchFilters.type}
                       onChange={(e) => setSearchFilters(prev => ({ ...prev, type: e.target.value as any }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
                     >
                       <option value="all">All Types</option>
                       <option value="Income">Income</option>
@@ -888,13 +920,13 @@ export default function FinancialListPage() {
                     </select>
                   </div>
 
-                  {/* 状态过滤 */}
+                  {/* 状态筛选 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Status</label>
                     <select
                       value={searchFilters.status}
                       onChange={(e) => setSearchFilters(prev => ({ ...prev, status: e.target.value as any }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
                     >
                       <option value="all">All Status</option>
                       <option value="Pending">Pending</option>
@@ -902,152 +934,104 @@ export default function FinancialListPage() {
                     </select>
                   </div>
 
-                  {/* 账户过滤 */}
+                  {/* 日期范围 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Account</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Date From</label>
+                    <input
+                      type="date"
+                      value={searchFilters.dateFrom}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Date To</label>
+                    <input
+                      type="date"
+                      value={searchFilters.dateTo}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
+                  </div>
+
+                  {/* 金额范围 */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Amount From</label>
+                    <input
+                      type="number"
+                      value={searchFilters.amountFrom}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountFrom: e.target.value }))}
+                      placeholder="0.00"
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Amount To</label>
+                    <input
+                      type="number"
+                      value={searchFilters.amountTo}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountTo: e.target.value }))}
+                      placeholder="0.00"
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
+                  </div>
+
+                  {/* 账户筛选 */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Account</label>
                     <select
                       value={searchFilters.account}
                       onChange={(e) => setSearchFilters(prev => ({ ...prev, account: e.target.value as any }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
                     >
                       <option value="all">All Accounts</option>
                       <option value="MIYF">MIYF</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
-
-                  {/* 日期范围 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                    <input
-                      type="date"
-                      value={searchFilters.dateFrom}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                    <input
-                      type="date"
-                      value={searchFilters.dateTo}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    />
-                  </div>
-
-                  {/* 金额范围 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount From (RM)</label>
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      value={searchFilters.amountFrom}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountFrom: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount To (RM)</label>
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      value={searchFilters.amountTo}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountTo: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                    />
-                  </div>
                 </div>
 
                 {/* 搜索操作按钮 */}
-                <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-300">
-                  <button
-                    onClick={saveCurrentSearch}
-                    className="px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                  >
-                    Save Search
-                  </button>
+                <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
                   <button
                     onClick={clearAllFilters}
-                    className="px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    className="px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                   >
                     Clear All
                   </button>
-                  
-                  {/* 保存的搜索列表 */}
-                  {savedSearches.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Saved:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {savedSearches.map((savedSearch) => (
-                          <div key={savedSearch.id} className="flex items-center gap-1">
-                            <button
-                              onClick={() => loadSavedSearch(savedSearch)}
-                              className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-                            >
-                              {savedSearch.name}
-                            </button>
-                            <button
-                              onClick={() => deleteSavedSearch(savedSearch.id)}
-                              className="text-red-500 hover:text-red-700 text-xs"
-                              title="Delete saved search"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <button
+                    onClick={saveCurrentSearch}
+                    className="px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                  >
+                    Save Search
+                  </button>
                 </div>
-              </div>
-            )}
 
-            {/* 当前过滤器显示 */}
-            {Object.values(searchFilters).some(value => value !== '' && value !== 'all') && (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-600">Active filters:</span>
-                {searchFilters.keyword && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                    Keyword: {searchFilters.keyword}
-                  </span>
-                )}
-                {searchFilters.type !== 'all' && (
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                    Type: {searchFilters.type}
-                  </span>
-                )}
-                {searchFilters.status !== 'all' && (
-                  <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-                    Status: {searchFilters.status}
-                  </span>
-                )}
-                {searchFilters.account !== 'all' && (
-                  <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
-                    Account: {searchFilters.account}
-                  </span>
-                )}
-                {searchFilters.dateFrom && (
-                  <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
-                    From: {searchFilters.dateFrom}
-                  </span>
-                )}
-                {searchFilters.dateTo && (
-                  <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded">
-                    To: {searchFilters.dateTo}
-                  </span>
-                )}
-                {searchFilters.amountFrom && (
-                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
-                    Amount ≥ RM {searchFilters.amountFrom}
-                  </span>
-                )}
-                {searchFilters.amountTo && (
-                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
-                    Amount ≤ RM {searchFilters.amountTo}
-                  </span>
+                {/* 保存的搜索 */}
+                {savedSearches.length > 0 && (
+                  <div className="mt-3 sm:mt-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">Saved Searches</label>
+                    <div className="flex flex-wrap gap-2">
+                      {savedSearches.map((savedSearch) => (
+                        <div key={savedSearch.id} className="flex items-center gap-1">
+                          <button
+                            onClick={() => loadSavedSearch(savedSearch)}
+                            className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200"
+                          >
+                            {savedSearch.name}
+                          </button>
+                          <button
+                            onClick={() => deleteSavedSearch(savedSearch.id)}
+                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -1340,7 +1324,7 @@ export default function FinancialListPage() {
             </div>
           )}
         </div>
-      </main>
+      </div>
 
       {/* Cash In Hand Modal */}
       {showCashModal && (
@@ -1406,30 +1390,6 @@ export default function FinancialListPage() {
                 >
                   Confirm Set
                 </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className={`px-4 py-3 rounded-md shadow-lg max-w-sm ${
-            toast.type === 'success' 
-              ? 'bg-green-500 text-white' 
-              : 'bg-red-500 text-white'
-          }`}>
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                {toast.type === 'success' ? (
-                  <CheckCircle className="h-5 w-5" />
-                ) : (
-                  <X className="h-5 w-5" />
-                )}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{toast.message}</p>
               </div>
             </div>
           </div>

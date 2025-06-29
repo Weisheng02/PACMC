@@ -30,7 +30,7 @@ export default function AddRecordPage() {
     date: new Date().toISOString().split('T')[0],
     account: 'MIYF',
     who: '',
-    amount: 0,
+    amount: '',
     description: '',
     remark: '',
   });
@@ -52,7 +52,7 @@ export default function AddRecordPage() {
         date: formData.date,
         type: formData.type,
         who: formData.who,
-        amount: Number(formData.amount),
+        amount: Number(formData.amount) || 0,
         description: formData.description,
         remark: formData.remark,
         createdBy: userProfile?.name || userProfile?.email || 'Unknown User',
@@ -188,13 +188,13 @@ export default function AddRecordPage() {
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
           {/* Header */}
           <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
-            <div className="w-full px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
+            <div className="w-full px-3 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-12 sm:h-16">
                 <div className="flex items-center">
-                  <Link href="/" className="mr-4">
-                    <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 dark:text-slate-400" />
+                  <Link href="/" className="mr-3 sm:mr-4">
+                    <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
                   </Link>
-                  <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100">
+                  <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
                     <span className="hidden sm:inline">Add Financial Record</span>
                     <span className="sm:hidden">Add Record</span>
                   </h1>
@@ -203,12 +203,12 @@ export default function AddRecordPage() {
             </div>
           </header>
           {/* Main Content */}
-          <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+          <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
             <div className="max-w-2xl mx-auto">
               {/* Toast Notification */}
               {toast && (
                 <div className="fixed top-4 right-4 z-50">
-                  <div className={`px-4 py-2 rounded-md shadow-lg ${
+                  <div className={`px-3 py-2 rounded-md shadow-lg text-sm ${
                     toast.type === 'success' 
                       ? 'bg-green-500 text-white' 
                       : 'bg-red-500 text-white'
@@ -219,18 +219,18 @@ export default function AddRecordPage() {
               )}
 
               {/* Add Record Form */}
-              <div className="bg-white rounded-lg shadow-sm border p-6 dark:bg-slate-800 dark:border-slate-700">
-                <h2 className="text-lg font-medium text-gray-900 mb-6 dark:text-slate-100">Record Details</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-4 sm:mb-6 dark:text-slate-100">Record Details</h2>
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                   {/* Record Type */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                       Record Type *
                     </label>
                     <select
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value as 'Income' | 'Expense' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                       required
                     >
                       {TYPES.map(type => (
@@ -240,27 +240,27 @@ export default function AddRecordPage() {
                   </div>
 
                   {/* Date and Account */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                         Date *
                       </label>
                       <input
                         type="date"
                         value={formData.date}
                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                         Account *
                       </label>
                       <select
                         value={formData.account}
                         onChange={(e) => setFormData({ ...formData, account: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                         required
                       >
                         {ACCOUNTS.map(account => (
@@ -271,22 +271,22 @@ export default function AddRecordPage() {
                   </div>
 
                   {/* Who and Amount */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                         Name *
                       </label>
                       <input
                         type="text"
                         value={formData.who}
                         onChange={(e) => setFormData({ ...formData, who: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                         placeholder="Enter the name"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                         Amount (RM) *
                       </label>
                       <input
@@ -294,8 +294,9 @@ export default function AddRecordPage() {
                         step="0.01"
                         min="0"
                         value={formData.amount}
-                        onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                        placeholder="Enter amount"
                         required
                       />
                     </div>
@@ -303,14 +304,14 @@ export default function AddRecordPage() {
 
                   {/* Description */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                       Description *
                     </label>
                     <input
                       type="text"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                       placeholder="Enter description"
                       required
                     />
@@ -318,120 +319,121 @@ export default function AddRecordPage() {
 
                   {/* Remark */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
                       Remark
                     </label>
                     <textarea
                       value={formData.remark}
                       onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
+                      rows={2}
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                       placeholder="Enter additional remarks (optional)"
                     />
                   </div>
-                </form>
-              </div>
 
-              {/* Receipts Upload Section */}
-              <div className="bg-white rounded-lg shadow-sm border p-6 dark:bg-slate-800 dark:border-slate-700">
-                <h2 className="text-lg font-medium text-gray-900 mb-6 dark:text-slate-100">Receipts (Optional)</h2>
-                
-                <div className="space-y-4">
-                  {/* File Upload */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">
-                      Upload Receipts
-                    </label>
-                    <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-slate-600 dark:bg-slate-700 dark:hover:bg-slate-600">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Receipt className="w-8 h-8 mb-4 text-gray-500 dark:text-slate-400" />
-                          <p className="mb-2 text-sm text-gray-500 dark:text-slate-400">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 10MB each)</p>
+                  {/* Receipts Upload Section */}
+                  <div className="border-t pt-4 sm:pt-6">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4 sm:mb-6 dark:text-slate-100">Receipts (Optional)</h3>
+                    
+                    <div className="space-y-3 sm:space-y-4">
+                      {/* File Upload */}
+                      <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                          Upload Receipts
+                        </label>
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-24 sm:h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-slate-600 dark:bg-slate-700 dark:hover:bg-slate-600">
+                            <div className="flex flex-col items-center justify-center pt-3 pb-4 sm:pt-5 sm:pb-6">
+                              <Receipt className="w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-4 text-gray-500 dark:text-slate-400" />
+                              <p className="mb-1 sm:mb-2 text-xs sm:text-sm text-gray-500 dark:text-slate-400">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-slate-400">PDF, JPG, PNG (MAX. 10MB each)</p>
+                            </div>
+                            <input
+                              type="file"
+                              multiple
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={handleFileSelect}
+                              className="hidden"
+                            />
+                          </label>
                         </div>
-                        <input
-                          type="file"
-                          multiple
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                        />
-                      </label>
+                      </div>
+
+                      {/* Pending Receipts */}
+                      {pendingReceipts.length > 0 && (
+                        <div>
+                          <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3 dark:text-slate-300">Pending Uploads ({pendingReceipts.length})</h3>
+                          <div className="space-y-2">
+                            {pendingReceipts.map((receipt) => (
+                              <div key={receipt.id} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg dark:bg-slate-700">
+                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                  {receipt.preview && isImageFile(receipt.file.name) ? (
+                                    <img
+                                      src={receipt.preview}
+                                      alt="Preview"
+                                      className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded"
+                                    />
+                                  ) : (
+                                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded flex items-center justify-center dark:bg-slate-600">
+                                      <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-slate-400" />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-slate-100">
+                                      {receipt.customName || receipt.file.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                                      {(receipt.file.size / 1024 / 1024).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveReceipt(receipt.id)}
+                                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Pending Receipts */}
-                  {pendingReceipts.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-3 dark:text-slate-300">Pending Uploads ({pendingReceipts.length})</h3>
-                      <div className="space-y-2">
-                        {pendingReceipts.map((receipt) => (
-                          <div key={receipt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-slate-700">
-                            <div className="flex items-center space-x-3">
-                              {receipt.preview && isImageFile(receipt.file.name) ? (
-                                <img
-                                  src={receipt.preview}
-                                  alt="Preview"
-                                  className="w-10 h-10 object-cover rounded"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center dark:bg-slate-600">
-                                  <Receipt className="w-5 h-5 text-gray-500 dark:text-slate-400" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-slate-100">
-                                  {receipt.customName || receipt.file.name}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-slate-400">
-                                  {(receipt.file.size / 1024 / 1024).toFixed(2)} MB
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveReceipt(receipt.id)}
-                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-end space-x-4">
-                <Link
-                  href="/financial-list"
-                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
-                >
-                  Cancel
-                </Link>
-                <button
-                  type="submit"
-                  disabled={loading || uploadingReceipts}
-                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </div>
-                  ) : uploadingReceipts ? (
-                    <div className="flex items-center">
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading Receipts...
-                    </div>
-                  ) : (
-                    'Create Record'
-                  )}
-                </button>
+                  {/* Submit Button */}
+                  <div className="flex justify-end space-x-3 sm:space-x-4 pt-4 sm:pt-6 border-t">
+                    <Link
+                      href="/financial-list"
+                      className="px-4 py-1.5 sm:px-6 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                    >
+                      Cancel
+                    </Link>
+                    <button
+                      type="submit"
+                      disabled={false}
+                      onClick={() => console.log('Button clicked!', { loading, uploadingReceipts })}
+                      className="px-4 py-1.5 sm:px-6 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <div className="flex items-center">
+                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                          Creating...
+                        </div>
+                      ) : uploadingReceipts ? (
+                        <div className="flex items-center">
+                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                          Uploading Receipts...
+                        </div>
+                      ) : (
+                        'Create Record'
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </main>

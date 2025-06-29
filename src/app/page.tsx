@@ -268,20 +268,20 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="w-full px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-12 sm:h-16">
             <div className="flex items-center">
               <img
-                src="/pacmc.jpg" // 将你的logo图片放在public文件夹中，命名为logo.jpg
+                src="/pacmc.jpg"
                 alt="PACMC Logo"
-                className="h-9 w-9 rounded-full mr-4 object-cover"
+                className="h-7 w-7 sm:h-9 sm:w-9 rounded-full mr-3 sm:mr-4 object-cover"
               />
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100">
+              <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
                 <span className="hidden sm:inline">PACMC Financial Management System</span>
                 <span className="sm:hidden">PACMC Finance</span>
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <NotificationBell />
               <LoginButton />
             </div>
@@ -290,30 +290,30 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 dark:text-slate-100">Welcome back, {userProfile?.name}!</h2>
-          <p className="text-gray-600 mb-1 dark:text-slate-300">Email: {userProfile?.email}</p>
-          <p className="text-gray-600 dark:text-slate-300">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2 dark:text-slate-100">Welcome back, {userProfile?.name}!</h2>
+          <p className="text-sm sm:text-base text-gray-600 mb-0.5 sm:mb-1 dark:text-slate-300">Email: {userProfile?.email}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-slate-300">
             Your role: <span className="font-semibold">{userProfile?.role}</span>
           </p>
         </div>
 
         {/* Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Financial Records */}
           <LoggedInUser>
             <Link href="/financial-list" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-4">
-                  <FileText className="h-6 w-6 text-blue-600 mr-3 dark:text-blue-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Financial Records</h3>
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3 dark:text-blue-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Financial Records</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   View all income and expense records, and manage them based on permissions
                 </p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-200">
                     All users can view
                   </span>
@@ -325,15 +325,15 @@ export default function Home() {
           {/* Chart Analysis */}
           <LoggedInUser>
             <Link href="/dashboard" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-4">
-                  <BarChart3 className="h-6 w-6 text-green-600 mr-3 dark:text-green-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Chart Analysis</h3>
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-2 sm:mr-3 dark:text-green-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Chart Analysis</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   View financial trends and category statistics
                 </p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded dark:bg-green-900 dark:text-green-200">
                     All users can view
                   </span>
@@ -343,39 +343,19 @@ export default function Home() {
           </LoggedInUser>
 
           {/* Add Record */}
-          <AdminOrSuperAdmin>
+          <LoggedInUser>
             <Link href="/add-record" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-4">
-                  <Plus className="h-6 w-6 text-purple-600 mr-3 dark:text-purple-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Add Record</h3>
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 mr-2 sm:mr-3 dark:text-purple-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Add Record</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
                   Add new income or expense records
                 </p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
                   <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded dark:bg-purple-900 dark:text-purple-200">
-                    Admin and above
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </AdminOrSuperAdmin>
-
-          {/* Notifications */}
-          <LoggedInUser>
-            <Link href="/notifications" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-4">
-                  <Bell className="h-6 w-6 text-indigo-600 mr-3 dark:text-indigo-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">Audit Logs</h3>
-                </div>
-                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
-                  View and manage system audit logs
-                </p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
-                  <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded dark:bg-indigo-900 dark:text-indigo-200">
-                    All users can view
+                    All users can add
                   </span>
                 </div>
               </div>
@@ -383,37 +363,57 @@ export default function Home() {
           </LoggedInUser>
 
           {/* User Management */}
-          <SuperAdminOnly>
+          <AdminOrSuperAdmin>
             <Link href="/admin/users" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-4">
-                  <Users className="h-6 w-6 text-orange-600 mr-3 dark:text-orange-400" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-slate-100">User Management</h3>
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 mr-2 sm:mr-3 dark:text-orange-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">User Management</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4 dark:text-slate-300">
-                  Manage user permissions and roles
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
+                  Manage user accounts and permissions
                 </p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
                   <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded dark:bg-orange-900 dark:text-orange-200">
-                    Super Admin only
+                    Admin only
                   </span>
                 </div>
               </div>
             </Link>
-          </SuperAdminOnly>
+          </AdminOrSuperAdmin>
 
-          {/* Report Export */}
+          {/* Cash in Hand */}
+          <LoggedInUser>
+            <Link href="/" className="block h-full">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 mr-2 sm:mr-3 dark:text-yellow-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Set Cash</h3>
+                </div>
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
+                  Set cash in hand amount
+                </p>
+                <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-slate-400">
+                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded dark:bg-yellow-900 dark:text-yellow-200">
+                    All users can set
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </LoggedInUser>
+
+          {/* Export */}
           <LoggedInUser>
             <Link href="/export" className="block h-full">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
-                <div className="flex items-center mb-4">
-                  <Shield className="h-6 w-6 text-red-600 mr-3" />
-                  <h3 className="text-lg font-medium text-gray-900">Report Export</h3>
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mr-2 sm:mr-3" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900">Report Export</h3>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                   Export PDF and Excel reports
                 </p>
-                <div className="flex items-center text-sm text-gray-500">
+                <div className="flex items-center text-xs sm:text-sm text-gray-500">
                   <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
                     All users can view
                   </span>
@@ -425,61 +425,42 @@ export default function Home() {
 
         {/* Quick Stats */}
         <LoggedInUser>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-300">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Quick Statistics</h3>
-              {dataLoading && (
-                <div className="flex items-center text-sm text-gray-500">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                  Updating...
-                </div>
-              )}
-            </div>
+          <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 dark:text-slate-100">Monthly Statistics</h3>
             
-            {dataError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <div className="flex items-center">
-                  <svg className="h-4 w-4 text-red-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <span className="text-sm text-red-700">{dataError}</span>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-green-600 truncate">RM{stats.monthlyIncome.toFixed(2)}</div>
+                <div className="text-xs text-gray-600 truncate">Monthly Income</div>
               </div>
-            )}
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 truncate">RM{stats.monthlyIncome.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Monthly Income</div>
+              <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-red-600 truncate">RM{stats.monthlyExpense.toFixed(2)}</div>
+                <div className="text-xs text-gray-600 truncate">Monthly Expense</div>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 truncate">RM{stats.monthlyExpense.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Monthly Expense</div>
+              <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-blue-600 truncate">RM{stats.monthlyBalance.toFixed(2)}</div>
+                <div className="text-xs text-gray-600 truncate">Monthly Balance</div>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-blue-600 truncate">RM{stats.monthlyBalance.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Monthly Balance</div>
-              </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-yellow-600 truncate">RM{stats.cashInHand.toFixed(2)}</div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Cash in Hand</div>
+              <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-yellow-600 truncate">RM{stats.cashInHand.toFixed(2)}</div>
+                <div className="text-xs text-gray-600 truncate">Cash in Hand</div>
               </div>
             </div>
             
             {/* Total Statistics */}
-            <div className="mt-6 pt-6 border-t border-gray-300">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-xs sm:text-base lg:text-lg font-bold text-green-600 truncate">RM{stats.totalIncome.toFixed(2)}</div>
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-300">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 dark:text-slate-100">Quick Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-xs sm:text-sm lg:text-base font-bold text-green-600 truncate">RM{stats.totalIncome.toFixed(2)}</div>
                   <div className="text-xs text-gray-600 truncate">Total Income</div>
                 </div>
-                <div className="text-center p-3 bg-red-50 rounded-lg border border-red-200">
-                  <div className="text-xs sm:text-base lg:text-lg font-bold text-red-600 truncate">RM{stats.totalExpense.toFixed(2)}</div>
+                <div className="text-center p-2 sm:p-3 bg-red-50 rounded-lg border border-red-200">
+                  <div className="text-xs sm:text-sm lg:text-base font-bold text-red-600 truncate">RM{stats.totalExpense.toFixed(2)}</div>
                   <div className="text-xs text-gray-600 truncate">Total Expense</div>
                 </div>
-                <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-xs sm:text-base lg:text-lg font-bold text-blue-600 truncate">RM{stats.totalBalance.toFixed(2)}</div>
+                <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-xs sm:text-sm lg:text-base font-bold text-blue-600 truncate">RM{stats.totalBalance.toFixed(2)}</div>
                   <div className="text-xs text-gray-600 truncate">Total Balance</div>
                 </div>
               </div>

@@ -235,306 +235,256 @@ export default function EditRecordPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <Link href="/financial-list" className="mr-4">
-                  <ArrowLeft className="h-8 w-8 text-gray-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
+          <div className="w-full px-3 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-3 sm:py-0">
+              <div className="flex items-center mb-3 sm:mb-0">
+                <Link href="/financial-list" className="mr-3 sm:mr-4">
+                  <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
                 </Link>
-                <h1 className="text-xl font-semibold text-gray-900">编辑财务记录</h1>
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
+                  <span className="hidden sm:inline">Edit Record</span>
+                  <span className="sm:hidden">Edit</span>
+                </h1>
+              </div>
+              
+              {/* Desktop buttons */}
+              <div className="hidden sm:flex items-center gap-3 sm:gap-4">
+                <button
+                  onClick={handleSubmit}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <Link
+                  href="/financial-list"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Link>
+              </div>
+
+              {/* Mobile buttons - simplified */}
+              <div className="flex items-center gap-2 w-full sm:hidden">
+                <Link
+                  href="/financial-list"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                  title="Back to Records"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </Link>
+                <button
+                  onClick={handleSubmit}
+                  disabled={saving}
+                  className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={saving ? 'Saving...' : 'Save Changes'}
+                >
+                  {saving ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <Save className="h-5 w-5" />
+                  )}
+                </button>
+                <Link
+                  href="/financial-list"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                  title="Cancel"
+                >
+                  <X className="h-5 w-5" />
+                </Link>
               </div>
             </div>
           </div>
         </header>
-        {/* Main Content */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Edit Form */}
-            <div className="bg-white shadow-sm border rounded-lg p-6 mb-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* 账户 */}
-                <div>
-                  <label htmlFor="account" className="block text-sm font-medium text-gray-700 mb-2">账户 *</label>
-                  <select
-                    id="account"
-                    value={formData.account}
-                    onChange={(e) => handleChange('account', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                  >
-                    {ACCOUNTS.map((account) => (
-                      <option key={account} value={account}>{account}</option>
-                    ))}
-                  </select>
-                </div>
-                {/* 日期 */}
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">日期 *</label>
-                  <input
-                    type="date"
-                    id="date"
-                    value={formData.date}
-                    onChange={(e) => handleChange('date', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                  />
-                </div>
-                {/* 类型 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">类型 *</label>
-                  <div className="flex gap-4">
-                    {TYPES.map((type) => (
-                      <label key={type} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="type"
-                          value={type}
-                          checked={formData.type === type}
-                          onChange={() => handleChange('type', type)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-700">{type === 'Income' ? 'income' : 'expense'}</span>
-                      </label>
-                    ))}
+
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+          {loading ? (
+            <div className="flex items-center justify-center min-h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-sm text-gray-600 dark:text-slate-400">Loading record...</span>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+              <p className="text-red-800 dark:text-red-200">{error}</p>
+            </div>
+          ) : formData ? (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-4 sm:mb-6 dark:text-slate-100">Edit Financial Record</h2>
+                
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                  {/* Date */}
+                  <div>
+                    <label htmlFor="date" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Date *
+                    </label>
+                    <input
+                      type="date"
+                      id="date"
+                      value={formData.date}
+                      onChange={(e) => handleChange('date', e.target.value)}
+                      required
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
                   </div>
-                </div>
-                {/* 记录人 */}
-                <div>
-                  <label htmlFor="who" className="block text-sm font-medium text-gray-700 mb-2">记录人 *</label>
-                  <input
-                    type="text"
-                    id="who"
-                    value={formData.who}
-                    onChange={(e) => handleChange('who', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                  />
-                </div>
-                {/* 描述 */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">描述 *</label>
-                  <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleChange('description', e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                  />
-                </div>
-                {/* 金额 */}
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">金额 *</label>
-                  <input
-                    type="number"
-                    id="amount"
-                    value={formData.amount}
-                    onChange={(e) => handleChange('amount', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    required
-                    min={0.01}
-                    step={0.01}
-                  />
-                </div>
-                {/* 备注 */}
-                <div>
-                  <label htmlFor="remark" className="block text-sm font-medium text-gray-700 mb-2">备注</label>
-                  <input
-                    type="text"
-                    id="remark"
-                    value={formData.remark || ''}
-                    onChange={(e) => handleChange('remark', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  />
-                </div>
-                <div className="flex justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={() => router.push('/financial-list')}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                    disabled={saving}
-                  >
-                    取消
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-                    disabled={saving}
-                  >
-                    <Save className="h-4 w-4" />
-                    {saving ? '保存中...' : '保存'}
-                  </button>
-                </div>
-              </form>
-            </div>
 
-            {/* Receipt Management Section */}
-            <div className="bg-white shadow-sm border rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Receipts ({receipts.length})</h2>
-                <input
-                  id="receipt-file-input"
-                  type="file"
-                  className="sr-only"
-                  accept="image/*,.pdf"
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (file && formData) {
-                      setUploading(true);
-                      try {
-                        // 检查文件大小
-                        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-                        if (file.size > MAX_FILE_SIZE) {
-                          alert(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the maximum limit of 10MB. Please choose a smaller file.`);
-                          return;
-                        }
+                  {/* Type */}
+                  <div>
+                    <label htmlFor="type" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Type *
+                    </label>
+                    <select
+                      id="type"
+                      value={formData.type}
+                      onChange={(e) => handleChange('type', e.target.value as 'Income' | 'Expense')}
+                      required
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    >
+                      <option value="">Select Type</option>
+                      <option value="Income">Income</option>
+                      <option value="Expense">Expense</option>
+                    </select>
+                  </div>
 
-                        // 创建FormData用于文件上传
-                        const formDataForUpload = new FormData();
-                        formDataForUpload.append('file', file);
-                        formDataForUpload.append('description', '');
-                        formDataForUpload.append('transactionKey', formData.key);
+                  {/* Amount */}
+                  <div>
+                    <label htmlFor="amount" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Amount (RM) *
+                    </label>
+                    <input
+                      type="number"
+                      id="amount"
+                      value={formData.amount}
+                      onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}
+                      step="0.01"
+                      min="0"
+                      required
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
+                  </div>
 
-                        // 上传到Google Drive
-                        const driveResponse = await fetch('/api/drive/upload', {
-                          method: 'POST',
-                          body: formDataForUpload,
-                        });
+                  {/* Description */}
+                  <div>
+                    <label htmlFor="description" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Description *
+                    </label>
+                    <textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => handleChange('description', e.target.value)}
+                      required
+                      rows={3}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                      placeholder="Enter description..."
+                    />
+                  </div>
 
-                        if (!driveResponse.ok) {
-                          const errorText = await driveResponse.text();
-                          throw new Error(`Failed to upload file to Google Drive: ${driveResponse.status} ${errorText}`);
-                        }
+                  {/* Account */}
+                  <div>
+                    <label htmlFor="account" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Account *
+                    </label>
+                    <select
+                      id="account"
+                      value={formData.account}
+                      onChange={(e) => handleChange('account', e.target.value)}
+                      required
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    >
+                      <option value="">Select Account</option>
+                      <option value="MIYF">MIYF</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
 
-                        const driveResult = await driveResponse.json();
-                        
-                        // 创建收据记录
-                        const newReceipt: Receipt = {
-                          receiptKey: Math.random().toString(36).substr(2, 8),
-                          transactionKey: formData.key,
-                          fileName: driveResult.originalName,
-                          fileUrl: driveResult.fileUrl,
-                          fileId: driveResult.fileId,
-                          downloadUrl: driveResult.downloadUrl,
-                          uploadBy: userProfile?.name || userProfile?.email || 'Unknown User',
-                          description: '',
-                          uploadDate: new Date().toISOString(),
-                        };
+                  {/* Who */}
+                  <div>
+                    <label htmlFor="who" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Who *
+                    </label>
+                    <input
+                      type="text"
+                      id="who"
+                      value={formData.who}
+                      onChange={(e) => handleChange('who', e.target.value)}
+                      required
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                      placeholder="Enter who..."
+                    />
+                  </div>
 
-                        // 添加到receipts列表
-                        const updatedReceipts = [newReceipt, ...receipts];
-                        setReceipts(updatedReceipts);
-                        // 收据数据直接存储在Google Drive中，不需要本地存储
-                        setToast({ type: 'success', message: '上传成功' });
-                      } catch (error) {
-                        setToast({ type: 'error', message: '上传失败' });
-                      } finally {
-                        setUploading(false);
-                      }
-                    }
-                    // Clear input value to allow selecting the same file again
-                    event.target.value = '';
-                  }}
-                />
-                <label
-                  htmlFor="receipt-file-input"
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
-                >
-                  {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-                  Add Receipt
-                </label>
+                  {/* Remark */}
+                  <div>
+                    <label htmlFor="remark" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Remark
+                    </label>
+                    <textarea
+                      id="remark"
+                      value={formData.remark}
+                      onChange={(e) => handleChange('remark', e.target.value)}
+                      rows={2}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                      placeholder="Enter remark (optional)..."
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label htmlFor="status" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2 dark:text-slate-300">
+                      Status
+                    </label>
+                    <select
+                      id="status"
+                      value={formData.status}
+                      onChange={(e) => handleChange('status', e.target.value as 'Pending' | 'Approved')}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                    </select>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-6">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {saving ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      {saving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <Link
+                      href="/financial-list"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </Link>
+                  </div>
+                </form>
               </div>
-
-              {receipts.length === 0 ? (
-                <div className="text-center py-8">
-                  <Receipt className="mx-auto h-12 w-12 text-gray-300" />
-                  <p className="mt-2 text-sm text-gray-500">No receipts uploaded for this record</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {receipts.map((receipt) => {
-                    const isImage = isImageFile(receipt.fileName);
-                    
-                    return (
-                      <div
-                        key={receipt.receiptKey}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
-                      >
-                        <div className="flex items-center space-x-3 flex-1">
-                          {/* 图片预览 */}
-                          {isImage ? (
-                            <div className="w-16 h-16 flex-shrink-0">
-                              <img
-                                src={receipt.fileUrl}
-                                alt={receipt.fileName}
-                                className="w-full h-full object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={() => {
-                                  // 可以添加图片预览功能
-                                  window.open(receipt.fileUrl, '_blank');
-                                }}
-                                title="Click to view full size"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded border flex items-center justify-center">
-                              <Receipt className="h-5 w-5 text-gray-500" />
-                            </div>
-                          )}
-                          
-                          {/* 文件信息 */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {receipt.fileName}
-                            </p>
-                            <div className="flex items-center space-x-4 text-xs text-gray-500">
-                              <span>{formatDateTime(receipt.uploadDate)}</span>
-                              <span>by {receipt.uploadBy}</span>
-                              {receipt.description && (
-                                <span className="truncate">{receipt.description}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 操作按钮 */}
-                        <div className="flex items-center space-x-2 ml-4">
-                          <a
-                            href={receipt.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-blue-600"
-                            title="View receipt"
-                          >
-                            {getFileIcon(receipt.fileName)}
-                          </a>
-                          <a
-                            href={receipt.fileUrl}
-                            download={receipt.fileName}
-                            className="text-gray-400 hover:text-green-600"
-                            title="Download receipt"
-                          >
-                            <Download className="h-4 w-4" />
-                          </a>
-                          <button
-                            onClick={() => handleDeleteReceipt(receipt.receiptKey)}
-                            disabled={deleting === receipt.receiptKey}
-                            className="text-gray-400 hover:text-red-600 disabled:opacity-50"
-                            title="Delete receipt"
-                          >
-                            {deleting === receipt.receiptKey ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
-          </div>
-        </main>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-slate-400">Record not found</p>
+            </div>
+          )}
+        </div>
       </div>
       {/* Toast Notification */}
       {toast && (

@@ -429,169 +429,266 @@ export default function ExportPage() {
 
   return (
     <LoggedInUser>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <Link href="/" className="mr-4">
-                  <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
+          <div className="w-full px-3 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-3 sm:py-0">
+              <div className="flex items-center mb-3 sm:mb-0">
+                <Link href="/" className="mr-3 sm:mr-4">
+                  <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
                 </Link>
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  <span className="hidden sm:inline">Report Export</span>
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
+                  <span className="hidden sm:inline">Export Data</span>
                   <span className="sm:hidden">Export</span>
                 </h1>
+              </div>
+              
+              {/* Desktop buttons */}
+              <div className="hidden sm:flex items-center gap-3 sm:gap-4">
+                <button
+                  onClick={exportToPDF}
+                  disabled={loading || filteredRecords.length === 0}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                >
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-slate-400"></div>
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  {loading ? 'Generating...' : 'Export PDF'}
+                </button>
+                <button
+                  onClick={exportToExcel}
+                  disabled={loading || filteredRecords.length === 0}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                >
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-slate-400"></div>
+                  ) : (
+                    <BarChart3 className="h-4 w-4" />
+                  )}
+                  {loading ? 'Generating...' : 'Export Excel'}
+                </button>
+              </div>
+
+              {/* Mobile buttons - simplified */}
+              <div className="flex items-center gap-2 w-full sm:hidden">
+                <Link
+                  href="/"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                  title="Back to Home"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </Link>
+                <button
+                  onClick={exportToPDF}
+                  disabled={loading || filteredRecords.length === 0}
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
+                  title={loading ? 'Generating...' : 'Export PDF'}
+                >
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 dark:border-slate-400"></div>
+                  ) : (
+                    <FileText className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-          {/* Filter Settings */}
-          <div className="bg-white shadow-sm border rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Filter className="h-5 w-5 mr-2" />
-              Filter Settings
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Date Range */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={dateRange.startDate}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={dateRange.endDate}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Record Type</label>
-                <select
-                  value={exportType}
-                  onChange={(e) => setExportType(e.target.value as 'all' | 'income' | 'expense')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                >
-                  <option value="all">All Records</option>
-                  <option value="income">Income Only</option>
-                  <option value="expense">Expense Only</option>
-                </select>
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg dark:bg-green-900">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Income</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
+                    {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Statistics */}
-          <div className="bg-white shadow-sm border rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2" />
-              Statistics
-            </h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-blue-600 truncate">{filteredRecords.length}</div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Record Count</div>
-              </div>
-              
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-green-600 truncate">
-                  RM{filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg dark:bg-red-900">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-red-600 dark:text-red-400" />
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Total Income</div>
-              </div>
-              
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-red-600 truncate">
-                  RM{filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0).toFixed(2)}
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Expense</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
+                    {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
+                  </p>
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Total Expense</div>
               </div>
-              
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold text-purple-600 truncate">
-                  RM{(filteredRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0) - 
-                     filteredRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0)).toFixed(2)}
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 truncate">Balance</div>
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Balance</p>
+                  <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold whitespace-nowrap truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 p-2 bg-purple-100 rounded-lg dark:bg-purple-900">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Records</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{records.length}</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Export Options */}
-          <div className="bg-white shadow-sm border rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <Download className="h-5 w-5 mr-2" />
-              Export Options
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* PDF Export */}
-              <div className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-center mb-4">
-                  <FileText className="h-8 w-8 text-red-600 mr-3" />
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">PDF Report</h3>
-                    <p className="text-sm text-gray-500">Includes statistics and detailed records</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Export Options
+                </h2>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">Date Range</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                    <input
+                      type="date"
+                      value={dateRange.startDate}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
+                    <input
+                      type="date"
+                      value={dateRange.endDate}
+                      onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                    />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">Record Type</label>
+                  <select
+                    value={exportType}
+                    onChange={(e) => setExportType(e.target.value as 'all' | 'income' | 'expense')}
+                    className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                  >
+                    <option value="all">All Records</option>
+                    <option value="income">Income Only</option>
+                    <option value="expense">Expense Only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">Export Format</label>
+                  <select
+                    value="pdf"
+                    onChange={(e) => {}}
+                    className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
+                  >
+                    <option value="pdf">PDF</option>
+                  </select>
+                </div>
+
                 <button
                   onClick={exportToPDF}
                   disabled={loading || filteredRecords.length === 0}
-                  className="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   ) : (
-                    <FileText className="h-4 w-4 mr-2" />
+                    <FileText className="h-4 w-4" />
                   )}
                   {loading ? 'Generating...' : 'Export PDF'}
                 </button>
               </div>
-
-              {/* Excel Export */}
-              <div className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-center mb-4">
-                  <BarChart3 className="h-8 w-8 text-green-600 mr-3" />
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Excel File</h3>
-                    <p className="text-sm text-gray-500">Raw data format for further analysis</p>
-                  </div>
-                </div>
-                <button
-                  onClick={exportToExcel}
-                  disabled={loading || filteredRecords.length === 0}
-                  className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  ) : (
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                  )}
-                  {loading ? 'Generating...' : 'Export Excel'}
-                </button>
-              </div>
             </div>
 
-            {filteredRecords.length === 0 && (
-              <div className="mt-4 text-center text-gray-500">
-                No records available for export under current filter conditions
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Data Preview
+                </h2>
               </div>
-            )}
+              
+              <div className="space-y-3">
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="text-gray-600 dark:text-slate-400">Filtered Records:</span>
+                  <span className="font-medium text-gray-900 dark:text-slate-100">{filteredRecords.length}</span>
+                </div>
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="text-gray-600 dark:text-slate-400">Date Range:</span>
+                  <span className="font-medium text-gray-900 dark:text-slate-100">
+                    {dateRange.startDate} to {dateRange.endDate}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="text-gray-600 dark:text-slate-400">Type:</span>
+                  <span className="font-medium text-gray-900 dark:text-slate-100">{exportType === 'all' ? 'All Records' : exportType === 'income' ? 'Income Only' : 'Expense Only'}</span>
+                </div>
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="text-gray-600 dark:text-slate-400">Format:</span>
+                  <span className="font-medium text-gray-900 dark:text-slate-100">PDF</span>
+                </div>
+              </div>
+
+              {filteredRecords.length > 0 && (
+                <div className="mt-4 sm:mt-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2 dark:text-slate-100">Sample Data (First 5 records)</h3>
+                  <div className="bg-gray-50 dark:bg-slate-700 rounded-md p-3 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-slate-600">
+                          <th className="text-left py-1 font-medium text-gray-700 dark:text-slate-300">Date</th>
+                          <th className="text-left py-1 font-medium text-gray-700 dark:text-slate-300">Type</th>
+                          <th className="text-left py-1 font-medium text-gray-700 dark:text-slate-300">Amount</th>
+                          <th className="text-left py-1 font-medium text-gray-700 dark:text-slate-300">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecords.slice(0, 5).map((record, index) => (
+                          <tr key={index} className="border-b border-gray-100 dark:border-slate-600">
+                            <td className="py-1 text-gray-600 dark:text-slate-400">{record.date?.split(' ')[0]}</td>
+                            <td className="py-1">
+                              <span className={`px-1 py-0.5 text-xs rounded ${
+                                record.type === 'Income' 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              }`}>
+                                {record.type}
+                              </span>
+                            </td>
+                            <td className="py-1 text-gray-900 dark:text-slate-100">{formatCurrency(Number(record.amount))}</td>
+                            <td className="py-1 text-gray-600 dark:text-slate-400 truncate max-w-20">{record.description}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     </LoggedInUser>
   );

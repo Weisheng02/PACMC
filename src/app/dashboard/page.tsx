@@ -213,42 +213,42 @@ export default function DashboardPage() {
 
   return (
     <LoggedInUser>
-      <div className="min-h-screen bg-gray-50">
-        <header className="sticky top-0 z-50 bg-white shadow-sm border-b">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-4 sm:py-0">
-              <div className="flex items-center mb-4 sm:mb-0">
-                <Link href="/" className="mr-4">
-                  <ArrowLeft className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
+          <div className="w-full px-3 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-3 sm:py-0">
+              <div className="flex items-center mb-3 sm:mb-0">
+                <Link href="/" className="mr-3 sm:mr-4">
+                  <ArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-gray-600 dark:text-slate-400" />
                 </Link>
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
                   <span className="hidden sm:inline">Financial Dashboard</span>
                   <span className="sm:hidden">Dashboard</span>
                 </h1>
               </div>
               
               {/* Desktop buttons */}
-              <div className="hidden sm:flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={fetchData}
                   disabled={refreshing}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                 >
                   {refreshing ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-slate-400"></div>
                   ) : (
                     <RefreshCw className="h-4 w-4" />
                   )}
                   {refreshing ? 'Refreshing...' : 'Refresh Data'}
                 </button>
                 {lastRefreshTime && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-slate-400">
                     Last updated: {lastRefreshTime.toLocaleTimeString()}
                   </span>
                 )}
                 <Link
                   href="/financial-list"
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                 >
                   <DollarSign className="h-4 w-4" />
                   View Records
@@ -259,7 +259,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2 w-full sm:hidden">
                 <Link
                   href="/"
-                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                   title="Back to Home"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,18 +269,18 @@ export default function DashboardPage() {
                 <button
                   onClick={fetchData}
                   disabled={refreshing}
-                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                   title={refreshing ? 'Refreshing...' : 'Refresh Data'}
                 >
                   {refreshing ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 dark:border-slate-400"></div>
                   ) : (
                     <RefreshCw className="h-5 w-5" />
                   )}
                 </button>
                 <Link
                   href="/financial-list"
-                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                   title="View Records"
                 >
                   <DollarSign className="h-5 w-5" />
@@ -290,79 +290,81 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg dark:bg-green-900">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-green-600 dark:text-green-400" />
                 </div>
-                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Income</p>
-                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate">
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Income</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
                     {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+                <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg dark:bg-red-900">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-red-600 dark:text-red-400" />
                 </div>
-                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Expense</p>
-                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate">
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Expense</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
                     {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Balance</p>
-                  <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold whitespace-nowrap truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Balance</p>
+                  <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold whitespace-nowrap truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
                     {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex items-center">
-                <div className="flex-shrink-0 p-2 bg-purple-100 rounded-lg">
-                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                <div className="flex-shrink-0 p-2 bg-purple-100 rounded-lg dark:bg-purple-900">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Records</p>
-                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate">{records.length}</p>
+                <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Records</p>
+                  <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 truncate dark:text-slate-100">{records.length}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                   Monthly Trend
                 </h2>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="month" 
                     tickFormatter={formatMonth}
-                    fontSize={12}
+                    fontSize={10}
+                    className="sm:text-xs"
                   />
                   <YAxis 
                     tickFormatter={formatCurrency}
-                    fontSize={12}
+                    fontSize={10}
+                    className="sm:text-xs"
                   />
                   <Tooltip 
                     formatter={(value: number) => [formatCurrency(value), '']}
@@ -375,24 +377,26 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
                   Cumulative Balance
                 </h2>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                 <LineChart data={cumulativeData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="month" 
                     tickFormatter={formatMonth}
-                    fontSize={12}
+                    fontSize={10}
+                    className="sm:text-xs"
                   />
                   <YAxis 
                     tickFormatter={formatCurrency}
-                    fontSize={12}
+                    fontSize={10}
+                    className="sm:text-xs"
                   />
                   <Tooltip 
                     formatter={(value: number) => [formatCurrency(value), '']}
@@ -409,16 +413,16 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-6 lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <PieChartIcon className="h-5 w-5" />
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 lg:col-span-2 dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                  <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   Category Distribution
                 </h2>
                 <select
                   value={selectedMonth}
                   onChange={(e) => handleMonthChange(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
                 >
                   {monthlyData.map((item) => (
                     <option key={item.month} value={item.month}>
@@ -428,7 +432,7 @@ export default function DashboardPage() {
                 </select>
               </div>
               <div className="flex items-center justify-center">
-                <ResponsiveContainer width="100%" height={400}>
+                <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
                   <PieChart>
                     <Pie
                       data={categoryData}
@@ -436,7 +440,8 @@ export default function DashboardPage() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={120}
+                      outerRadius={80}
+                      className="sm:outerRadius={120}"
                       fill="#8884d8"
                       dataKey="value"
                     >
