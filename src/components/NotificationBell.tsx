@@ -56,7 +56,7 @@ async function clearAuditLogs() {
   if (!res.ok) throw new Error('Failed to clear audit logs');
 }
 
-function getNotiKey(log) {
+function getNotiKey(log: AuditLog) {
   return `noti:${log.time}|${log.action}|${log.user}`;
 }
 
