@@ -26,7 +26,7 @@ interface AuditLog {
 }
 
 // Get audit logs
-async function getNotificationLogs(userProfile) {
+async function getNotificationLogs(userProfile: { role: string; name: string }) {
   let url = '/api/sheets/audit-log';
   if (userProfile) {
     const params = new URLSearchParams();
