@@ -61,7 +61,7 @@ export default function NotificationsPage() {
       let logs = data.logs || [];
       // basic user: 只显示自己更改的和被approved的
       if (userProfile?.role === 'Basic User') {
-        logs = logs.filter(log =>
+        logs = logs.filter((log: NotificationLog) =>
           log.user === userProfile.name ||
           (log.action === 'Update Status' && log.detail && log.detail.includes(`Who: ${userProfile.name}`))
         );
