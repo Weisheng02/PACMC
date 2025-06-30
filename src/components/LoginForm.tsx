@@ -201,7 +201,6 @@ export function LoginForm() {
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600 transition-colors"
         >
           <User className="h-4 w-4" />
-          {userProfile?.name || user.email}
           <svg 
             className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} 
             fill="none" 
@@ -219,10 +218,7 @@ export function LoginForm() {
               {/* User Info */}
               <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-700">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {userProfile?.name || user?.displayName || 'User'}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-slate-400">
-                  {user?.email}
+                  {userProfile?.name || user.email}
                 </p>
               </div>
               
@@ -335,19 +331,16 @@ export function LoginForm() {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">
               Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
-                placeholder="Enter your email"
-              />
-            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+              placeholder="Enter your email"
+            />
           </div>
 
           <div>
@@ -355,7 +348,6 @@ export function LoginForm() {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -363,7 +355,7 @@ export function LoginForm() {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+                className="w-full py-2 px-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
                 placeholder="Enter your password"
               />
               <button
@@ -413,38 +405,32 @@ export function LoginForm() {
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">
               Full Name
             </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
-                placeholder="Enter your full name"
-              />
-            </div>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+              placeholder="Enter your full name"
+            />
           </div>
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">
               Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
-                placeholder="Enter your email"
-              />
-            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+              placeholder="Enter your email"
+            />
           </div>
 
           <div>
@@ -452,7 +438,6 @@ export function LoginForm() {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -460,7 +445,7 @@ export function LoginForm() {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+                className="w-full py-2 px-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
                 placeholder="Enter your password"
               />
               <button
@@ -478,7 +463,6 @@ export function LoginForm() {
               Confirm Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
@@ -486,7 +470,7 @@ export function LoginForm() {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 required
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+                className="w-full py-2 px-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
                 placeholder="Confirm your password"
               />
               <button
@@ -533,19 +517,16 @@ export function LoginForm() {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">
               Email
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
-                placeholder="Enter your email"
-              />
-            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:focus:ring-blue-400 input-focus-effect"
+              placeholder="Enter your email"
+            />
           </div>
 
           <button

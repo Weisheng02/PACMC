@@ -168,7 +168,7 @@ export default function Home() {
               <div className="flex justify-center mb-6">
                 <div className="relative">
                   <img
-                    src="/logo.jpg"
+                    src="/pacmc.jpg"
                     alt="PACMC Logo"
                     className="h-20 w-20 rounded-full object-cover shadow-lg border-4 border-white dark:border-slate-700"
                   />

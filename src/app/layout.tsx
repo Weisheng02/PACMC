@@ -63,21 +63,17 @@ export default function RootLayout({
           </div>
         </AuthProvider>
         
-        {/* Service Worker Registration */}
+        {/* Service Worker Unregistration */}
         <Script
-          id="sw-register"
+          id="sw-unregister"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                  }
                 });
               }
             `,
