@@ -20,7 +20,7 @@ interface NotificationLog {
 const PAGE_SIZE = 20;
 
 // localStorage已读工具
-function getNotiKey(log) {
+function getNotiKey(log: NotificationLog) {
   return `noti:${log.time}|${log.action}|${log.user}`;
 }
 function getReadSet() {
