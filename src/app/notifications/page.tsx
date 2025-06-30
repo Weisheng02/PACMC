@@ -30,7 +30,7 @@ function getReadSet() {
     return new Set();
   }
 }
-function setReadSet(set) {
+function setReadSet(set: Set<string>) {
   localStorage.setItem('notiReadSet', JSON.stringify(Array.from(set)));
 }
 
