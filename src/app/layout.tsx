@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Script from "next/script";
+// import StickyHeader from '@/components/StickyHeader';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +58,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {/* 页面内容 */}
+          {/* StickyHeader 已移除，保留各页面自有header */}
           <div className="pt-2 sm:pt-4">
             {children}
           </div>

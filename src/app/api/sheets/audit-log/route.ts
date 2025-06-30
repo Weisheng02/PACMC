@@ -18,28 +18,36 @@ async function getSheetsClient() {
 }
 
 // 读取日志
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const userParam = searchParams.get('user');
+    const roleParam = searchParams.get('role');
     const sheets = await getSheetsClient();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${AUDIT_SHEET_NAME}!A2:I`, // 读取A2:I，包含status字段
+      range: `${AUDIT_SHEET_NAME}!A2:I`,
     });
     const rows = res.data.values || [];
-    // 只显示status为1的日志（活跃状态）
-    const logs = rows
-      .filter(row => row[8] === '1' || row[8] === undefined) // status字段在第9列（索引8）
-      .map(row => ({
-        time: row[0],
-        user: row[1],
-        action: row[2],
-        object: row[3],
-        field: row[4],
-        old: row[5],
-        new: row[6],
-        detail: row[7],
-        status: row[8] || '1',
-      }));
+    let logs = rows.map(row => ({
+      time: row[0],
+      user: row[1],
+      action: row[2],
+      object: row[3],
+      field: row[4],
+      old: row[5],
+      new: row[6],
+      detail: row[7],
+      status: row[8] || '1',
+    }));
+    // admin/super admin看到所有status=1和0，普通用户只看到status=1且属于自己的
+    if (roleParam === 'Admin' || roleParam === 'Super Admin') {
+      // 返回全部
+    } else if (userParam) {
+      logs = logs.filter(log => log.status === '1' && log.user === userParam);
+    } else {
+      logs = logs.filter(log => log.status === '1');
+    }
     return NextResponse.json({ logs });
   } catch (err) {
     console.error('Audit log error:', err);
@@ -48,28 +56,38 @@ export async function GET() {
 }
 
 // 软删除日志（将status设为0）
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const userParam = searchParams.get('user');
+    const roleParam = searchParams.get('role');
     const sheets = await getSheetsClient();
-    
-    // 获取所有日志行
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
       range: `${AUDIT_SHEET_NAME}!A2:I`,
     });
-    
     const rows = res.data.values || [];
-    if (rows.length === 0) {
+    let updateRequests = [];
+    if (roleParam === 'Basic User' && userParam) {
+      // 只清空属于该user的
+      rows.forEach((row, index) => {
+        if ((row[8] === '1' || row[8] === undefined) && row[1] === userParam) {
+          updateRequests.push({
+            range: `${AUDIT_SHEET_NAME}!I${index + 2}`,
+            values: [['0']]
+          });
+        }
+      });
+    } else {
+      // admin/super admin清空全部
+      updateRequests = rows.map((row, index) => ({
+        range: `${AUDIT_SHEET_NAME}!I${index + 2}`,
+        values: [['0']]
+      }));
+    }
+    if (updateRequests.length === 0) {
       return NextResponse.json({ success: true, message: 'No logs to clear' });
     }
-
-    // 批量更新所有行的status为0
-    const updateRequests = rows.map((row, index) => ({
-      range: `${AUDIT_SHEET_NAME}!I${index + 2}`, // I列是status字段，从第2行开始
-      values: [['0']]
-    }));
-
-    // 执行批量更新
     await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: SHEET_ID,
       requestBody: {
@@ -77,11 +95,10 @@ export async function DELETE() {
         data: updateRequests
       }
     });
-
     return NextResponse.json({ 
       success: true, 
-      message: `Cleared ${rows.length} audit logs (soft delete)`,
-      clearedCount: rows.length
+      message: `Cleared ${updateRequests.length} audit logs (soft delete)`,
+      clearedCount: updateRequests.length
     });
   } catch (err) {
     console.error('Audit log error:', err);

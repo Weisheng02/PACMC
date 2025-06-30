@@ -17,6 +17,16 @@ interface PendingReceipt {
   displayName?: string;
 }
 
+// 获取马来西亚当前日期（GMT+8）
+function getMalaysiaDateString() {
+  // 当前UTC时间
+  const now = new Date();
+  // 马来西亚时区+8小时
+  const malaysiaTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  // 取马来西亚的年月日
+  return malaysiaTime.toISOString().slice(0, 10);
+}
+
 export default function AddRecordPage() {
   const router = useRouter();
   const { userProfile } = useAuth();
@@ -27,7 +37,7 @@ export default function AddRecordPage() {
   
   const [formData, setFormData] = useState({
     type: 'Expense' as 'Income' | 'Expense',
-    date: new Date().toISOString().split('T')[0],
+    date: getMalaysiaDateString(),
     account: 'MIYF',
     who: '',
     amount: '',

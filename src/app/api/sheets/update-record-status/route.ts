@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import * as admin from 'firebase-admin';
+import nodemailer from 'nodemailer';
+
+// Initialize Firebase Admin if not already
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+  });
+}
 
 // 初始化 Google Sheets API
 const getSheetsClient = () => {
@@ -114,7 +123,7 @@ async function handleStatusUpdate(request: NextRequest) {
 
     // 如果状态改为已审核，更新审核信息
     if (status === 'Approved') {
-      const now = new Date().toLocaleString('zh-TW', {
+      const now = new Date().toLocaleString('en-US', {
         timeZone: 'Asia/Taipei',
         year: 'numeric',
         month: '2-digit',
@@ -122,6 +131,7 @@ async function handleStatusUpdate(request: NextRequest) {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
+        hour12: true,
       });
 
       // 分别更新审核日期和审核人
@@ -144,6 +154,43 @@ async function handleStatusUpdate(request: NextRequest) {
           values: [[approvedBy || 'System']],
         },
       });
+
+      // ====== 新增：查找created by用户并发邮件 ======
+      try {
+        const createdByName = rows[rowIndex-1][11]; // L列
+        if (createdByName) {
+          const usersRef = admin.firestore().collection('users');
+          const userSnap = await usersRef.where('name', '==', createdByName).limit(1).get();
+          if (!userSnap.empty) {
+            const userData = userSnap.docs[0].data();
+            const userEmail = userData.email;
+            // 邮件内容
+            const mailSubject = 'Your Financial Record Has Been Approved';
+            const mailBody = `Dear ${createdByName},\n\nWe are pleased to inform you that your financial record has been approved.\n\nDetails:\n- Type: ${rows[rowIndex-1][3]}\n- Amount: RM${rows[rowIndex-1][5]}\n- Description: ${rows[rowIndex-1][6]}\n- Date: ${rows[rowIndex-1][2]}\n- Approved By: ${approvedBy || 'System'}\n- Approved At: ${now}\n\nIf you have any questions, please contact the finance team.\n\nBest regards,\nPACMC Finance System`;
+            // 这里用nodemailer发送邮件（可先console.log）
+            console.log('[EMAIL APPROVAL]', { to: userEmail, subject: mailSubject, text: mailBody });
+            // // 示例：实际发邮件（需配置SMTP）
+            // const transporter = nodemailer.createTransport({
+            //   host: process.env.SMTP_HOST,
+            //   port: Number(process.env.SMTP_PORT),
+            //   secure: false,
+            //   auth: {
+            //     user: process.env.SMTP_USER,
+            //     pass: process.env.SMTP_PASS,
+            //   },
+            // });
+            // await transporter.sendMail({
+            //   from: 'noreply@pacmc-money.com',
+            //   to: userEmail,
+            //   subject: mailSubject,
+            //   text: mailBody,
+            // });
+          }
+        }
+      } catch (mailErr) {
+        console.error('Failed to send approval email:', mailErr);
+      }
+      // ====== END ======
     }
 
     // 写入详细操作日志

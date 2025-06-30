@@ -283,12 +283,16 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <NotificationBell />
+              {user && (
+                <Link href="/admin/pending-records" className="px-3 py-1 rounded bg-yellow-500 text-gray-900 hover:bg-yellow-400 transition text-sm font-bold flex items-center shadow-sm border border-yellow-400 dark:bg-yellow-400 dark:text-gray-900 dark:hover:bg-yellow-300">
+                  Pending
+                </Link>
+              )}
               <LoginForm />
             </div>
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}

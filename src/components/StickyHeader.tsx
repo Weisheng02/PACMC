@@ -1,7 +1,14 @@
 "use client";
 import Link from "next/link";
+import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from './NotificationBell';
 
 export default function StickyHeader() {
+  const { userProfile } = useAuth();
+  console.log('userProfile:', userProfile);
+
+  const isLoggedIn = !!userProfile;
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 w-full dark:bg-slate-800 dark:border-slate-600">
       <div className="flex items-center justify-between px-4 sm:px-8 py-2 gap-2">
@@ -47,6 +54,12 @@ export default function StickyHeader() {
             </svg>
             Set Cash
           </button>
+          <NotificationBell />
+          {isLoggedIn && (
+            <Link href="/admin/pending-records" className="ml-1 px-3 py-1 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition text-sm font-medium flex items-center">
+              Pending
+            </Link>
+          )}
         </div>
       </div>
     </header>

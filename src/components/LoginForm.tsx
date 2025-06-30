@@ -242,15 +242,6 @@ export function LoginForm() {
               </Link>
               
               <Link
-                href="/settings"
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
-                onClick={() => setShowUserMenu(false)}
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </Link>
-              
-              <Link
                 href="/notifications"
                 className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
                 onClick={() => setShowUserMenu(false)}

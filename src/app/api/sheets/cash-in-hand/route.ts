@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     
     // 生成唯一 Key
     const key = Math.random().toString(36).substr(2, 8);
-    const now = new Date().toLocaleString('zh-TW', {
+    const now = new Date().toLocaleString('en-US', {
       timeZone: 'Asia/Taipei',
       year: 'numeric',
       month: '2-digit',
@@ -169,6 +169,7 @@ export async function POST(request: NextRequest) {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
+      hour12: true,
     });
 
     // 准备新行数据

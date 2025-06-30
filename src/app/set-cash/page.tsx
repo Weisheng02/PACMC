@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoggedInUser } from '@/components/PermissionGate';
-import { Wallet, ArrowLeft, Check } from 'lucide-react';
+import { Wallet, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function SetCashPage() {
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const [cashInHand, setCashInHand] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -89,6 +89,23 @@ export default function SetCashPage() {
       setSaving(false);
     }
   };
+
+  if (!user || !userProfile) {
+    return null;
+  }
+
+  if (userProfile.role !== 'Super Admin') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-slate-900">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-8 flex flex-col items-center">
+          <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+          <p className="text-gray-600 dark:text-slate-400 mb-4">You do not have permission to access this page.</p>
+          <Link href="/" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Return to Home</Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

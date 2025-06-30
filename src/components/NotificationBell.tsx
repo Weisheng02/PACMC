@@ -26,10 +26,28 @@ interface AuditLog {
 }
 
 // Get audit logs
-async function getAuditLogs() {
-  const res = await fetch('/api/sheets/audit-log');
-  if (!res.ok) throw new Error('Failed to fetch audit logs');
-  return res.json();
+async function getNotificationLogs(userProfile) {
+  let url = '/api/sheets/audit-log';
+  if (userProfile) {
+    const params = new URLSearchParams();
+    params.set('role', userProfile.role);
+    if (userProfile.role === 'Basic User') {
+      params.set('user', userProfile.name);
+    }
+    url += '?' + params.toString();
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch notifications');
+  let data = await res.json();
+  let logs = data.logs || [];
+  // basic user: 只显示自己更改的和被approved的
+  if (userProfile?.role === 'Basic User') {
+    logs = logs.filter(log =>
+      log.user === userProfile.name ||
+      (log.action === 'Update Status' && log.detail && log.detail.includes(`Who: ${userProfile.name}`))
+    );
+  }
+  return logs;
 }
 
 // Clear audit logs
@@ -38,44 +56,86 @@ async function clearAuditLogs() {
   if (!res.ok) throw new Error('Failed to clear audit logs');
 }
 
+function getNotiKey(log) {
+  return `noti:${log.time}|${log.action}|${log.user}`;
+}
+
+function getReadSet() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem('notiReadSet') || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+function setReadSet(set) {
+  localStorage.setItem('notiReadSet', JSON.stringify(Array.from(set)));
+}
+
 export default function NotificationBell() {
   const { userProfile, isSuperAdmin } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [readSet, setReadSetState] = useState<Set<string>>(getReadSet());
 
-  useEffect(() => {
-    if (!userProfile) return;
+  // 未读数量
+  const unreadLogs = logs.filter(log => !readSet.has(getNotiKey(log)));
+  const notiCount = unreadLogs.length;
 
-    const loadLogs = async () => {
-      try {
-        const data = await getAuditLogs();
-        setLogs(data.logs || []);
-      } catch (error) {
-        console.error('Error loading audit logs:', error);
-      }
-    };
+  // 标记单条为已读
+  const markAsRead = (log) => {
+    const key = getNotiKey(log);
+    if (!readSet.has(key)) {
+      const newSet = new Set(readSet);
+      newSet.add(key);
+      setReadSetState(newSet);
+      setReadSet(newSet);
+    }
+  };
 
-    loadLogs();
-    // 每30秒刷新一次
-    const interval = setInterval(loadLogs, 30000);
-    return () => clearInterval(interval);
-  }, [userProfile]);
+  // 全部标记为已读
+  const markAllAsRead = () => {
+    const newSet = new Set(readSet);
+    logs.forEach(log => newSet.add(getNotiKey(log)));
+    setReadSetState(newSet);
+    setReadSet(newSet);
+  };
 
+  // 超级管理员清空（后端）
   const handleClearLogs = async () => {
     if (!confirm('Are you sure you want to clear all notifications?')) return;
-    
     setClearing(true);
     try {
       await clearAuditLogs();
       setLogs([]);
+      // 本地也清空
+      setReadSetState(new Set());
+      setReadSet(new Set());
     } catch (error) {
-      console.error('Error clearing audit logs:', error);
+      // ignore
     } finally {
       setClearing(false);
     }
   };
+
+  useEffect(() => {
+    if (!userProfile) return;
+    const loadLogs = async () => {
+      setLoading(true);
+      try {
+        const logs = await getNotificationLogs(userProfile);
+        setLogs(logs.slice(0, 50));
+      } catch (error) {
+        setLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLogs();
+    const interval = setInterval(loadLogs, 30000);
+    return () => clearInterval(interval);
+  }, [userProfile]);
 
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -137,8 +197,26 @@ export default function NotificationBell() {
 
   if (!userProfile) return null;
 
-  // 只显示最近50条日志
-  const recentLogs = logs.slice(0, 50);
+  // 排序：Just now（1分钟内）最前，其余按时间倒序
+  const now = new Date();
+  const sortedLogs = logs.slice().sort((a, b) => {
+    const dateA = new Date(a.time);
+    const dateB = new Date(b.time);
+    const diffA = now.getTime() - dateA.getTime();
+    const diffB = now.getTime() - dateB.getTime();
+    const isJustNowA = !isNaN(dateA.getTime()) && diffA >= 0 && diffA < 60 * 1000;
+    const isJustNowB = !isNaN(dateB.getTime()) && diffB >= 0 && diffB < 60 * 1000;
+    if (isJustNowA && !isJustNowB) return -1;
+    if (!isJustNowA && isJustNowB) return 1;
+    if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+      return dateB.getTime() - dateA.getTime();
+    }
+    if (!isNaN(dateA.getTime())) return -1;
+    if (!isNaN(dateB.getTime())) return 1;
+    return 0;
+  });
+  // 只显示最近50条
+  const recentLogs = sortedLogs.slice(0, 50);
   const logCount = logs.length;
 
   return (
@@ -149,9 +227,9 @@ export default function NotificationBell() {
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-700"
       >
         <Bell className="h-6 w-6" />
-        {logCount > 0 && (
+        {notiCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {logCount > 99 ? '99+' : logCount}
+            {notiCount > 99 ? '99+' : notiCount}
           </span>
         )}
       </button>
@@ -186,19 +264,22 @@ export default function NotificationBell() {
 
           {/* Log List */}
           <div className="max-h-80 overflow-y-auto">
-            {recentLogs.length === 0 ? (
+            {logs.length === 0 ? (
               <div className="p-3 sm:p-4 text-center text-gray-500 dark:text-slate-400">
                 <Bell className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2 text-gray-300 dark:text-slate-500" />
                 <p className="text-xs sm:text-sm">No Notifications</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-300 dark:divide-slate-600">
-                {recentLogs.map((log, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2 sm:p-3 hover:bg-gray-50 transition-colors dark:hover:bg-slate-700"
-                  >
-                    <div className="flex items-start space-x-2 sm:space-x-3">
+                {recentLogs.map((log, idx) => {
+                  const isUnread = !readSet.has(getNotiKey(log));
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-2 sm:p-3 hover:bg-gray-50 transition-colors dark:hover:bg-slate-700 flex items-start gap-2 ${isUnread ? 'bg-blue-50 dark:bg-blue-900/10' : ''}`}
+                      onClick={() => markAsRead(log)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="flex-shrink-0 mt-0.5">
                         {getActionIcon(log.action)}
                       </div>
@@ -206,36 +287,55 @@ export default function NotificationBell() {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1">
                           <div className="flex items-center space-x-2 min-w-0">
                             <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-slate-100 truncate max-w-[60vw]">{log.action}</span>
-                            {/* Created by user */}
                             <span className="text-xs text-gray-500 dark:text-slate-300 whitespace-nowrap ml-1 sm:ml-2">Created by {log.user}</span>
                           </div>
                           <span className="text-xs text-gray-400 flex items-center gap-1 dark:text-slate-400 whitespace-nowrap">
                             <Clock className="h-3 w-3" />
-                            {log.time?.split(' ')[0]}
+                            {formatTimeAgo(log.time)}
                           </span>
                         </div>
                         <div className="text-xs sm:text-sm text-gray-600 mb-1 dark:text-slate-300 truncate max-w-[80vw]">
                           {getLogSummary(log)}
                         </div>
                       </div>
+                      {isUnread && <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mt-2 ml-2"></span>}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
           {/* Footer */}
-          {recentLogs.length > 0 && (
-            <div className="p-2 sm:p-3 border-t border-gray-200 dark:border-slate-600">
-              <Link
-                href="/notifications"
-                className="block text-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                View all audit logs →
-              </Link>
-            </div>
-          )}
+          <div className="p-2 sm:p-3 border-t border-gray-200 dark:border-slate-600 flex items-center justify-between">
+            <Link
+              href="/notifications"
+              className="block text-xs sm:text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              onClick={() => setIsOpen(false)}
+            >
+              View all notifications →
+            </Link>
+            {logs.length > 0 && (
+              <>
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-gray-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 ml-2"
+                >
+                  Mark all as read
+                </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={handleClearLogs}
+                    disabled={clearing}
+                    className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50 flex items-center gap-1 dark:text-red-400 dark:hover:text-red-300 ml-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear All
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
