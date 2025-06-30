@@ -84,7 +84,7 @@ export default function NotificationBell() {
   const notiCount = unreadLogs.length;
 
   // 标记单条为已读
-  const markAsRead = (log) => {
+  const markAsRead = (log: AuditLog) => {
     const key = getNotiKey(log);
     if (!readSet.has(key)) {
       const newSet = new Set(readSet);
