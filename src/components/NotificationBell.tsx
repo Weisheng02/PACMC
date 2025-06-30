@@ -60,11 +60,11 @@ function getNotiKey(log: AuditLog) {
   return `noti:${log.time}|${log.action}|${log.user}`;
 }
 
-function getReadSet() {
+function getReadSet(): Set<string> {
   try {
-    return new Set(JSON.parse(localStorage.getItem('notiReadSet') || '[]'));
+    return new Set<string>(JSON.parse(localStorage.getItem('notiReadSet') || '[]'));
   } catch {
-    return new Set();
+    return new Set<string>();
   }
 }
 function setReadSet(set: Set<string>) {

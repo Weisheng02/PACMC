@@ -94,8 +94,8 @@ export default function NotificationsPage() {
       try {
         await fetch('/api/sheets/audit-log', { method: 'DELETE' });
         setLogs([]);
-        setReadSetState(new Set());
-        setReadSet(new Set());
+        setReadSetState(new Set<string>());
+        setReadSet(new Set<string>());
       } catch (err) {
         // ignore
       } finally {
