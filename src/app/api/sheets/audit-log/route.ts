@@ -67,7 +67,7 @@ export async function DELETE(req: NextRequest) {
       range: `${AUDIT_SHEET_NAME}!A2:I`,
     });
     const rows = res.data.values || [];
-    let updateRequests = [];
+    let updateRequests: { range: string; values: string[][] }[] = [];
     if (roleParam === 'Basic User' && userParam) {
       // 只清空属于该user的
       rows.forEach((row, index) => {
