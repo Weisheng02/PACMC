@@ -95,31 +95,31 @@ export default function PendingRecordsPage() {
   return (
     <PermissionGate allowedRoles={['Admin', 'Super Admin']}>
       <div className="max-w-7xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
           <h1 className="text-2xl font-bold">Pending Records</h1>
           <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm font-medium border border-gray-300 flex items-center gap-1"
+            onClick={() => window.location.href = '/'}
+            className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm font-medium border border-gray-300 flex items-center gap-1 w-full sm:w-auto"
             type="button"
           >
-            ← Back to Dashboard
+            ← Back to Home
           </button>
         </div>
-        <div className="flex gap-2 mb-2">
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
           <input
-            className="input input-bordered w-48"
+            className="input input-bordered w-full sm:w-48"
             placeholder="Search description/amount/ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <input
-            className="input input-bordered w-32"
+            className="input input-bordered w-full sm:w-32"
             placeholder="Created by"
             value={filterCreatedBy}
             onChange={(e) => setFilterCreatedBy(e.target.value)}
           />
           <select
-            className="input input-bordered w-32"
+            className="input input-bordered w-full sm:w-32"
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -127,18 +127,21 @@ export default function PendingRecordsPage() {
             <option value="Income">Income</option>
             <option value="Expense">Expense</option>
           </select>
-          <button
-            onClick={selectAll}
-            className="px-2 py-1 rounded bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200 text-xs font-medium mr-1"
-            type="button"
-          >Select All</button>
-          <button
-            onClick={clearAll}
-            className="px-2 py-1 rounded bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200 text-xs font-medium"
-            type="button"
-          >Clear</button>
+          <div className="hidden sm:flex gap-2">
+            <button
+              onClick={selectAll}
+              className="px-2 py-1 rounded bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200 text-xs font-medium mr-1"
+              type="button"
+            >Select All</button>
+            <button
+              onClick={clearAll}
+              className="px-2 py-1 rounded bg-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-200 text-xs font-medium"
+              type="button"
+            >Clear</button>
+          </div>
         </div>
-        <div className="overflow-x-auto bg-white rounded shadow border">
+        {/* 桌面端表格 */}
+        <div className="overflow-x-auto bg-white rounded shadow border hidden md:block">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-gray-100">
@@ -187,7 +190,62 @@ export default function PendingRecordsPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between mt-4">
+        {/* 移动端卡片列表（支持多选和批量操作，卡片更紧凑） */}
+        <div className="flex flex-col gap-2 md:hidden">
+          {/* 批量操作栏 */}
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <input type="checkbox" checked={selected.size === filtered.length && filtered.length > 0} onChange={e => e.target.checked ? selectAll() : clearAll()} />
+              <span className="ml-2 text-sm">Select All</span>
+            </div>
+            <button
+              onClick={() => approveRecords(Array.from(selected))}
+              disabled={selected.size === 0 || approving}
+              className="px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 text-xs font-medium flex items-center gap-1 disabled:opacity-50"
+              type="button"
+            >
+              {approving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+              Bulk Approve
+            </button>
+          </div>
+          {loading ? (
+            <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-8">No pending records</div>
+          ) : (
+            filtered.map((r) => (
+              <div key={r.key} className={`bg-white rounded shadow border p-2 flex flex-col gap-1 ${selected.has(r.key) ? 'ring-2 ring-green-400' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" checked={selected.has(r.key)} onChange={() => toggleSelect(r.key)} />
+                    <span className="font-bold text-sm">{r.key}</span>
+                  </div>
+                  <span className="text-green-700 font-semibold text-sm">RM{r.amount}</span>
+                </div>
+                <div className="flex flex-wrap gap-1 text-xs">
+                  <span className="bg-gray-100 rounded px-1 py-0.5">{r.type}</span>
+                  <span className="bg-gray-100 rounded px-1 py-0.5">{r.status}</span>
+                </div>
+                <div className="text-xs text-gray-700">{r.description}</div>
+                <div className="flex flex-col gap-0.5 text-xs text-gray-500">
+                  <span>Created: {r.date}</span>
+                  <span>By: {r.createdBy}</span>
+                  {r.remark && <span>Remark: {r.remark}</span>}
+                </div>
+                <button
+                  type="button"
+                  className="w-full px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 text-xs font-medium flex items-center justify-center gap-1 disabled:opacity-50 mt-1"
+                  disabled={approving}
+                  onClick={() => approveRecords([r.key])}
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />Approve
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+        {/* 桌面端底部批量操作 */}
+        <div className="hidden md:flex items-center justify-between mt-4">
           <button
             onClick={exportExcel}
             className="px-3 py-1 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm font-medium flex items-center gap-1"

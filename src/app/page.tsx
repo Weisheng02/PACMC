@@ -323,7 +323,7 @@ export default function Home() {
 
           {/* Chart Analysis - All logged in users can view */}
           <LoggedInUser>
-            <Link href="/dashboard" className="block h-full">
+            <Link href="/" className="block h-full">
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
                 <div className="flex items-center mb-3 sm:mb-4">
                   <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-2 sm:mr-3 dark:text-green-400" />
