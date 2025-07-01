@@ -79,7 +79,7 @@ export default function SettingsPage() {
     setSettings(prev => ({
       ...prev,
       [category]: {
-        ...prev[category],
+        ...(prev[category] || {}),
         [key]: value,
       },
     }));
