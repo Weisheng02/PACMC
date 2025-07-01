@@ -564,6 +564,11 @@ export default function FinancialListPage() {
   const filteredBalance = filteredTotalIncome - filteredTotalExpense;
   const filteredPendingRecords = filteredRecords.filter(record => record.status === 'Pending');
 
+  // 计算当前选中年月的收入、支出和余额
+  const currentMonthIncome = filteredRecordsByYM.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  const currentMonthExpense = filteredRecordsByYM.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  const currentMonthBalance = currentMonthIncome - currentMonthExpense;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -708,56 +713,43 @@ export default function FinancialListPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-green-100 rounded-lg dark:bg-green-900">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Income</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
-                  {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
-                </p>
-              </div>
+          <div className="bg-green-100 border-l-4 border-green-600 rounded-lg p-3 sm:p-6 flex items-center shadow-sm dark:bg-green-100 dark:border-green-600">
+            <div className="flex-shrink-0 p-2 bg-green-200 rounded-lg dark:bg-green-200">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-green-700 dark:text-green-700" />
+            </div>
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-green-800 dark:text-green-800 truncate">Total Income</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-500 dark:text-green-900 whitespace-nowrap truncate">{formatCurrency(currentMonthIncome)}</p>
+              <p className="text-xs text-green-700 dark:text-green-700 mt-1">for {selectedYear}-{selectedMonth}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-red-100 rounded-lg dark:bg-red-900">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Total Expense</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
-                  {formatCurrency(records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
-                </p>
-              </div>
+          <div className="bg-red-100 border-l-4 border-red-600 rounded-lg p-3 sm:p-6 flex items-center shadow-sm dark:bg-red-100 dark:border-red-600">
+            <div className="flex-shrink-0 p-2 bg-red-200 rounded-lg dark:bg-red-200">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-red-700 dark:text-red-700" />
+            </div>
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-red-800 dark:text-red-800 truncate">Total Expense</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-red-500 dark:text-red-500 whitespace-nowrap truncate">{formatCurrency(currentMonthExpense)}</p>
+              <p className="text-xs text-red-700 dark:text-red-700 mt-1">for {selectedYear}-{selectedMonth}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Balance</p>
-                <p className={`text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold whitespace-nowrap truncate ${records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {formatCurrency(records.filter(r => r.type === 'Income').reduce((sum, r) => sum + (Number(r.amount) || 0), 0) - records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}
-                </p>
-              </div>
+          <div className="bg-blue-100 border-l-4 border-blue-600 rounded-lg p-3 sm:p-6 flex items-center shadow-sm dark:bg-blue-100 dark:border-blue-600">
+            <div className="flex-shrink-0 p-2 bg-blue-200 rounded-lg dark:bg-blue-200">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-6 text-blue-700 dark:text-blue-700" />
+            </div>
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-800 truncate">Balance</p>
+              <p className={`text-lg sm:text-xl lg:text-2xl font-bold whitespace-nowrap truncate ${currentMonthBalance >= 0 ? 'text-blue-500 dark:text-blue-900' : 'text-red-700 dark:text-red-200'}`}>{formatCurrency(currentMonthBalance)}</p>
+              <p className="text-xs text-blue-700 dark:text-blue-700 mt-1">for {selectedYear}-{selectedMonth}</p>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
-                <Wallet className="h-4 w-4 sm:h-5 sm:w-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate dark:text-slate-400">Cash in Hand</p>
-                <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-900 whitespace-nowrap truncate dark:text-slate-100">
-                  {formatCurrency(cashInHand)}
-                </p>
-              </div>
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 rounded-lg p-3 sm:p-6 flex items-center shadow-sm dark:bg-yellow-100 dark:border-yellow-500">
+            <div className="flex-shrink-0 p-2 bg-yellow-200 rounded-lg dark:bg-yellow-200">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-6 text-yellow-700 dark:text-yellow-700" />
+            </div>
+            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-yellow-800 dark:text-yellow-800 truncate">Cash in Hand</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-900 dark:text-yellow-900 whitespace-nowrap truncate">{formatCurrency(cashInHand)}</p>
             </div>
           </div>
         </div>
