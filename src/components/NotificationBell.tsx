@@ -71,13 +71,56 @@ function setReadSet(set: Set<string>) {
   localStorage.setItem('notiReadSet', JSON.stringify(Array.from(set)));
 }
 
+// 新增：Pending Record 类型
+interface PendingRecord {
+  key: string;
+  account: string;
+  date: string;
+  type: string;
+  who: string;
+  amount: number;
+  description: string;
+  status: string;
+  takePut: boolean;
+  remark: string;
+  createdDate: string;
+  createdBy: string;
+  approvedDate: string;
+  approvedBy: string;
+  lastUserUpdate: string;
+  lastDateUpdate: string;
+}
+
+// 获取所有记录
+async function getPendingRecords() {
+  const res = await fetch('/api/sheets/read');
+  if (!res.ok) throw new Error('Failed to fetch records');
+  const data = await res.json();
+  // 只要 Pending
+  return (data.records || []).filter((r: PendingRecord) => r.status === 'Pending');
+}
+
+// 本地已读 Pending key
+function getPendingReadSet(): Set<string> {
+  try {
+    return new Set<string>(JSON.parse(localStorage.getItem('pendingReadSet') || '[]'));
+  } catch {
+    return new Set<string>();
+  }
+}
+function setPendingReadSet(set: Set<string>) {
+  localStorage.setItem('pendingReadSet', JSON.stringify(Array.from(set)));
+}
+
 export default function NotificationBell() {
   const { userProfile, isSuperAdmin } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [pendingRecords, setPendingRecords] = useState<PendingRecord[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [readSet, setReadSetState] = useState<Set<string>>(getReadSet());
+  const [pendingReadSet, setPendingReadSetState] = useState<Set<string>>(getPendingReadSet());
 
   // 未读数量
   const unreadLogs = logs.filter(log => !readSet.has(getNotiKey(log)));
@@ -133,8 +176,24 @@ export default function NotificationBell() {
       }
     };
     loadLogs();
-    const interval = setInterval(loadLogs, 30000);
-    return () => clearInterval(interval);
+    return () => {};
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (!userProfile) return;
+    const loadPending = async () => {
+      setLoading(true);
+      try {
+        const records = await getPendingRecords();
+        setPendingRecords(records);
+      } catch (error) {
+        setPendingRecords([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPending();
+    return () => {};
   }, [userProfile]);
 
   const getActionIcon = (action: string) => {
@@ -219,11 +278,17 @@ export default function NotificationBell() {
   const recentLogs = sortedLogs.slice(0, 50);
   const logCount = logs.length;
 
+  // 按时间倒序
+  const sortedRecords = pendingRecords.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <div className="relative">
       {/* Notification Bell Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) markAllAsRead();
+        }}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-700"
       >
         <Bell className="h-6 w-6" />
