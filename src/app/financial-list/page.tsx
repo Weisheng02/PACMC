@@ -334,6 +334,29 @@ export default function FinancialListPage() {
   const currentMonthExpense = filteredRecordsByYM.filter(r => r.type === 'Expense').reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
   const currentMonthBalance = currentMonthIncome - currentMonthExpense;
 
+  // 新增：切换记录状态
+  const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
+    try {
+      const response = await fetch('/api/sheets/update-record-status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, status: newStatus }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+      // 更新本地 records 状态
+      setRecords(prev =>
+        prev.map(record =>
+          record.key === key ? { ...record, status: newStatus } : record
+        )
+      );
+      setToast({ type: 'success', message: 'Status updated successfully!' });
+    } catch (error) {
+      setToast({ type: 'error', message: 'Failed to update status. Please try again.' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
