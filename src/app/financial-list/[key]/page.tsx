@@ -289,7 +289,7 @@ export default function RecordDetailsPage() {
   };
 
   const saveEdit = async () => {
-    if (!editForm) return;
+    if (!editForm || !record) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/sheets/update/${record.key}`, {
