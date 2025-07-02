@@ -36,6 +36,8 @@ export default function RecordDetailsPage() {
   const [uploading, setUploading] = useState(false);
   const [editingReceiptKey, setEditingReceiptKey] = useState<string | null>(null);
   const [editingDisplayName, setEditingDisplayName] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<any>(null);
 
   const recordKey = params.key as string;
 
@@ -266,6 +268,51 @@ export default function RecordDetailsPage() {
     }
   };
 
+  const startEdit = () => {
+    if (record) {
+      setEditForm({
+        date: record.date?.split(' ')[0] || '',
+        type: record.type,
+        amount: record.amount,
+        account: record.account,
+        description: record.description,
+        who: record.who,
+        remark: record.remark || '',
+      });
+      setIsEditing(true);
+    }
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditForm(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editForm) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/sheets/update/${record.key}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editForm,
+          amount: Number(editForm.amount),
+          lastUserUpdate: userProfile?.name || userProfile?.email || '',
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to update');
+      setToast({ type: 'success', message: 'Record updated!' });
+      setIsEditing(false);
+      setEditForm(null);
+      loadRecordDetails();
+    } catch (e) {
+      setToast({ type: 'error', message: 'Update failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -309,13 +356,13 @@ export default function RecordDetailsPage() {
               
               {/* Desktop buttons */}
               <div className="hidden sm:flex items-center gap-3 sm:gap-4">
-                <Link
-                  href={`/edit-record/${recordKey}`}
+                <button
+                  onClick={startEdit}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                 >
                   <Edit className="h-4 w-4" />
                   Edit Record
-                </Link>
+                </button>
                 <button
                   onClick={handleDelete}
                   disabled={!!deleting}
@@ -341,13 +388,13 @@ export default function RecordDetailsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </Link>
-                <Link
-                  href={`/edit-record/${recordKey}`}
+                <button
+                  onClick={startEdit}
                   className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
                   title="Edit Record"
                 >
                   <Edit className="h-5 w-5" />
-                </Link>
+                </button>
                 <button
                   onClick={handleDelete}
                   disabled={!!deleting}
@@ -394,49 +441,78 @@ export default function RecordDetailsPage() {
                   <div className="space-y-3 sm:space-y-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Date</label>
-                      <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{formatDate(record.date)}</p>
+                      {isEditing ? (
+                        <input type="date" className="input input-bordered w-full" value={editForm?.date || ''} onChange={e => setEditForm((f: any) => ({ ...f, date: e.target.value }))} />
+                      ) : (
+                        <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{formatDate(record.date)}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Type</label>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        record.type === 'Income' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
-                        {record.type}
-                      </span>
+                      {isEditing ? (
+                        <select className="input input-bordered w-full" value={editForm?.type} onChange={e => setEditForm((f: any) => ({ ...f, type: e.target.value }))}>
+                          <option value="Income">Income</option>
+                          <option value="Expense">Expense</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${record.type === 'Income' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>{record.type}</span>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Amount</label>
-                      <p className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100">{formatCurrency(Number(record.amount))}</p>
+                      {isEditing ? (
+                        <input type="number" className="input input-bordered w-full" value={editForm?.amount} onChange={e => setEditForm((f: any) => ({ ...f, amount: e.target.value }))} />
+                      ) : (
+                        <p className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-slate-100">{formatCurrency(Number(record.amount))}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Account</label>
-                      <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.account}</p>
+                      {isEditing ? (
+                        <input className="input input-bordered w-full" value={editForm?.account} onChange={e => setEditForm((f: any) => ({ ...f, account: e.target.value }))} />
+                      ) : (
+                        <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.account}</p>
+                      )}
                     </div>
                   </div>
                   
                   <div className="space-y-3 sm:space-y-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Description</label>
-                      <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.description}</p>
+                      {isEditing ? (
+                        <input className="input input-bordered w-full" value={editForm?.description} onChange={e => setEditForm((f: any) => ({ ...f, description: e.target.value }))} />
+                      ) : (
+                        <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.description}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Who</label>
-                      <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.who}</p>
+                      {isEditing ? (
+                        <input className="input input-bordered w-full" value={editForm?.who} onChange={e => setEditForm((f: any) => ({ ...f, who: e.target.value }))} />
+                      ) : (
+                        <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.who}</p>
+                      )}
                     </div>
-                    {record.remark && (
-                      <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Remark</label>
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Remark</label>
+                      {isEditing ? (
+                        <input className="input input-bordered w-full" value={editForm?.remark} onChange={e => setEditForm((f: any) => ({ ...f, remark: e.target.value }))} />
+                      ) : (
                         <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{record.remark}</p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-400">Created</label>
                       <p className="text-sm sm:text-base text-gray-900 dark:text-slate-100">{formatDateTime(record.createdDate)}</p>
                     </div>
                   </div>
                 </div>
+                {isEditing && (
+                  <div className="flex gap-3 mt-6 justify-end">
+                    <button onClick={cancelEdit} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">取消</button>
+                    <button onClick={saveEdit} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center gap-2"><SaveIcon className="h-4 w-4" />保存</button>
+                  </div>
+                )}
               </div>
 
               {/* Receipts Section */}

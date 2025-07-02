@@ -211,7 +211,11 @@ export default function ProfilePage() {
                       Account Created
                     </label>
                     <p className="text-gray-900 dark:text-white">
-                      {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'Unknown'}
+                      {user?.metadata?.creationTime
+                        ? new Date(user.metadata.creationTime).toLocaleDateString()
+                        : userProfile?.createdAt
+                          ? new Date(userProfile.createdAt).toLocaleDateString()
+                          : 'Unknown'}
                     </p>
                   </div>
 

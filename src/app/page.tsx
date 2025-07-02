@@ -24,6 +24,14 @@ export default function Home() {
   });
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  // 获取所有年份
+  const allYears = Array.from(new Set(financialData.map(r => new Date(r.date).getFullYear()))).sort((a, b) => b - a);
+  // 计算所选年份的统计
+  const yearRecords = financialData.filter(r => new Date(r.date).getFullYear() === selectedYear);
+  const yearIncome = yearRecords.filter(r => r.type === 'Income').reduce((sum, r) => sum + r.amount, 0);
+  const yearExpense = yearRecords.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0);
+  const yearBalance = yearIncome - yearExpense;
 
   // 获取财务数据
   useEffect(() => {
@@ -216,7 +224,7 @@ export default function Home() {
                   <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-1 dark:text-slate-100">Financial Tracking</h4>
-                <p className="text-xs text-gray-600 dark:text-slate-400">Monitor income and expenses</p>
+                <div className="text-xs font-normal text-gray-500 mt-0.5">Monitor income and expenses</div>
               </div>
               
               <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 dark:bg-slate-800/60 dark:border-slate-600/20">
@@ -224,7 +232,7 @@ export default function Home() {
                   <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-1 dark:text-slate-100">Reports & Analytics</h4>
-                <p className="text-xs text-gray-600 dark:text-slate-400">Generate detailed reports</p>
+                <div className="text-xs font-normal text-gray-500 mt-0.5">Generate detailed reports</div>
               </div>
               
               <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 dark:bg-slate-800/60 dark:border-slate-600/20">
@@ -232,7 +240,7 @@ export default function Home() {
                   <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-1 dark:text-slate-100">Secure Access</h4>
-                <p className="text-xs text-gray-600 dark:text-slate-400">Role-based permissions</p>
+                <div className="text-xs font-normal text-gray-500 mt-0.5">Role-based permissions</div>
               </div>
             </div>
 
@@ -269,23 +277,23 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b dark:bg-slate-800 dark:border-slate-700">
         <div className="w-full px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12 sm:h-16">
+          <div className="flex justify-between items-center h-10 sm:h-12">
             <div className="flex items-center">
               <img
                 src="/pacmc.jpg"
                 alt="PACMC Logo"
-                className="h-7 w-7 sm:h-9 sm:w-9 rounded-full mr-3 sm:mr-4 object-cover"
+                className="h-6 w-6 sm:h-8 sm:w-8 rounded-full mr-2 sm:mr-3 object-cover"
               />
-              <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-slate-100">
+              <h1 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 dark:text-slate-100">
                 <span className="hidden sm:inline">PACMC Financial Management System</span>
                 <span className="sm:hidden">PACMC Finance</span>
               </h1>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <NotificationBell />
-              {user && (
-                <Link href="/admin/pending-records" className="px-3 py-1 rounded bg-yellow-500 text-gray-900 hover:bg-yellow-400 transition text-sm font-bold flex items-center shadow-sm border border-yellow-400 dark:bg-yellow-400 dark:text-gray-900 dark:hover:bg-yellow-300">
-                  Pending
+              {(user && (userProfile?.role === 'Admin' || userProfile?.role === 'Super Admin')) && (
+                <Link href="/admin/pending-records" className="flex items-center px-3 py-1.5 rounded-md bg-white border border-gray-300 text-xs font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600" style={{ minWidth: 'auto' }}>
+                  Pending Record
                 </Link>
               )}
               <LoginForm />
@@ -296,42 +304,21 @@ export default function Home() {
       {/* Main Content */}
       <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Welcome Section */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2 dark:text-slate-100">Welcome back, {userProfile?.name}!</h2>
-          <p className="text-sm sm:text-base text-gray-600 mb-0.5 sm:mb-1 dark:text-slate-300">Email: {userProfile?.email}</p>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-slate-300">
-            Your role: <span className="font-semibold">{userProfile?.role}</span>
-          </p>
-        </div>
+        {/* 用户欢迎区已移除 */}
 
         {/* Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className={`grid ${userProfile?.role === 'Basic User' ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-2 lg:grid-cols-3'} gap-3 sm:gap-6 mb-6 sm:mb-8`}>
           {/* Financial Records - All logged in users can view */}
           <LoggedInUser>
             <Link href="/financial-list" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3 dark:text-blue-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Financial Records</h3>
+              <div className="bg-white p-3 sm:p-6 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex items-center sm:block">
+                <FileText className="h-7 w-7 text-blue-600 mr-3 sm:mr-0" />
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">
+                    财务记录
+                  </h3>
+                  <div className="text-xs font-normal text-gray-500 mt-0.5">Financial Records</div>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
-                  View all income and expense records, and manage them based on permissions
-                </p>
-              </div>
-            </Link>
-          </LoggedInUser>
-
-          {/* Chart Analysis - All logged in users can view */}
-          <LoggedInUser>
-            <Link href="/" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-2 sm:mr-3 dark:text-green-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Chart Analysis</h3>
-                </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
-                  View financial trends and category statistics
-                </p>
               </div>
             </Link>
           </LoggedInUser>
@@ -339,44 +326,14 @@ export default function Home() {
           {/* Add Record - All logged in users can add */}
           <LoggedInUser>
             <Link href="/add-record" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 mr-2 sm:mr-3 dark:text-purple-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Add Record</h3>
+              <div className="bg-white p-3 sm:p-6 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex items-center sm:block">
+                <Plus className="h-7 w-7 text-purple-600 mr-3 sm:mr-0" />
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">
+                    新增记录
+                  </h3>
+                  <div className="text-xs font-normal text-gray-500 mt-0.5">Add Record</div>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
-                  Add new income or expense records
-                </p>
-              </div>
-            </Link>
-          </LoggedInUser>
-
-          {/* User Management - Only Admin and Super Admin */}
-          {(userProfile?.role === 'Admin' || userProfile?.role === 'Super Admin') && (
-            <Link href="/admin/users" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 mr-2 sm:mr-3 dark:text-orange-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">User Management</h3>
-                </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
-                  Manage user accounts and permissions
-                </p>
-              </div>
-            </Link>
-          )}
-
-          {/* Cash in Hand - All logged in users can set */}
-          <LoggedInUser>
-            <Link href="/set-cash" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 mr-2 sm:mr-3 dark:text-yellow-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Set Cash</h3>
-                </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
-                  Set cash in hand amount
-                </p>
               </div>
             </Link>
           </LoggedInUser>
@@ -384,63 +341,94 @@ export default function Home() {
           {/* Export - All logged in users can view */}
           <LoggedInUser>
             <Link href="/export" className="block h-full">
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-300 hover:shadow-md transition-shadow cursor-pointer h-full dark:bg-slate-800 dark:border-slate-700 dark:hover:shadow-lg">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mr-2 sm:mr-3 dark:text-red-400" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100">Report Export</h3>
+              <div className="bg-white p-3 sm:p-6 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex items-center sm:block">
+                <Shield className="h-7 w-7 text-red-600 mr-3 sm:mr-0" />
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">
+                    报表导出
+                  </h3>
+                  <div className="text-xs font-normal text-gray-500 mt-0.5">Report Export</div>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 dark:text-slate-300">
-                  Export PDF and Excel reports
-                </p>
               </div>
             </Link>
           </LoggedInUser>
+
+          {/* 其它卡片仅 admin 及以上可见 */}
+          {(userProfile?.role === 'Admin' || userProfile?.role === 'Super Admin') && (
+            <>
+              <Link href="/dashboard" className="block h-full">
+                <div className="bg-white p-3 sm:p-6 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex items-center sm:block">
+                  <BarChart3 className="h-7 w-7 text-green-600 mr-3 sm:mr-0" />
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">
+                      图表分析
+                    </h3>
+                    <div className="text-xs font-normal text-gray-500 mt-0.5">Chart Analysis</div>
+                  </div>
+                </div>
+              </Link>
+              <Link href="/admin/users" className="block h-full">
+                <div className="bg-white p-3 sm:p-6 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex items-center sm:block">
+                  <Users className="h-7 w-7 text-orange-600 mr-3 sm:mr-0" />
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">
+                      用户管理
+                    </h3>
+                    <div className="text-xs font-normal text-gray-500 mt-0.5">User Management</div>
+                  </div>
+                </div>
+              </Link>
+              <Link href="/set-cash" className="block h-full">
+                <div className="bg-white p-3 sm:p-6 rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer h-full flex items-center sm:block">
+                  <Wallet className="h-7 w-7 text-yellow-600 mr-3 sm:mr-0" />
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-slate-100">
+                      现金设置
+                    </h3>
+                    <div className="text-xs font-normal text-gray-500 mt-0.5">Set Cash</div>
+                  </div>
+                </div>
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Quick Stats */}
-        <LoggedInUser>
-          <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 dark:text-slate-100">Monthly Statistics</h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-green-600 truncate">RM{stats.monthlyIncome.toFixed(2)}</div>
-                <div className="text-xs text-gray-600 truncate">Monthly Income</div>
+        {/* Quick Stats（仅 admin 及以上可见） */}
+        {(userProfile?.role === 'Admin' || userProfile?.role === 'Super Admin') && (
+          <LoggedInUser>
+            <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 dark:bg-slate-800 dark:border-slate-700">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 dark:text-slate-100">Monthly Statistics</h3>
+              {/* 年份选择器 */}
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-xs text-gray-500">Year:</span>
+                <select
+                  className="text-xs px-2 py-1 border border-gray-300 rounded dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600"
+                  value={selectedYear}
+                  onChange={e => setSelectedYear(Number(e.target.value))}
+                >
+                  {allYears.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
               </div>
-              <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-red-600 truncate">RM{stats.monthlyExpense.toFixed(2)}</div>
-                <div className="text-xs text-gray-600 truncate">Monthly Expense</div>
-              </div>
-              <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-blue-600 truncate">RM{stats.monthlyBalance.toFixed(2)}</div>
-                <div className="text-xs text-gray-600 truncate">Monthly Balance</div>
-              </div>
-              <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div className="text-xs sm:text-sm lg:text-lg xl:text-xl font-bold text-yellow-600 truncate">RM{stats.cashInHand.toFixed(2)}</div>
-                <div className="text-xs text-gray-600 truncate">Cash in Hand</div>
-              </div>
-            </div>
-            
-            {/* Total Statistics */}
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-300">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 dark:text-slate-100">Quick Actions</h3>
+              {/* 统计卡片 */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-xs sm:text-sm lg:text-base font-bold text-green-600 truncate">RM{stats.totalIncome.toFixed(2)}</div>
-                  <div className="text-xs text-gray-600 truncate">Total Income</div>
+                  <div className="text-xs sm:text-sm lg:text-base font-bold text-green-600 truncate">RM{yearIncome.toFixed(2)}</div>
+                  <div className="text-xs text-gray-500 truncate">Total Income</div>
                 </div>
                 <div className="text-center p-2 sm:p-3 bg-red-50 rounded-lg border border-red-200">
-                  <div className="text-xs sm:text-sm lg:text-base font-bold text-red-600 truncate">RM{stats.totalExpense.toFixed(2)}</div>
-                  <div className="text-xs text-gray-600 truncate">Total Expense</div>
+                  <div className="text-xs sm:text-sm lg:text-base font-bold text-red-600 truncate">RM{yearExpense.toFixed(2)}</div>
+                  <div className="text-xs text-gray-500 truncate">Total Expense</div>
                 </div>
                 <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-xs sm:text-sm lg:text-base font-bold text-blue-600 truncate">RM{stats.totalBalance.toFixed(2)}</div>
-                  <div className="text-xs text-gray-600 truncate">Total Balance</div>
+                  <div className="text-xs sm:text-sm lg:text-base font-bold text-blue-600 truncate">RM{yearBalance.toFixed(2)}</div>
+                  <div className="text-xs text-gray-500 truncate">Total Balance</div>
                 </div>
               </div>
             </div>
-          </div>
-        </LoggedInUser>
+          </LoggedInUser>
+        )}
       </main>
     </div>
   );

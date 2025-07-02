@@ -112,13 +112,6 @@ export default function UserManagementPage() {
                     Last: {lastRefreshTime.toLocaleTimeString()}
                   </span>
                 )}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add User
-                </button>
               </div>
 
               {/* Mobile buttons - simplified */}
@@ -143,13 +136,6 @@ export default function UserManagementPage() {
                   ) : (
                     <RefreshCw className="h-5 w-5" />
                   )}
-                </button>
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-                  title="Add User"
-                >
-                  <Plus className="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -229,7 +215,6 @@ export default function UserManagementPage() {
                       <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">User</th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Role</th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Status</th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Created</th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
@@ -276,9 +261,6 @@ export default function UserManagementPage() {
                           }`}>
                             {user.status}
                           </span>
-                        </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 dark:text-slate-400">
-                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                           <div className="flex items-center gap-2">

@@ -26,30 +26,6 @@ export default function FinancialListPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   
-  // 高级搜索和过滤状态
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [searchFilters, setSearchFilters] = useState({
-    keyword: '',
-    type: 'all' as 'all' | 'Income' | 'Expense',
-    status: 'all' as 'all' | 'Pending' | 'Approved',
-    dateFrom: '',
-    dateTo: '',
-    amountFrom: '',
-    amountTo: '',
-    account: 'all' as 'all' | 'MIYF' | 'Other',
-  });
-  const [savedSearches, setSavedSearches] = useState<Array<{
-    id: string;
-    name: string;
-    filters: typeof searchFilters;
-  }>>([]);
-  
-  // 可折叠月份分组状态
-  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
-  
-  // Toast notification state
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  
   // 1. 新增年份和月份筛选状态
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
@@ -57,8 +33,18 @@ export default function FinancialListPage() {
   // 新增月份内排序状态
   const [monthSortOrder, setMonthSortOrder] = useState<'asc' | 'desc'>('desc'); // 默认从新到旧
 
+  // 权限过滤：basic user 只能看自己相关记录
+  let visibleRecords = records;
+  if (userProfile && userProfile.role === 'Basic User') {
+    visibleRecords = records.filter(r =>
+      r.createdBy === userProfile.name ||
+      r.createdBy === userProfile.email ||
+      r.who === userProfile.name
+    );
+  }
+
   // 2. 计算所有有数据的年份和每年有数据的月份
-  const yearMonthMap = records.reduce((acc, record) => {
+  const yearMonthMap = visibleRecords.reduce((acc, record) => {
     const dateStr = record.date?.split(' ')[0] || '';
     const [year, month] = dateStr.split('-');
     if (year && month) {
@@ -88,7 +74,7 @@ export default function FinancialListPage() {
     const [year, month] = (dateStr?.split(' ')[0] || '').split('-');
     return { year, month };
   };
-  const filteredRecordsByYM = records.filter(r => {
+  const filteredRecordsByYM = visibleRecords.filter(r => {
     const { year, month } = getYM(r.date);
     return year === selectedYear && month === selectedMonth;
   }).sort((a, b) => {
@@ -137,6 +123,7 @@ export default function FinancialListPage() {
   }, []);
 
   // Auto-dismiss toast notifications
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -250,242 +237,21 @@ export default function FinancialListPage() {
   const approvedRecords = records.filter(record => record.status === 'Approved');
   const pendingRecords = records.filter(record => record.status === 'Pending');
 
-  // 应用搜索过滤器
-  const applyFilters = (records: FinancialRecord[]) => {
-    return records.filter(record => {
-      // 关键词搜索（搜索描述、姓名、备注）
-      if (searchFilters.keyword) {
-        const keyword = searchFilters.keyword.toLowerCase();
-        const searchableText = [
-          record.description,
-          record.who,
-          record.remark,
-          record.account
-        ].join(' ').toLowerCase();
-        
-        if (!searchableText.includes(keyword)) {
-          return false;
-        }
-      }
-
-      // 类型过滤
-      if (searchFilters.type !== 'all' && record.type !== searchFilters.type) {
-        return false;
-      }
-
-      // 状态过滤
-      if (searchFilters.status !== 'all' && record.status !== searchFilters.status) {
-        return false;
-      }
-
-      // 账户过滤
-      if (searchFilters.account !== 'all' && record.account !== searchFilters.account) {
-        return false;
-      }
-
-      // 日期范围过滤
-      if (searchFilters.dateFrom) {
-        const recordDate = new Date(record.date);
-        const fromDate = new Date(searchFilters.dateFrom);
-        if (recordDate < fromDate) {
-          return false;
-        }
-      }
-
-      if (searchFilters.dateTo) {
-        const recordDate = new Date(record.date);
-        const toDate = new Date(searchFilters.dateTo);
-        if (recordDate > toDate) {
-          return false;
-        }
-      }
-
-      // 金额范围过滤
-      if (searchFilters.amountFrom) {
-        const fromAmount = parseFloat(searchFilters.amountFrom);
-        if (record.amount < fromAmount) {
-          return false;
-        }
-      }
-
-      if (searchFilters.amountTo) {
-        const toAmount = parseFloat(searchFilters.amountTo);
-        if (record.amount > toAmount) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  };
-
-  // 保存当前搜索
-  const saveCurrentSearch = () => {
-    const searchName = prompt('请输入搜索名称：');
-    if (!searchName) return;
-
-    const newSearch = {
-      id: Date.now().toString(),
-      name: searchName,
-      filters: { ...searchFilters }
-    };
-
-    setSavedSearches(prev => [...prev, newSearch]);
-    
-    // 保存到本地存储
-    const saved = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-    saved.push(newSearch);
-    localStorage.setItem('savedSearches', JSON.stringify(saved));
-    
-    setToast({ type: 'success', message: '搜索已保存！' });
-  };
-
-  // 加载保存的搜索
-  const loadSavedSearch = (savedSearch: typeof savedSearches[0]) => {
-    setSearchFilters(savedSearch.filters);
-  };
-
-  // 删除保存的搜索
-  const deleteSavedSearch = (searchId: string) => {
-    if (!confirm('确定要删除这个保存的搜索吗？')) return;
-    
-    setSavedSearches(prev => prev.filter(s => s.id !== searchId));
-    
-    // 从本地存储删除
-    const saved = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-    const updated = saved.filter((s: any) => s.id !== searchId);
-    localStorage.setItem('savedSearches', JSON.stringify(updated));
-  };
-
-  // 清除所有过滤器
-  const clearAllFilters = () => {
-    setSearchFilters({
-      keyword: '',
-      type: 'all',
-      status: 'all',
-      dateFrom: '',
-      dateTo: '',
-      amountFrom: '',
-      amountTo: '',
-      account: 'all',
-    });
-  };
-
-  // 加载保存的搜索从本地存储
-  useEffect(() => {
-    const saved = localStorage.getItem('savedSearches');
-    if (saved) {
-      try {
-        setSavedSearches(JSON.parse(saved));
-      } catch (error) {
-        console.error('Error loading saved searches:', error);
-      }
-    }
-  }, []);
-
-  const handleStatusToggle = async (key: string, newStatus: 'Pending' | 'Approved') => {
-    // 如果是审批操作，需要确认
-    if (newStatus === 'Approved') {
-      const record = records.find(r => r.key === key);
-      if (record) {
-        const confirmed = confirm(
-          `Are you sure you want to approve this record?\n\n` +
-          `Type: ${record.type}\n` +
-          `Amount: RM${formatCurrency(record.amount)}\n` +
-          `Description: ${record.description}\n` +
-          `Created by: ${record.createdBy || 'Unknown'}`
-        );
-        
-        if (!confirmed) {
-          return;
-        }
-      }
-    }
-
-    // 保存原始状态以便回滚
-    const originalRecords = [...records];
-    const originalStatus = records.find(r => r.key === key)?.status;
-
-    // 立即更新本地状态，实现即时反馈
-    setRecords(prevRecords =>
-      prevRecords.map(record =>
-        record.key === key ? { ...record, status: newStatus } : record
-      )
-    );
-
-    // 后台发送API请求，不阻塞UI
-    try {
-      const response = await fetch('/api/sheets/update-record-status', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          key, 
-          status: newStatus,
-          approvedBy: userProfile?.name || userProfile?.email || 'Unknown User'
-        }),
-      });
-
-      if (!response.ok) {
-        // 如果API失败，回滚到原状态
-        console.error('Failed to update status:', response.status);
-        setRecords(originalRecords);
-        setToast({ type: 'error', message: 'Failed to update record status. Please try again.' });
-        console.warn('Status update failed, reverted to original state');
-      } else {
-        // 成功更新状态
-        const result = await response.json();
-        if (newStatus === 'Approved') {
-          setToast({ type: 'success', message: `Record approved successfully! ${result.message || ''}` });
-        }
-      }
-    } catch (error) {
-      // 如果API失败，回滚到原状态
-      console.error('Error updating status:', error);
-      setRecords(originalRecords);
-      setToast({ type: 'error', message: 'Failed to update record status. Please try again.' });
-      console.warn('Status update failed, reverted to original state');
-    }
-  };
-
   // 分组和排序逻辑
   const getGroupedAndSortedRecords = () => {
-    // 首先应用搜索过滤器
-    let processedRecords = applyFilters([...records]);
-
-    // 按创建时间排序（最新的在上）
+    let processedRecords = filteredRecordsByYM;
+    // 根据 monthSortOrder 动态排序
     processedRecords.sort((a, b) => {
-      let createdTimeA = 0;
-      let createdTimeB = 0;
-      
-      if (a.createdDate) {
-        try {
-          createdTimeA = new Date(a.createdDate).getTime();
-        } catch (e) {
-          createdTimeA = 0;
-        }
-      }
-      
-      if (b.createdDate) {
-        try {
-          createdTimeB = new Date(b.createdDate).getTime();
-        } catch (e) {
-          createdTimeB = 0;
-        }
-      }
-      
-      // 最新的创建时间在上，新记录排在最上面
-      return createdTimeB - createdTimeA;
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return monthSortOrder === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
     });
 
     // 按月份分组（基于date字段）
     const grouped: { [key: string]: FinancialRecord[] } = {};
-    
     processedRecords.forEach(record => {
       const date = new Date(record.date);
       const monthKey = `${date.getFullYear()}年${date.getMonth() + 1}月`;
-      
       if (!grouped[monthKey]) {
         grouped[monthKey] = [];
       }
@@ -506,10 +272,8 @@ export default function FinancialListPage() {
             }
             return 0;
           };
-          
           const timeA = parseMonthKey(monthKeyA);
           const timeB = parseMonthKey(monthKeyB);
-          
           return timeB - timeA; // 最新的月份在上
         })
     );
@@ -521,6 +285,7 @@ export default function FinancialListPage() {
   const filteredRecordsCount = Object.values(groupedRecords).reduce((total, group) => total + group.length, 0);
 
   // 设置默认展开最新的月份
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
   useEffect(() => {
     const monthKeys = Object.keys(groupedRecords);
     if (monthKeys.length > 0 && expandedMonths.size === 0) {
@@ -554,7 +319,7 @@ export default function FinancialListPage() {
   };
 
   // 计算过滤后的统计数据
-  const filteredRecords = applyFilters(records);
+  const filteredRecords = filteredRecordsByYM;
   const filteredTotalIncome = filteredRecords
     .filter(record => record.type === 'Income')
     .reduce((sum, record) => sum + record.amount, 0);
@@ -641,7 +406,8 @@ export default function FinancialListPage() {
               )}
               <Link
                 href="/add-record"
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-700 border border-transparent rounded-md hover:bg-blue-700"
+                
               >
                 <Plus className="h-4 w-4" />
                 Add Record
@@ -680,14 +446,15 @@ export default function FinancialListPage() {
               </button>
               <Link
                 href="/add-record"
-                className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                className="flex items-center justify-center w-10 h-10 bg-blue-700 border border-transparent rounded-md hover:bg-blue-800 text-white"
+                style={{ fontSize: '16px', letterSpacing: '0.03em' }}
                 title="Add Record"
               >
                 <Plus className="h-5 w-5" />
               </Link>
               <button
                 onClick={() => setShowCashModal(true)}
-                className="flex items-center justify-center w-10 h-10 text-white bg-yellow-600 border border-transparent rounded-md hover:bg-yellow-700"
+                className="flex items-center justify-center w-auto min-w-[90px] h-10 text-yellow-800 bg-yellow-200 border border-yellow-400 rounded-md hover:bg-yellow-300 px-2"
                 title="Set Cash"
               >
                 <Wallet className="h-5 w-5" />
@@ -743,15 +510,17 @@ export default function FinancialListPage() {
               <p className="text-xs text-blue-700 dark:text-blue-700 mt-1">for {selectedYear}-{selectedMonth}</p>
             </div>
           </div>
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 rounded-lg p-3 sm:p-6 flex items-center shadow-sm dark:bg-yellow-100 dark:border-yellow-500">
-            <div className="flex-shrink-0 p-2 bg-yellow-200 rounded-lg dark:bg-yellow-200">
-              <Wallet className="h-4 w-4 sm:h-5 sm:w-6 text-yellow-700 dark:text-yellow-700" />
+          {(isAdmin || isSuperAdmin) && (
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 rounded-lg p-3 sm:p-6 flex items-center shadow-sm dark:bg-yellow-100 dark:border-yellow-500">
+              <div className="flex-shrink-0 p-2 bg-yellow-200 rounded-lg dark:bg-yellow-200">
+                <Wallet className="h-4 w-4 sm:h-5 sm:w-6 text-yellow-700 dark:text-yellow-700" />
+              </div>
+              <div className="ml-2 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-yellow-800 dark:text-yellow-800 truncate">Cash in Hand</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-500 dark:text-yellow-900 whitespace-nowrap truncate">{formatCurrency(cashInHand)}</p>
+              </div>
             </div>
-            <div className="ml-2 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-yellow-800 dark:text-yellow-800 truncate">Cash in Hand</p>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-900 dark:text-yellow-900 whitespace-nowrap truncate">{formatCurrency(cashInHand)}</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Error Message */}
@@ -790,160 +559,7 @@ export default function FinancialListPage() {
                 {monthSortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                 <span>{monthSortOrder === 'asc' ? 'Sort' : 'Sort'}</span>
               </button>
-              
-              <button
-                onClick={() => setShowAdvancedSearch(v => !v)}
-                className="text-xs px-2 sm:px-3 py-1 border rounded-md text-gray-600 bg-gray-100 hover:bg-blue-600 hover:text-white transition-colors duration-150 ml-1 sm:ml-2 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100"
-              >
-                Advanced Search
-              </button>
             </div>
-
-            {/* 高级搜索面板 */}
-            {showAdvancedSearch && (
-              <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 dark:bg-slate-700 rounded-lg border dark:border-slate-600">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {/* 关键词搜索 */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Keyword Search</label>
-                    <input
-                      type="text"
-                      value={searchFilters.keyword}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, keyword: e.target.value }))}
-                      placeholder="Search in description, who, remark..."
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    />
-                  </div>
-
-                  {/* 类型筛选 */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Type</label>
-                    <select
-                      value={searchFilters.type}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, type: e.target.value as any }))}
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    >
-                      <option value="all">All Types</option>
-                      <option value="Income">Income</option>
-                      <option value="Expense">Expense</option>
-                    </select>
-                  </div>
-
-                  {/* 状态筛选 */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Status</label>
-                    <select
-                      value={searchFilters.status}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, status: e.target.value as any }))}
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Approved">Approved</option>
-                    </select>
-                  </div>
-
-                  {/* 日期范围 */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Date From</label>
-                    <input
-                      type="date"
-                      value={searchFilters.dateFrom}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Date To</label>
-                    <input
-                      type="date"
-                      value={searchFilters.dateTo}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    />
-                  </div>
-
-                  {/* 金额范围 */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Amount From</label>
-                    <input
-                      type="number"
-                      value={searchFilters.amountFrom}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountFrom: e.target.value }))}
-                      placeholder="0.00"
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Amount To</label>
-                    <input
-                      type="number"
-                      value={searchFilters.amountTo}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, amountTo: e.target.value }))}
-                      placeholder="0.00"
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    />
-                  </div>
-
-                  {/* 账户筛选 */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 dark:text-slate-300">Account</label>
-                    <select
-                      value={searchFilters.account}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, account: e.target.value as any }))}
-                      className="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-600 dark:border-slate-500 dark:text-slate-100"
-                    >
-                      <option value="all">All Accounts</option>
-                      <option value="MIYF">MIYF</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* 搜索操作按钮 */}
-                <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-                  <button
-                    onClick={clearAllFilters}
-                    className="px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600"
-                  >
-                    Clear All
-                  </button>
-                  <button
-                    onClick={saveCurrentSearch}
-                    className="px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-                  >
-                    Save Search
-                  </button>
-                </div>
-
-                {/* 保存的搜索 */}
-                {savedSearches.length > 0 && (
-                  <div className="mt-3 sm:mt-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 dark:text-slate-300">Saved Searches</label>
-                    <div className="flex flex-wrap gap-2">
-                      {savedSearches.map((savedSearch) => (
-                        <div key={savedSearch.id} className="flex items-center gap-1">
-                          <button
-                            onClick={() => loadSavedSearch(savedSearch)}
-                            className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200"
-                          >
-                            {savedSearch.name}
-                          </button>
-                          <button
-                            onClick={() => deleteSavedSearch(savedSearch.id)}
-                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {records.length === 0 ? (
@@ -1050,7 +666,12 @@ export default function FinancialListPage() {
                               </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate border-r border-gray-300">
-                              {record.remark || '-'}
+                              {record.remark && (
+                                <div className="flex items-center mt-1">
+                                  <span className="text-sm font-semibold text-gray-700 mr-2">Remark:</span>
+                                  <span className="text-base text-gray-900">{record.remark}</span>
+                                </div>
+                              )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex items-center gap-2">
@@ -1092,28 +713,47 @@ export default function FinancialListPage() {
                   <div className="md:hidden">
                     <div className="space-y-4 p-2">
                       {filteredRecordsByYM.map((record) => (
-                        <div key={record.key} className="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col gap-2">
-                          {/* 第一行：类型+金额 */}
-                          <div className="flex justify-between items-center">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${record.type === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{record.type === 'Income' ? 'Income' : 'Expense'}</span>
-                            <span className={`font-bold text-right whitespace-nowrap ${record.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(record.amount)}</span>
+                        <Link
+                          key={record.key}
+                          href={`/financial-list/${record.key}`}
+                          className="block bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:bg-blue-50 transition cursor-pointer mb-3"
+                          style={{ textDecoration: 'none', color: 'inherit' }}
+                        >
+                          {/* 第一行：类型色块 + 金额 */}
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${record.type === 'Income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{record.type === 'Income' ? 'Income' : 'Expense'}</span>
+                            <span className={`text-xl font-extrabold ${record.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(record.amount)}</span>
                           </div>
-                          {/* 第二行：Date */}
-                          <div className="text-xs text-gray-500 mt-1"><span className="font-medium">Date:</span> {record.date?.split(' ')[0]}</div>
-                          {/* 第三行：Name */}
-                          <div className="text-xs text-gray-500 mt-1"><span className="font-medium">Name:</span> {record.who}</div>
-                          {/* 第四行：Description */}
-                          <div className="text-xs text-gray-500 mt-1"><span className="font-medium">Description:</span> {record.description}</div>
-                          {/* 第五行：Remark（如有） */}
-                          {record.remark && <div className="text-xs text-gray-400 mt-1"><span className="font-medium">Remark:</span> {record.remark}</div>}
-                          {/* 操作按钮区 */}
-                          <div className="flex gap-2 mt-2">
-                            <Link href={`/financial-list/${record.key}`} className="text-blue-600 hover:text-blue-900 p-1"><Eye className="h-4 w-4" /></Link>
+                          {/* 第二行：日期 + 姓名 */}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center">
+                              <span className="text-sm font-semibold text-gray-600 mr-1">Date:</span>
+                              <span className="text-sm text-gray-900">{record.date?.split(' ')[0]}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-sm font-semibold text-gray-600 mr-1">Name:</span>
+                              <span className="text-sm text-gray-900">{record.who}</span>
+                            </div>
+                          </div>
+                          {/* 第三行：描述 */}
+                          <div className="flex items-start mb-1">
+                            <span className="text-sm font-semibold text-gray-600 mr-1">Description:</span>
+                            <span className="text-sm text-gray-900 break-all">{record.description}</span>
+                          </div>
+                          {/* 第四行：备注（如有） */}
+                          {record.remark && (
+                            <div className="flex items-start">
+                              <span className="text-sm font-semibold text-gray-600 mr-1">Remark:</span>
+                              <span className="text-sm text-gray-900 break-all">{record.remark}</span>
+                            </div>
+                          )}
+                          {/* 操作按钮区（只保留删除按钮） */}
+                          <div className="flex gap-2 mt-3">
                             <SuperAdminOnly>
-                              <button onClick={() => handleDelete(record.key)} disabled={deletingKey === record.key} className={`p-1 ${deletingKey === record.key ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}>{deletingKey === record.key ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>) : (<Trash2 className="h-4 w-4" />)}</button>
+                              <button onClick={e => { e.preventDefault(); handleDelete(record.key); }} disabled={deletingKey === record.key} className={`p-1 ${deletingKey === record.key ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-900'}`}>{deletingKey === record.key ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>) : (<Trash2 className="h-4 w-4" />)}</button>
                             </SuperAdminOnly>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -1133,7 +773,7 @@ export default function FinancialListPage() {
       </div>
 
       {/* Cash In Hand Modal */}
-      {showCashModal && (
+      {(isAdmin || isSuperAdmin) && showCashModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
